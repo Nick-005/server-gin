@@ -12,7 +12,7 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/vac", GetVacancy)
-	router.Run("localhost:4252")
+	router.Run("0.0.0.0:4252")
 }
 
 func GetVacancy(ctx *gin.Context) {
