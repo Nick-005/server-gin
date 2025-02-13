@@ -45,12 +45,21 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
 			return
 		}
-		response, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Location, body.Experience)
+		vac_id, emp_limit, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Location, body.Experience)
 		if err != nil {
 			ctx.JSON(404, "ERROR IN GET ALL VACANCY in SQLITE")
 		}
+		if vac_id == -1 {
+			ctx.JSON(200, gin.H{
+				"vacancyID": vac_id,
+				"status":    "Error",
+				"message":   "Employee has a limit",
+				"Emp_limit": emp_limit,
+			})
+		}
 		ctx.JSON(200, gin.H{
-			"vacancyID": response,
+			"Emp_limit": emp_limit,
+			"vacancyID": vac_id,
 			"status":    "Success",
 		})
 	}
