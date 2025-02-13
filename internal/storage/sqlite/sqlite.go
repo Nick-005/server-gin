@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {
@@ -132,4 +132,57 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 	}
 	fmt.Println()
 	return result, nil
+}
+
+func (s *Storage) AddVacancy(employee_id int, name string, price int, location string, experience string) (int64, error) {
+	const op = "storage.sqlite.Add.Vacancy"
+
+	stmtVacancy, err := s.db.Prepare("INSERT INTO vacancy(employee_id,name ,price,location,experience) VALUES (?,?,?,?,?)")
+
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w\n\t error in try to prepare sql request", op, err)
+	}
+	limit := s.GetLimit(employee_id)
+	if limit != 0 {
+		return -1, fmt.Errorf("%s: error in get limit", op)
+	}
+
+	resultd, err := stmtVacancy.Exec(employee_id, name, price, location, experience)
+	if err != nil {
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return -1, fmt.Errorf("%s: error in try to get sqlite", op)
+		}
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	vac_id, err := resultd.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return vac_id, nil
+}
+
+func (s *Storage) GetLimit(ID int) int {
+
+	stmtCount, err := s.db.Prepare("SELECT limitVac FROM employee WHERE id = ?")
+	if err != nil {
+		return -1
+	}
+	var count int
+	err = stmtCount.QueryRow(ID).Scan(&count)
+	if err != nil {
+		return -1
+	}
+	if count >= 10 {
+		return -1
+	}
+	update := count + 1
+	stmtUpdate, err := s.db.Prepare("UPDATE employee SET limitVac = ? WHERE id = ?")
+	if err != nil {
+		return -1
+	}
+	_, err = stmtUpdate.Exec(update, ID)
+	if err != nil {
+		return -1
+	}
+	return 0
 }
