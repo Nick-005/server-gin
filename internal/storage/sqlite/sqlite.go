@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -10,6 +11,16 @@ import (
 
 type Storage struct {
 	db *sql.DB
+}
+
+type RequestEmployee struct {
+	ID               int    `json:"ID"`
+	Limit            int    `json:"limit"`
+	NameOrganization string `json:"nameOrg"`
+	PhoneNumber      string `json:"phoneNumber"`
+	Email            string `json:"email"`
+	Geography        string `json:"geography"`
+	About            string `json:"about"`
 }
 
 type ResponseVac struct {
@@ -132,6 +143,72 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 	}
 	fmt.Println()
 	return result, nil
+}
+
+func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
+	const op = "storage.sqlite.Get.EmployeeByIDs"
+	var result RequestEmployee
+	stmtVacancy, err := s.db.Prepare("SELECT * FROM employee WHERE id = ?")
+	if err != nil {
+		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
+	}
+	_ = stmtVacancy
+
+	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.Limit, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.Geography, &result.About)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
+
+		} else {
+			return result, fmt.Errorf("%s: какая-то ошибка в получении работодателя по его id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
+	const op = "storage.sqlite.Get.VacancyByIDs"
+	var result ResponseVac
+	_, err := s.db.Prepare("SELECT * FROM vacancy WHERE id = ?")
+
+	if err != nil {
+		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
+	}
+
+	err = s.db.QueryRow("SELECT * FROM vacancy WHERE id = ?", ID).Scan(&result.ID, &result.Emp_ID, &result.Vac_Name, &result.Price, &result.Location, &result.Experience)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
+
+		} else {
+			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *Storage) AddEmployee(limitIsOver int, nameOrganization string, phoneNumber string, email string, geography string, about string) (int64, error) {
+	const op = "storage.sqlite.Add.Emp"
+	stmt, err := s.db.Prepare("INSERT INTO employee(limitVac ,nameOrganization,phoneNumber,email,geography,about) VALUES (?,?,?,?,?,?)")
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	res, err := stmt.Exec(limitIsOver, nameOrganization, phoneNumber, email, geography, about)
+	if err != nil {
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return -1, fmt.Errorf("%s: Произошла ошибка в добавлении данных в бд. Вероятно, такие данные уже пользуются", op)
+		}
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return id, nil
 }
 
 func (s *Storage) AddVacancy(employee_id int, name string, price int, location string, experience string) (int64, int64, error) {

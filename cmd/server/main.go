@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"main.go/internal/config"
@@ -18,6 +19,14 @@ type Vacancy_Body struct {
 	Experience string `json:"exp"`
 }
 
+type RequestEmployee struct {
+	NameOrganization string `json:"nameOrg"`
+	PhoneNumber      string `json:"phoneNumber"`
+	Email            string `json:"email"`
+	Geography        string `json:"geography"`
+	About            string `json:"about"`
+}
+
 func main() {
 	cfg := config.MustLoad()
 	storage, err := InitStorage(cfg)
@@ -26,8 +35,13 @@ func main() {
 	}
 	router := gin.Default()
 
-	router.GET("/vac", GetVacancy(storage))
+	router.GET("/vacs", GetVacancy(storage))
+	router.GET("/vac/:id", GetVacancyByID(storage))
+	router.GET("/emp/:id", GetEmployerByID(storage))
 	router.POST("/vac", PostVacancy(storage))
+
+	router.POST("/emp", PostEmployer(storage))
+
 	router.Run("localhost:4252")
 }
 
@@ -47,6 +61,28 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	return storage, nil
 }
 
+func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req RequestEmployee
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
+			return
+		}
+
+		id, err := storage.AddEmployee(0, req.NameOrganization, req.PhoneNumber, req.Email, req.Geography, req.About)
+		if err != nil {
+			ctx.JSON(200, "Error in method AddEmployee")
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"emp_id": id,
+			"status": "OK",
+		})
+
+	}
+
+}
+
 func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body Vacancy_Body
@@ -56,7 +92,7 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		}
 		vac_id, emp_limit, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Location, body.Experience)
 		if err != nil {
-			ctx.JSON(404, "ERROR IN GET ALL VACANCY in SQLITE")
+			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
 		}
 		if vac_id == -1 {
 			ctx.JSON(200, gin.H{
@@ -76,16 +112,60 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
+func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi(ctx.Param("id"))
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Error",
+				"info":   "Error in get id's from URL parametr! PLS check ur id",
+			})
+			return
+		}
+
+		res, err := storage.GetEmployee(id)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"status": "Error",
+				"info":   "Произошла какая-то ошибка в методе. Напишите об этом разработчику",
+			})
+			return
+		}
+		ctx.JSON(200, res)
+
+	}
+
+}
+
+func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi(ctx.Param("id"))
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Error",
+				"info":   "Error in get id's from URL parametr! PLS check ur id",
+			})
+			return
+		}
+		response, err := storage.VacancyByID(id)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"status": "Error",
+				"info":   "Произошла какая-то ошибка в методе. Напишите об этом разработчику",
+			})
+			return
+		}
+		ctx.JSON(200, response)
+
+	}
+
+}
+
 func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		cfg := config.MustLoad()
-		storage, err := sqlite.CreateVacancyTable(cfg.StoragePath)
-		if err != nil {
-			log.Fatal("error in CreateVacancy Table", err)
-		}
 		response, err := storage.GetAllVacancy()
 		if err != nil {
-			ctx.JSON(404, "ERROR IN GET ALL VACANCY in SQLITE")
+			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
 		}
 		ctx.JSON(200, response)
 	}
