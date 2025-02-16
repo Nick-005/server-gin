@@ -36,10 +36,13 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/vacs", GetVacancy(storage))
+
 	router.GET("/vac/:id", GetVacancyByID(storage))
 	router.GET("/emp/:id", GetEmployerByID(storage))
-	router.POST("/vac", PostVacancy(storage))
 
+	router.GET("/emp/vacs/:id", GetVacancyByEmployer(storage))
+
+	router.POST("/vac", PostVacancy(storage))
 	router.POST("/emp", PostEmployer(storage))
 
 	router.Run("localhost:4252")
@@ -59,6 +62,28 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 		return nil, fmt.Errorf("error in CreateVacancy Table")
 	}
 	return storage, nil
+}
+
+func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi(ctx.Param("id"))
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Error",
+				"info":   "Error in get id's from URL parametr! PLS check ur id",
+			})
+			return
+		}
+		result, err := storage.GetAllVacsForEmployee(id)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"status": "Error",
+				"info":   err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, result)
+	}
 }
 
 func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {

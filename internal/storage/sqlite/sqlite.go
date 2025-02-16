@@ -145,6 +145,36 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 	return result, nil
 }
 
+func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVac, error) {
+	const op = "storage.sqlite.Get.AllVacancy"
+	_, err := s.db.Prepare("SELECT * FROM vacancy WHERE employee_id = ?")
+	if err != nil {
+		fmt.Println("ERROR IN CREATING REQUEST OT DB!", op)
+		return nil, fmt.Errorf("ERROR IN CREATING REQUEST OT DB")
+	}
+	result := []ResponseVac{}
+	row, err := s.db.Query("SELECT * FROM vacancy WHERE employee_id = ?", emp_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
+
+		} else {
+			return result, fmt.Errorf("%s: какая-то ошибка в получении работодателя по его id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
+		}
+	}
+	for row.Next() {
+		r := ResponseVac{}
+		err := row.Scan(&r.ID, &r.Emp_ID, &r.Vac_Name, &r.Price, &r.Location, &r.Experience)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		// r.Status = resp.OK().Status
+		result = append(result, r)
+	}
+	return result, nil
+}
+
 func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	const op = "storage.sqlite.Get.EmployeeByIDs"
 	var result RequestEmployee
