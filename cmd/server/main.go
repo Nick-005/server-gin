@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,23 +20,31 @@ type Vacancy_Body struct {
 
 func main() {
 	cfg := config.MustLoad()
-	_, err := sqlite.CreateVacancyTable(cfg.StoragePath)
+	storage, err := InitStorage(cfg)
 	if err != nil {
-		log.Fatal("error in CreateVacancy Table", err)
-	}
-	_, err = sqlite.CreateEmployeeTable(cfg.StoragePath)
-	if err != nil {
-		log.Fatal("error in CreateVacancy Table", err)
-	}
-	storage, err := sqlite.CreateVacancyTable(cfg.StoragePath)
-	if err != nil {
-		log.Fatal("error in CreateVacancy Table", err)
+		log.Fatalln("Произошла ошибка в инициализации бд")
 	}
 	router := gin.Default()
 
 	router.GET("/vac", GetVacancy(storage))
 	router.POST("/vac", PostVacancy(storage))
-	router.Run("0.0.0.0:4252")
+	router.Run("localhost:4252")
+}
+
+func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
+	_, err := sqlite.CreateVacancyTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateVacancy Table")
+	}
+	_, err = sqlite.CreateEmployeeTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
+	storage, err := sqlite.CreateTableUser(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateVacancy Table")
+	}
+	return storage, nil
 }
 
 func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
@@ -56,6 +65,7 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 				"message":   "Employee has a limit",
 				"Emp_limit": emp_limit,
 			})
+			return
 		}
 		ctx.JSON(200, gin.H{
 			"Emp_limit": emp_limit,

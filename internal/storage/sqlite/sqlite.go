@@ -143,8 +143,8 @@ func (s *Storage) AddVacancy(employee_id int, name string, price int, location s
 		return -1, -1, fmt.Errorf("%s: %w\n\t error in try to prepare sql request", op, err)
 	}
 	limit := s.GetLimit(employee_id)
-	if limit != 0 {
-		return -1, -1, fmt.Errorf("%s: error in get limit", op)
+	if limit == -1 {
+		return -1, -1, fmt.Errorf("%s: The employer has reached the limit", op)
 	}
 
 	resultd, err := stmtVacancy.Exec(employee_id, name, price, location, experience)
@@ -154,21 +154,24 @@ func (s *Storage) AddVacancy(employee_id int, name string, price int, location s
 		}
 		return -1, -1, fmt.Errorf("%s: %w", op, err)
 	}
+
 	vac_id, err := resultd.LastInsertId()
 	if err != nil {
 		return -1, -1, fmt.Errorf("%s: %w", op, err)
 	}
+
 	return vac_id, int64(limit), nil
 }
 
 func (s *Storage) GetLimit(ID int) int {
 
-	stmtCount, err := s.db.Prepare("SELECT limitVac FROM employee WHERE id = ?")
+	_, err := s.db.Prepare("SELECT limitVac FROM employee WHERE id = ?")
 	if err != nil {
 		return -1
 	}
 	var count int
-	err = stmtCount.QueryRow(ID).Scan(&count)
+	row := s.db.QueryRow("SELECT limitVac FROM employee WHERE id = $1", ID)
+	err = row.Scan(&count)
 	if err != nil {
 		return -1
 	}
@@ -176,13 +179,13 @@ func (s *Storage) GetLimit(ID int) int {
 		return -1
 	}
 	update := count + 1
-	stmtUpdate, err := s.db.Prepare("UPDATE employee SET limitVac = ? WHERE id = ?")
+	_, err = s.db.Prepare("UPDATE employee SET limitVac = ? WHERE id = ?")
 	if err != nil {
 		return -1
 	}
-	_, err = stmtUpdate.Exec(update, ID)
+	_, err = s.db.Exec("UPDATE employee SET limitVac = $1 WHERE id = $2", update, ID)
 	if err != nil {
 		return -1
 	}
-	return 0
+	return update
 }
