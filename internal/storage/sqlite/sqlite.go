@@ -32,6 +32,33 @@ type ResponseVac struct {
 	Experience string `json:"exp"`
 }
 
+func CreateTokenTable(storagPath string) (*Storage, error) {
+	const op = "storage.sqlite.Token"
+	db, err := sql.Open("sqlite3", storagPath)
+	if err != nil {
+		return nil, fmt.Errorf("%s : %w", op, err)
+	}
+	stmtEmp, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS token(
+		id INTEGER PRIMARY KEY,
+		user_id INTEGER NOT NULL,
+		active_token TEXT NOT NULL, 
+		is_active INTEGER NOT NULL CHECK (is_active IN (0,1))
+		);
+		CREATE INDEX IF NOT EXISTS about ON token(user_id);
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmtEmp.Exec()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
 func CreateEmployeeTable(storagPath string) (*Storage, error) {
 	const op = "storage.sqlite.Emp"
 	db, err := sql.Open("sqlite3", storagPath)

@@ -57,6 +57,10 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error in CreateEmployee Table")
 	}
+	_, err = sqlite.CreateTokenTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
 	storage, err := sqlite.CreateTableUser(cfg.StoragePath)
 	if err != nil {
 		return nil, fmt.Errorf("error in CreateVacancy Table")
