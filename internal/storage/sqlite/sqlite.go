@@ -182,6 +182,18 @@ func CreateStatusTable(storagePath string) (*Storage, error) {
 		id INTEGER PRIMARY KEY,
 		name TEXT NOT NULL
 	);
+	INSERT INTO STATUS (id, name)
+	SELECT 1, 'Активный'
+	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
+
+	INSERT INTO STATUS (id, name)
+	SELECT 2, 'Неактивный'
+	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
+
+	INSERT INTO STATUS (id, name)
+	SELECT 3, 'Заблокированный'
+	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
+	
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
