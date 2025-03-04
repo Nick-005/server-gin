@@ -23,10 +23,10 @@ type Vacancy_Body struct {
 }
 
 type RequestAdd struct {
-	Email       string `json:"email" `
-	Password    string `json:"password"`
 	Name        string `json:"name"`
-	PhoneNumber string `json:"phone"`
+	PhoneNumber string `json:"number"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
 }
 
 type RequestEmployee struct {
@@ -63,7 +63,11 @@ func main() {
 
 	router.POST("/vac", PostVacancy(storage))
 	router.POST("/emp", PostEmployer(storage))
+
+	router.POST("/user", PostUser(storage))
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
 	router.Run("localhost:4252")
 }
 
@@ -98,6 +102,39 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	}
 
 	return storage, nil
+}
+
+// @Success 200 {string} PostUser
+// @Router /user [post]
+func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var body RequestAdd
+		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			return
+		}
+		uid, err := storage.AddUser(body.Email, body.Password, body.Name, body.PhoneNumber)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"Status": "Error",
+				"Info":   err.Error(),
+			})
+			return
+		}
+		token, err := storage.CreateAccessToken(body.Email)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"Status": "Error",
+				"Info":   err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"Status": "OK",
+			"Token":  token,
+			"UID":    uid,
+		})
+	}
 }
 
 // @Success 200 {string} GetVacancyByEmployer

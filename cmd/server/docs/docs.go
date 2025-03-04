@@ -51,6 +51,18 @@ const docTemplate = `{
                 }
             }
         },
+        "/user": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/vac": {
             "get": {
                 "responses": {

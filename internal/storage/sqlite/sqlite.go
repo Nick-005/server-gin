@@ -150,7 +150,7 @@ func CreateTableUser(storagePath string) (*Storage, error) {
 		email TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL,
 		resume_id INTEGER,
-		status_id INTEGER NOT NULL,
+		status_id INTEGER,
 		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE,
 		FOREIGN KEY (resume_id) REFERENCES resume(id)
 	);
@@ -450,7 +450,7 @@ func CreateToken(email string) (string, error) {
 	payload.Iss = "Nick005-aka-monkeyZV"
 	payload.Sub = email
 	payload.Iat = time.Now().Unix()
-	payload.Exp = time.Now().Add(time.Second * 60).Unix()
+	payload.Exp = time.Now().Add(time.Hour * 4).Unix()
 
 	headerJSON, err := json.Marshal(header)
 	if err != nil {
@@ -476,28 +476,13 @@ func CreateToken(email string) (string, error) {
 	return tokenJWT, nil
 }
 
-func (s *Storage) CreateAccessToken(email string, uid int) (int, string, error) {
-	const op = "sqlite.CreateAccessToken.user"
+func (s *Storage) CreateAccessToken(email string) (string, error) {
+	const op = "sqlite.CreateAccessToken.User"
 	token, err := CreateToken(email)
 	if err != nil {
-		return -1, "error", err
+		return "Error", fmt.Errorf("%s: %w", op, err)
 	}
-	stmtUser, err := s.db.Prepare("INSERT INTO token(user_id, active_token, is_active) VALUES (?,?,?)")
-	if err != nil {
-		return -1, "error", fmt.Errorf("%s: %w", op, err)
-	}
-	indexd, err := stmtUser.Exec(uid, token, 1)
-	if err != nil {
-		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return -1, "error", fmt.Errorf("%s: %w", op, err)
-		}
-		return -1, "error", fmt.Errorf("%s: %w", op, err)
-	}
-	user_id, err := indexd.LastInsertId()
-	if err != nil {
-		return -1, "error", fmt.Errorf("%s: %w", op, err)
-	}
-	return int(user_id), token, nil
+	return token, nil
 }
 
 func (s *Storage) AddUser(email string, password string, name string, phoneNumber string) (int, error) {
@@ -513,6 +498,7 @@ func (s *Storage) AddUser(email string, password string, name string, phoneNumbe
 		}
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}
+
 	uid, err := indexd.LastInsertId()
 	if err != nil {
 		return -1, fmt.Errorf("%s: %w", op, err)
