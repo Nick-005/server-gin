@@ -1,10 +1,15 @@
 package sqlite
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/mattn/go-sqlite3"
 )
@@ -421,4 +426,96 @@ func (s *Storage) GetLimit(ID int) int {
 		return -1
 	}
 	return update
+}
+
+func CreateToken(email string) (string, error) {
+	type Header struct {
+		Alg string `json:"alg"` // Алгоритм подписи
+		Typ string `json:"typ"` // Тип токена
+	}
+
+	type Payload struct {
+		Iss string `json:"iss"`
+		Sub string `json:"sub"` // Subject (обычно идентификатор пользователя)
+		Iat int64  `json:"iat"` // Issued at - время в которое был выдан токен
+		Exp int64  `json:"exp"` // Время истечения токена (в Unix timestamp)
+	}
+	var secretKEY string = "ISP-7-21-borodinna"
+
+	var header Header
+	header.Alg = "HS256"
+	header.Typ = "JWT"
+
+	var payload Payload
+	payload.Iss = "Nick005-aka-monkeyZV"
+	payload.Sub = email
+	payload.Iat = time.Now().Unix()
+	payload.Exp = time.Now().Add(time.Second * 60).Unix()
+
+	headerJSON, err := json.Marshal(header)
+	if err != nil {
+		return "error", fmt.Errorf("error in converting HEADER to JSON")
+	}
+	headerBASE64 := base64.RawURLEncoding.Strict().EncodeToString(headerJSON)
+
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return "error", fmt.Errorf("error in converting PAYLOAD to JSON")
+	}
+	payloadBASE64 := base64.RawURLEncoding.Strict().EncodeToString(payloadJSON)
+
+	// создаем подпись для JWTшки
+	signaturePayAndHeader := fmt.Sprintf("%s.%s", headerBASE64, payloadBASE64)
+
+	h := hmac.New(sha256.New, []byte(secretKEY))
+	h.Write([]byte(signaturePayAndHeader))
+	var signature string = base64.RawStdEncoding.EncodeToString(h.Sum(nil))
+
+	var tokenJWT string = fmt.Sprintf("%s.%s.%s", headerBASE64, payloadBASE64, signature)
+
+	return tokenJWT, nil
+}
+
+func (s *Storage) CreateAccessToken(email string, uid int) (int, string, error) {
+	const op = "sqlite.CreateAccessToken.user"
+	token, err := CreateToken(email)
+	if err != nil {
+		return -1, "error", err
+	}
+	stmtUser, err := s.db.Prepare("INSERT INTO token(user_id, active_token, is_active) VALUES (?,?,?)")
+	if err != nil {
+		return -1, "error", fmt.Errorf("%s: %w", op, err)
+	}
+	indexd, err := stmtUser.Exec(uid, token, 1)
+	if err != nil {
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return -1, "error", fmt.Errorf("%s: %w", op, err)
+		}
+		return -1, "error", fmt.Errorf("%s: %w", op, err)
+	}
+	user_id, err := indexd.LastInsertId()
+	if err != nil {
+		return -1, "error", fmt.Errorf("%s: %w", op, err)
+	}
+	return int(user_id), token, nil
+}
+
+func (s *Storage) AddUser(email string, password string, name string, phoneNumber string) (int, error) {
+	const op = "storage.sqlite.Add.User"
+	stmtUser, err := s.db.Prepare("INSERT INTO user(email, password, name , phoneNumber) VALUES (?,?,?,?)")
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	indexd, err := stmtUser.Exec(email, password, name, phoneNumber)
+	if err != nil {
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return -1, fmt.Errorf("%s: %s", op, "такой пользователь уже существует!")
+		}
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	uid, err := indexd.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return int(uid), nil
 }

@@ -22,6 +22,13 @@ type Vacancy_Body struct {
 	Experience string `json:"exp"`
 }
 
+type RequestAdd struct {
+	Email       string `json:"email" `
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone"`
+}
+
 type RequestEmployee struct {
 	NameOrganization string `json:"nameOrg"`
 	PhoneNumber      string `json:"phoneNumber"`
