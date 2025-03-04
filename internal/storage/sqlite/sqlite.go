@@ -32,6 +32,75 @@ type ResponseVac struct {
 	Experience string `json:"exp"`
 }
 
+// done
+func CreateVacancyTable(storagePath string) (*Storage, error) {
+	const op = "storage.sqlite.New"
+	db, err := sql.Open("sqlite3", storagePath)
+	if err != nil {
+		return nil, fmt.Errorf("%s : %w", op, err)
+	}
+
+	stmtVacancy, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS vacancy(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			emp_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			price REAL,
+			mail TEXT,
+			phoneNumber TEXT,
+			location TEXT,
+			experience_id INTEGER,
+			aboutWork TEXT,
+			is_visible BOOLEAN DEFAULT TRUE,
+			FOREIGN KEY (emp_id) REFERENCES employer(id) ON DELETE CASCADE,
+			FOREIGN KEY (experience_id) REFERENCES experience(id)
+	);
+	
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmtVacancy.Exec()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
+// done
+func CreateResponeVacTable(storagPath string) (*Storage, error) {
+	const op = "storage.sqlite.Response"
+	db, err := sql.Open("sqlite3", storagPath)
+	if err != nil {
+		return nil, fmt.Errorf("%s : %w", op, err)
+	}
+	stmtResp, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS response(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL, 
+		vacancy_id INTEGER NOT NULL,
+		created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now')),
+		status_id INTEGER NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+		FOREIGN KEY (vacancy_id) REFERENCES vacancy(id) ON DELETE CASCADE,
+		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE
+		);
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = stmtResp.Exec()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
+// done
 func CreateEmployeeTable(storagPath string) (*Storage, error) {
 	const op = "storage.sqlite.Emp"
 	db, err := sql.Open("sqlite3", storagPath)
@@ -39,15 +108,15 @@ func CreateEmployeeTable(storagPath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s : %w", op, err)
 	}
 	stmtEmp, err := db.Prepare(`
-	CREATE TABLE IF NOT EXISTS employee(
+	CREATE TABLE IF NOT EXISTS employer(
 		id INTEGER PRIMARY KEY,
-		limitVac INTEGER,
 		nameOrganization TEXT NOT NULL UNIQUE,
 		phoneNumber TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE ,
-		geography TEXT NOT NULL,
-		about TEXT);
-		CREATE INDEX IF NOT EXISTS about ON employee(about);
+		INN TEXT NOT NULL,
+		about TEXT,
+		limitVac INTEGER);
+		CREATE INDEX IF NOT EXISTS about ON employer(limitVac);
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -61,6 +130,7 @@ func CreateEmployeeTable(storagPath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
+// done
 func CreateTableUser(storagePath string) (*Storage, error) {
 	const op = "storage.sqlite.New.User"
 	db, err := sql.Open("sqlite3", storagePath)
@@ -70,11 +140,18 @@ func CreateTableUser(storagePath string) (*Storage, error) {
 	res, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS user(
 		id INTEGER PRIMARY KEY,
+		name TEXT NOT NULL,
+		phoneNumber TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL,
-		name TEXT NOT NULL,
-		phoneNumber TEXT NOT NULL UNIQUE
-	)
+		resume_id INTEGER,
+		status_id INTEGER NOT NULL,
+		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE,
+		FOREIGN KEY (resume_id) REFERENCES resume(id)
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_user_status_id ON user(status_id);
+	CREATE INDEX IF NOT EXISTS idx_user_resume_id ON user(resume_id);
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -88,28 +165,77 @@ func CreateTableUser(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-func CreateVacancyTable(storagePath string) (*Storage, error) {
-	const op = "storage.sqlite.New"
+// done
+func CreateStatusTable(storagePath string) (*Storage, error) {
+	const op = "storage.sqlite.New.Status"
 	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s : %w", op, err)
 	}
-
-	stmtVacancy, err := db.Prepare(`
-	CREATE TABLE IF NOT EXISTS vacancy(
+	res, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS status(
 		id INTEGER PRIMARY KEY,
-		employee_id INTEGER,
-		name TEXT NOT NULL,
-		price INTEGER,
-		location TEXT NOT NULL,
-		experience TEXT);
-		CREATE INDEX IF NOT EXISTS price ON vacancy(price);
+		name TEXT NOT NULL
+	);
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = stmtVacancy.Exec()
+	_, err = res.Exec()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
+// done
+func CreateResumeTable(storagePath string) (*Storage, error) {
+	const op = "storage.sqlite.New.Resume"
+	db, err := sql.Open("sqlite3", storagePath)
+	if err != nil {
+		return nil, fmt.Errorf("%s : %w", op, err)
+	}
+	res, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS resume(
+		id INTEGER PRIMARY KEY,
+		experience_id INTEGER,
+		description TEXT NOT NULL,
+		FOREIGN KEY (experience_id) REFERENCES experience(id)
+	);
+	CREATE INDEX IF NOT EXISTS idx_resume_id ON user(experience_id);
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = res.Exec()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
+// done
+func CreateExperienceTable(storagePath string) (*Storage, error) {
+	const op = "storage.sqlite.New.Experience"
+	db, err := sql.Open("sqlite3", storagePath)
+	if err != nil {
+		return nil, fmt.Errorf("%s : %w", op, err)
+	}
+	res, err := db.Prepare(`
+	CREATE TABLE IF NOT EXISTS experience(
+		id INTEGER PRIMARY KEY,
+		name TEXT NOT NULL
+	);
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = res.Exec()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

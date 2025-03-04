@@ -7,6 +7,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files" // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger"
+	docs "main.go/cmd/server/docs"
 	"main.go/internal/config"
 	"main.go/internal/storage/sqlite"
 )
@@ -27,6 +30,15 @@ type RequestEmployee struct {
 	About            string `json:"about"`
 }
 
+// @BasePath /api/v1
+
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
 func main() {
 	cfg := config.MustLoad()
 	storage, err := InitStorage(cfg)
@@ -34,7 +46,7 @@ func main() {
 		log.Fatalln("Произошла ошибка в инициализации бд")
 	}
 	router := gin.Default()
-
+	docs.SwaggerInfo.BasePath = "api/v1"
 	router.GET("/vacs", GetVacancy(storage))
 
 	router.GET("/vac/:id", GetVacancyByID(storage))
@@ -44,7 +56,7 @@ func main() {
 
 	router.POST("/vac", PostVacancy(storage))
 	router.POST("/emp", PostEmployer(storage))
-
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	router.Run("localhost:4252")
 }
 
@@ -53,17 +65,36 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error in CreateVacancy Table")
 	}
+	_, err = sqlite.CreateResponeVacTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
 	_, err = sqlite.CreateEmployeeTable(cfg.StoragePath)
 	if err != nil {
 		return nil, fmt.Errorf("error in CreateEmployee Table")
 	}
-	storage, err := sqlite.CreateTableUser(cfg.StoragePath)
+	_, err = sqlite.CreateTableUser(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
+	_, err = sqlite.CreateStatusTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
+	_, err = sqlite.CreateExperienceTable(cfg.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("error in CreateEmployee Table")
+	}
+	storage, err := sqlite.CreateResumeTable(cfg.StoragePath)
 	if err != nil {
 		return nil, fmt.Errorf("error in CreateVacancy Table")
 	}
+
 	return storage, nil
 }
 
+// @Success 200 {string} GetVacancyByEmployer
+// @Router /emp/vacs/id [get]
 func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
@@ -86,6 +117,8 @@ func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
+// @Success 200 {string} PostEmployer
+// @Router /emp [post]
 func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req RequestEmployee
@@ -108,6 +141,8 @@ func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
+// @Success 200 {string} PostVacancy
+// @Router /vac [post]
 func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body Vacancy_Body
@@ -137,6 +172,8 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
+// @Success 200 {string} GetEmployerByID
+// @Router /emp/:id [get]
 func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
@@ -162,6 +199,8 @@ func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
+// @Success 200 {string} GetVacancyByID
+// @Router /vac/:id [get]
 func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
@@ -186,6 +225,8 @@ func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
+// @Success 200 {string} GetVacancy
+// @Router /vac [get]
 func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := storage.GetAllVacancy()
