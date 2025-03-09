@@ -47,7 +47,7 @@ func CreateVacancyTable(storagePath string) (*Storage, error) {
 
 	stmtVacancy, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS vacancy(
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id INTEGER PRIMARY KEY,
 			emp_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
 			price REAL,
@@ -83,7 +83,7 @@ func CreateResponeVacTable(storagPath string) (*Storage, error) {
 	}
 	stmtResp, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS response(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY,
 		user_id INTEGER NOT NULL, 
 		vacancy_id INTEGER NOT NULL,
 		created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now')),
@@ -173,33 +173,54 @@ func CreateTableUser(storagePath string) (*Storage, error) {
 // done
 func CreateStatusTable(storagePath string) (*Storage, error) {
 	const op = "storage.sqlite.New.Status"
+
 	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s : %w", op, err)
 	}
-	res, err := db.Prepare(`
+
+	// Создаем таблицу
+	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS status(
 		id INTEGER PRIMARY KEY,
 		name TEXT NOT NULL
-	);
-	INSERT INTO STATUS (id, name)
-	SELECT 1, 'Активный'
-	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
-
-	INSERT INTO STATUS (id, name)
-	SELECT 2, 'Неактивный'
-	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
-
-	INSERT INTO STATUS (id, name)
-	SELECT 3, 'Заблокированный'
-	WHERE NOT EXISTS (SELECT 1 FROM STATUS);
-	
-	`)
+	);`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = res.Exec()
+	// Добавляем начальные значения
+	_, err = db.Exec(`
+	INSERT INTO status (id, name) VALUES (1, 'Заблокирован')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO status (id, name) VALUES (2, 'Активен')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO status (id, name) VALUES (3, 'Требует активации')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO status (id, name) VALUES (4, 'Приглашение')
+	ON CONFLICT (id) DO NOTHING;
+
+	INSERT INTO status (id, name) VALUES (5, 'Отказано')
+	ON CONFLICT (id) DO NOTHING;
+
+	INSERT INTO status (id, name) VALUES (6, 'Ожидание')
+	ON CONFLICT (id) DO NOTHING;
+
+	INSERT INTO status (id, name) VALUES (7, 'Активный поиск')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO status (id, name) VALUES (8, 'Рассматриваю предложения')
+	ON CONFLICT (id) DO NOTHING;
+
+	INSERT INTO status (id, name) VALUES (9, 'Предложили работу, пока думаю')
+	ON CONFLICT (id) DO NOTHING;
+
+	INSERT INTO status (id, name) VALUES (10, 'Не ищу работу')
+	ON CONFLICT (id) DO NOTHING;
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -242,7 +263,7 @@ func CreateExperienceTable(storagePath string) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s : %w", op, err)
 	}
-	res, err := db.Prepare(`
+	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS experience(
 		id INTEGER PRIMARY KEY,
 		name TEXT NOT NULL
@@ -252,7 +273,21 @@ func CreateExperienceTable(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = res.Exec()
+	// Добавляем начальные значения
+	_, err = db.Exec(`
+	INSERT INTO experience (id, name) VALUES (1, 'Без опыта')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO experience (id, name) VALUES (2, '1-3 года')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO experience (id, name) VALUES (3, '3-5 лет')
+	ON CONFLICT (id) DO NOTHING;
+	
+	INSERT INTO experience (id, name) VALUES (4, 'Более 5 лет')
+	ON CONFLICT (id) DO NOTHING;
+	
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
