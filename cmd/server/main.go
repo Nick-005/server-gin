@@ -22,6 +22,11 @@ type Vacancy_Body struct {
 	Experience string `json:"exp"`
 }
 
+type RequestVac struct {
+	Limit   int `json:"limit"`
+	Last_id int `json:"last_id"`
+}
+
 type RequestAdd struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"number"`
@@ -54,7 +59,7 @@ func main() {
 	}
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "api/v1"
-	router.GET("/vacs", GetVacancy(storage))
+	router.GET("/vacs", GetAllVacancy(storage))
 
 	router.GET("/vac/:id", GetVacancyByID(storage))
 	router.GET("/emp/:id", GetEmployerByID(storage))
@@ -271,9 +276,27 @@ func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 
 // @Success 200 {string} GetVacancy
 // @Router /vac [get]
-func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := storage.GetAllVacancy()
+		if err != nil {
+			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
+		}
+		ctx.JSON(200, response)
+	}
+
+}
+
+// @Success 200 {string} GetVacancy
+// @Router /vac [get]
+func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var body RequestVac
+		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			return
+		}
+		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
 			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
 		}

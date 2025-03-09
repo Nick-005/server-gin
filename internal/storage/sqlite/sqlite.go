@@ -29,6 +29,19 @@ type RequestEmployee struct {
 }
 
 type ResponseVac struct {
+	ID          int    `json:"ID"`
+	Emp_ID      int    `json:"emp_id"`
+	Vac_Name    string `json:"vac_name"`
+	Price       int    `json:"price"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	Location    string `json:"location"`
+	Experience  string `json:"exp"`
+	About       string `json:"about"`
+	Is_visible  int    `json:"is_visible"`
+}
+
+type ResponseSearchVac struct {
 	ID         int    `json:"ID"`
 	Emp_ID     int    `json:"emp_id"`
 	Vac_Name   string `json:"vac_name"`
@@ -51,7 +64,7 @@ func CreateVacancyTable(storagePath string) (*Storage, error) {
 			emp_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
 			price REAL,
-			mail TEXT,
+			email TEXT,
 			phoneNumber TEXT,
 			location TEXT,
 			experience_id INTEGER,
@@ -394,6 +407,39 @@ func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
 		} else {
 			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
 		}
+	}
+
+	return result, nil
+}
+
+func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseSearchVac, error) {
+	const op = "storage.sqlite.Get.VacancyByIDs"
+	var result []ResponseSearchVac
+	_, err := s.db.Prepare("SELECT * FROM vacancy where id > ? order by id limit ?")
+
+	if err != nil {
+		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
+	}
+
+	rows, err := s.db.Query("SELECT * FROM vacancy where id > ? order by id limit ?", last_id, limit)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return result, fmt.Errorf("%s: ошибка в бд (xdd). %w", op, err)
+
+		} else {
+			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd. %w", op, err)
+		}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		vac := ResponseSearchVac{}
+		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name, &vac.Price, &vac.Location, &vac.Experience)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		result = append(result, vac)
 	}
 
 	return result, nil
