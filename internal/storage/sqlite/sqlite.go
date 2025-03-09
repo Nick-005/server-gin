@@ -534,11 +534,12 @@ func (s *Storage) CreateAccessToken(email string) (string, error) {
 
 func (s *Storage) AddUser(email string, password string, name string, phoneNumber string) (int, error) {
 	const op = "storage.sqlite.Add.User"
-	stmtUser, err := s.db.Prepare("INSERT INTO user(email, password, name , phoneNumber) VALUES (?,?,?,?)")
+	stmtUser, err := s.db.Prepare("INSERT INTO user(email, password, name , phoneNumber, status_id) VALUES (?,?,?,?,?)")
 	if err != nil {
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}
-	indexd, err := stmtUser.Exec(email, password, name, phoneNumber)
+	defer stmtUser.Close()
+	indexd, err := stmtUser.Exec(email, password, name, phoneNumber, 8)
 	if err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return -1, fmt.Errorf("%s: %s", op, "такой пользователь уже существует!")

@@ -50,7 +50,7 @@ func main() {
 	cfg := config.MustLoad()
 	storage, err := InitStorage(cfg)
 	if err != nil {
-		log.Fatalln("Произошла ошибка в инициализации бд")
+		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "api/v1"
@@ -78,27 +78,27 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	}
 	_, err = sqlite.CreateResponeVacTable(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table")
+		return nil, fmt.Errorf("error in CreateResponeVacTable Table. %w", err)
 	}
 	_, err = sqlite.CreateEmployeeTable(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table")
+		return nil, fmt.Errorf("error in CreateEmployee Table. %w", err)
 	}
 	_, err = sqlite.CreateTableUser(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table")
+		return nil, fmt.Errorf("error in CreateTableUser Table. %w", err)
 	}
 	_, err = sqlite.CreateStatusTable(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table")
+		return nil, fmt.Errorf("error in CreateStatusTable Table. %w", err)
 	}
 	_, err = sqlite.CreateExperienceTable(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table")
+		return nil, fmt.Errorf("error in CreateExperienceTable Table. %w", err)
 	}
 	storage, err := sqlite.CreateResumeTable(cfg.StoragePath)
 	if err != nil {
-		return nil, fmt.Errorf("error in CreateVacancy Table")
+		return nil, fmt.Errorf("error in CreateResumeTable Table. %w", err)
 	}
 
 	return storage, nil
