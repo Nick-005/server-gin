@@ -15,11 +15,15 @@ import (
 )
 
 type Vacancy_Body struct {
-	Emp_ID     int    `json:"emp_id"`
-	Vac_Name   string `json:"vac_name"`
-	Price      int    `json:"price"`
-	Location   string `json:"location"`
-	Experience string `json:"exp"`
+	Emp_ID      int    `json:"emp_id"`
+	Vac_Name    string `json:"vac_name"`
+	Price       int    `json:"price"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	Location    string `json:"location"`
+	Experience  string `json:"exp"`
+	About       string `json:"about"`
+	Is_visible  int    `json:"is_visible"`
 }
 
 type RequestVac struct {
@@ -38,8 +42,7 @@ type RequestEmployee struct {
 	NameOrganization string `json:"nameOrg"`
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
-	Geography        string `json:"geography"`
-	About            string `json:"about"`
+	INN              string `json:"inn"`
 }
 
 // @BasePath /api/v1
@@ -59,7 +62,10 @@ func main() {
 	}
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "api/v1"
-	router.GET("/vacs", GetAllVacancy(storage))
+
+	router.GET("/all/vacs", GetAllVacancy(storage))
+
+	router.GET("/vac", GetVacancy(storage))
 
 	router.GET("/vac/:id", GetVacancyByID(storage))
 	router.GET("/emp/:id", GetEmployerByID(storage))
@@ -73,7 +79,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("localhost:4252")
+	router.Run("localhost:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -175,10 +181,13 @@ func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
 			return
 		}
-
-		id, err := storage.AddEmployee(0, req.NameOrganization, req.PhoneNumber, req.Email, req.Geography, req.About)
+		// status = 1  == Заблокирован
+		// status = 2  == Активен																  |
+		// status = 3  == Требует активации.													  |
+		// В данном случае, у нас по умолчанию будет работодателю требоваться активация аккаунта  V
+		id, err := storage.AddEmployee(req.NameOrganization, req.PhoneNumber, req.Email, req.INN, 3)
 		if err != nil {
-			ctx.JSON(200, "Error in method AddEmployee")
+			ctx.JSON(200, fmt.Errorf("error in add employer. Error is: %w", err).Error())
 			return
 		}
 		ctx.JSON(200, gin.H{
@@ -298,7 +307,7 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		}
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
-			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
+			ctx.JSON(200, fmt.Errorf("error in GET vacancies! %w", err))
 		}
 		ctx.JSON(200, response)
 	}

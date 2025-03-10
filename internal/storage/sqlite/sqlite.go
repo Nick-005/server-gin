@@ -24,6 +24,7 @@ type RequestEmployee struct {
 	NameOrganization string `json:"nameOrg"`
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
+	INN              string `json:"inn"`
 	Geography        string `json:"geography"`
 	About            string `json:"about"`
 }
@@ -128,12 +129,13 @@ func CreateEmployeeTable(storagPath string) (*Storage, error) {
 	stmtEmp, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS employer(
 		id INTEGER PRIMARY KEY,
-		nameOrganization TEXT NOT NULL UNIQUE,
+		nameOrganization TEXT NOT NULL,
 		phoneNumber TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE ,
-		INN TEXT NOT NULL,
-		about TEXT,
-		limitVac INTEGER);
+		INN TEXT NOT NULL UNIQUE,
+		status_id INTEGER,
+		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE
+		);
 		CREATE INDEX IF NOT EXISTS about ON employer(limitVac);
 	`)
 	if err != nil {
@@ -375,11 +377,11 @@ func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	}
 	_ = stmtVacancy
 
-	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.Limit, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.Geography, &result.About)
+	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.Limit, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.INN, &result.Geography, &result.About)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
+			return result, fmt.Errorf("%s: %w", op, err)
 
 		} else {
 			return result, fmt.Errorf("%s: какая-то ошибка в получении работодателя по его id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
@@ -445,13 +447,13 @@ func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseSearchVac, error
 	return result, nil
 }
 
-func (s *Storage) AddEmployee(limitIsOver int, nameOrganization string, phoneNumber string, email string, geography string, about string) (int64, error) {
+func (s *Storage) AddEmployee(nameOrganization string, phoneNumber string, email string, inn string, statusID int) (int64, error) {
 	const op = "storage.sqlite.Add.Emp"
-	stmt, err := s.db.Prepare("INSERT INTO employee(limitVac ,nameOrganization,phoneNumber,email,geography,about) VALUES (?,?,?,?,?,?)")
+	stmt, err := s.db.Prepare("INSERT INTO employer(nameOrganization,phoneNumber,email,INN,status_id) VALUES (?,?,?,?,?)")
 	if err != nil {
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}
-	res, err := stmt.Exec(limitIsOver, nameOrganization, phoneNumber, email, geography, about)
+	res, err := stmt.Exec(nameOrganization, phoneNumber, email, inn, statusID)
 	if err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return -1, fmt.Errorf("%s: Произошла ошибка в добавлении данных в бд. Вероятно, такие данные уже пользуются", op)
