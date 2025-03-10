@@ -21,9 +21,9 @@ type Vacancy_Body struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phoneNumber"`
 	Location    string `json:"location"`
-	Experience  string `json:"exp"`
+	Experience  int    `json:"exp"`
 	About       string `json:"about"`
-	Is_visible  int    `json:"is_visible"`
+	Is_visible  bool   `json:"is_visible"`
 }
 
 type RequestVac struct {
@@ -208,21 +208,12 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
 			return
 		}
-		vac_id, emp_limit, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Location, body.Experience)
+		vac_id, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Email, body.PhoneNumber, body.Location, body.Experience, body.About, body.Is_visible)
 		if err != nil {
-			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
-		}
-		if vac_id == -1 {
-			ctx.JSON(200, gin.H{
-				"vacancyID": vac_id,
-				"status":    "Error",
-				"message":   "Employee has a limit",
-				"Emp_limit": emp_limit,
-			})
+			ctx.JSON(200, fmt.Errorf("error in add vacancy! Error is: %w", err).Error())
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"Emp_limit": emp_limit,
 			"vacancyID": vac_id,
 			"status":    "Success",
 		})
@@ -273,7 +264,7 @@ func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(400, gin.H{
 				"status": "Error",
-				"info":   "Произошла какая-то ошибка в методе. Напишите об этом разработчику",
+				"info":   fmt.Errorf("ошибка: %w", err).Error(),
 			})
 			return
 		}
@@ -289,7 +280,8 @@ func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := storage.GetAllVacancy()
 		if err != nil {
-			ctx.JSON(200, "ERROR IN GET ALL VACANCY in SQLITE")
+			ctx.JSON(200, fmt.Errorf("ERROR IN GET ALL VACANCY in SQLITE. %w", err).Error())
+			return
 		}
 		ctx.JSON(200, response)
 	}
@@ -307,7 +299,7 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		}
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
-			ctx.JSON(200, fmt.Errorf("error in GET vacancies! %w", err))
+			ctx.JSON(200, fmt.Errorf("error in GET vacancies! %w", err).Error())
 		}
 		ctx.JSON(200, response)
 	}

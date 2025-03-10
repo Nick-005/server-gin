@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/mattn/go-sqlite3"
@@ -39,7 +38,7 @@ type ResponseVac struct {
 	Location    string `json:"location"`
 	Experience  string `json:"exp"`
 	About       string `json:"about"`
-	Is_visible  int    `json:"is_visible"`
+	Is_visible  bool   `json:"is_visible"`
 }
 
 type ResponseSearchVac struct {
@@ -311,22 +310,22 @@ func CreateExperienceTable(storagePath string) (*Storage, error) {
 }
 
 func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
-
+	result := []ResponseVac{}
 	const op = "storage.sqlite.Get.AllVacancy"
 	_, err := s.db.Prepare("SELECT * FROM vacancy")
 	if err != nil {
-		fmt.Println("ERROR IN CREATING REQUEST OT DB!", op)
-		log.Fatal(1)
+		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
+		return result, fmt.Errorf("error in creating request to DB")
 	}
-	result := []ResponseVac{}
+
 	row, err := s.db.Query("SELECT * FROM vacancy")
 	if err != nil {
 		fmt.Println(err, "Error")
-		return nil, nil
+		return nil, fmt.Errorf("error in exec sql script")
 	}
 	for row.Next() {
 		r := ResponseVac{}
-		err := row.Scan(&r.ID, &r.Emp_ID, &r.Vac_Name, &r.Price, &r.Location, &r.Experience)
+		err := row.Scan(&r.ID, &r.Emp_ID, &r.Vac_Name, &r.Price, &r.Email, &r.PhoneNumber, &r.Location, &r.Experience, &r.About, &r.Is_visible)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -400,14 +399,17 @@ func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
 		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
 	}
 
-	err = s.db.QueryRow("SELECT * FROM vacancy WHERE id = ?", ID).Scan(&result.ID, &result.Emp_ID, &result.Vac_Name, &result.Price, &result.Location, &result.Experience)
+	err = s.db.QueryRow("SELECT * FROM vacancy WHERE id = ?", ID).Scan(
+		&result.ID, &result.Emp_ID, &result.Vac_Name,
+		&result.Price, &result.Email, &result.PhoneNumber, &result.Location,
+		&result.Experience, &result.About, &result.Is_visible)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
+			return result, fmt.Errorf("%s: %w", op, err)
 
 		} else {
-			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
+			return result, fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
@@ -467,33 +469,32 @@ func (s *Storage) AddEmployee(nameOrganization string, phoneNumber string, email
 	return id, nil
 }
 
-func (s *Storage) AddVacancy(employee_id int, name string, price int, location string, experience string) (int64, int64, error) {
+func (s *Storage) AddVacancy(employee_id int, name string, price int, email string, phoneNumber string,
+	location string, experience int, about string, visible bool) (int64, error) {
+
 	const op = "storage.sqlite.Add.Vacancy"
 
-	stmtVacancy, err := s.db.Prepare("INSERT INTO vacancy(employee_id,name ,price,location,experience) VALUES (?,?,?,?,?)")
+	stmtVacancy, err := s.db.Prepare("INSERT INTO vacancy(emp_id,name ,price,email,phoneNumber,location, experience_id, aboutWork, is_visible)" +
+		"VALUES (?,?,?,?,?,?,?,?,?)")
 
 	if err != nil {
-		return -1, -1, fmt.Errorf("%s: %w\n\t error in try to prepare sql request", op, err)
-	}
-	limit := s.GetLimit(employee_id)
-	if limit == -1 {
-		return -1, -1, fmt.Errorf("%s: The employer has reached the limit", op)
+		return -1, fmt.Errorf("%s: %w\n\t error in try to prepare sql request", op, err)
 	}
 
-	resultd, err := stmtVacancy.Exec(employee_id, name, price, location, experience)
+	resultd, err := stmtVacancy.Exec(employee_id, name, price, email, phoneNumber, location, experience, about, visible)
 	if err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return -1, -1, fmt.Errorf("%s: error in try to get sqlite", op)
+			return -1, fmt.Errorf("%s: error in try to get sqlite", op)
 		}
-		return -1, -1, fmt.Errorf("%s: %w", op, err)
+		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 
 	vac_id, err := resultd.LastInsertId()
 	if err != nil {
-		return -1, -1, fmt.Errorf("%s: %w", op, err)
+		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return vac_id, int64(limit), nil
+	return vac_id, nil
 }
 
 func (s *Storage) GetLimit(ID int) int {
