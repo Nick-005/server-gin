@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	swaggerfiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 	docs "main.go/cmd/server/docs"
@@ -45,6 +47,8 @@ type RequestEmployee struct {
 	INN              string `json:"inn"`
 }
 
+const secretKEY = "ISP-7-21-borodinna"
+
 // @BasePath /api/v1
 
 // PingExample godoc
@@ -62,6 +66,8 @@ func main() {
 	}
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "api/v1"
+
+	router.GET("/token/check", GetTimeToken(storage))
 
 	router.GET("/all/vacs", GetAllVacancy(storage))
 
@@ -113,6 +119,51 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	}
 
 	return storage, nil
+}
+
+// @Success 200 {string} GetTimeToken
+// @Router /token/check [get]
+func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
+			ctx.JSON(401, gin.H{"error": "Authorization header is required"})
+			return
+		}
+
+		// Проверяем, что заголовок начинается с "Bearer "
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ctx.JSON(401, gin.H{"error": "Invalid authorization format"})
+			return
+		}
+
+		// Извлекаем токен, удаляя "Bearer " из строки
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return secretKEY, nil
+		})
+		if err != nil {
+			ctx.JSON(200, fmt.Errorf("ошибка в получении токена из запроса. Проверьте на ошибки свой запрос! Err: %w", err).Error())
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			fmt.Println(claims["exp"])
+			ctx.JSON(200, gin.H{
+				"status":      "OK",
+				"token":       "valid",
+				"expiredTime": claims["exp"],
+			})
+		} else {
+			ctx.JSON(200, fmt.Errorf("ошибка в валидации токена! Err: %w", err).Error())
+			return
+		}
+
+	}
 }
 
 // @Success 200 {string} PostUser

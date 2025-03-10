@@ -548,7 +548,7 @@ func CreateToken(email string) (string, error) {
 	payload.Iss = "Nick005-aka-monkeyZV"
 	payload.Sub = email
 	payload.Iat = time.Now().Unix()
-	payload.Exp = time.Now().Add(time.Hour * 4).Unix()
+	payload.Exp = time.Now().Add(time.Minute * 1).Unix()
 
 	headerJSON, err := json.Marshal(header)
 	if err != nil {
