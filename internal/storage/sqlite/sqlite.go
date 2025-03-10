@@ -416,9 +416,9 @@ func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
 	return result, nil
 }
 
-func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseSearchVac, error) {
+func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseVac, error) {
 	const op = "storage.sqlite.Get.VacancyByIDs"
-	var result []ResponseSearchVac
+	var result []ResponseVac
 	_, err := s.db.Prepare("SELECT * FROM vacancy where id > ? order by id limit ?")
 
 	if err != nil {
@@ -437,8 +437,10 @@ func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseSearchVac, error
 	defer rows.Close()
 
 	for rows.Next() {
-		vac := ResponseSearchVac{}
-		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name, &vac.Price, &vac.Location, &vac.Experience)
+		vac := ResponseVac{}
+		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name,
+			&vac.Price, &vac.Email, &vac.PhoneNumber, &vac.Location,
+			&vac.Experience, &vac.About, &vac.Is_visible)
 		if err != nil {
 			fmt.Println(err)
 			continue

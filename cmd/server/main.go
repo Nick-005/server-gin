@@ -300,6 +300,7 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
 			ctx.JSON(200, fmt.Errorf("error in GET vacancies! %w", err).Error())
+			return
 		}
 		ctx.JSON(200, response)
 	}
