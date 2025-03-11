@@ -84,6 +84,13 @@ func main() {
 
 	router.POST("/user", PostUser(storage))
 
+	router.GET("/auth/otklik", AuthMiddleWare(), func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"status": "OK!",
+			"auth":   "Success!",
+		})
+	})
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	router.Run("localhost:8089")
@@ -153,7 +160,7 @@ func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 			}
 			return []byte(secretKEY), nil
 		})
-		fmt.Println(token)
+		// fmt.Println(token)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -178,6 +185,66 @@ func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 			return
 		}
 
+	}
+}
+
+func AuthMiddleWare() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "Authorization header is required"},
+			)
+			ctx.Abort()
+			return
+		}
+
+		// Проверяем, что заголовок начинается с "Bearer "
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "Invalid authorization format"},
+			)
+			ctx.Abort()
+			return
+		}
+
+		// Извлекаем токен, удаляя "Bearer " из строки
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		// fmt.Println(tokenString)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(secretKEY), nil
+		})
+		// fmt.Println(token)
+		if err != nil || !token.Valid {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			ctx.Abort()
+			return
+		}
+
+		// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// 	// fmt.Println("Expires at:", time.Unix(int64(claims["exp"].(float64)), 0))
+		// 	ctx.JSON(200, gin.H{
+		// 		"status":      "OK",
+		// 		"token":       "valid",
+		// 		"expiredTime": int64(claims["exp"].(float64)),
+		// 		"nowTime":     time.Now().Unix(),
+		// 	})
+		// } else {
+		// 	ctx.JSON(200, gin.H{
+		// 		"status": "Err",
+		// 		"error":  "something get wrong! Please write to nick-005",
+		// 	})
+		// 	return
+		// }
+		ctx.Next()
 	}
 }
 

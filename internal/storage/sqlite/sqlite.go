@@ -591,6 +591,8 @@ name TEXT NOT NULL,
 phoneNumber TEXT NOT NULL UNIQUE,
 email TEXT NOT NULL UNIQUE,
 password TEXT NOT NULL,
+resume_id INTEGER,
+status_id INTEGER,
 */
 func (s *Storage) AddUser(email string, password string, name string, phoneNumber string) (int, error) {
 	const op = "storage.sqlite.Add.User"
