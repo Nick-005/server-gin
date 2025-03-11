@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -35,7 +36,7 @@ type RequestVac struct {
 
 type RequestAdd struct {
 	Name        string `json:"name"`
-	PhoneNumber string `json:"number"`
+	PhoneNumber string `json:"phoneNumber"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 }
@@ -127,39 +128,53 @@ func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.JSON(401, gin.H{"error": "Authorization header is required"})
+			ctx.JSON(401, gin.H{
+				"status": "Err",
+				"error":  "Authorization header is required"},
+			)
 			return
 		}
 
 		// Проверяем, что заголовок начинается с "Bearer "
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			ctx.JSON(401, gin.H{"error": "Invalid authorization format"})
+			ctx.JSON(401, gin.H{
+				"status": "Err",
+				"error":  "Invalid authorization format"},
+			)
 			return
 		}
 
 		// Извлекаем токен, удаляя "Bearer " из строки
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
+		// fmt.Println(tokenString)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return secretKEY, nil
+			return []byte(secretKEY), nil
 		})
+		fmt.Println(token)
 		if err != nil {
-			ctx.JSON(200, fmt.Errorf("ошибка в получении токена из запроса. Проверьте на ошибки свой запрос! Err: %w", err).Error())
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			fmt.Println(claims["exp"])
+			// fmt.Println("Expires at:", time.Unix(int64(claims["exp"].(float64)), 0))
 			ctx.JSON(200, gin.H{
 				"status":      "OK",
 				"token":       "valid",
-				"expiredTime": claims["exp"],
+				"expiredTime": int64(claims["exp"].(float64)),
+				"nowTime":     time.Now().Unix(),
 			})
 		} else {
-			ctx.JSON(200, fmt.Errorf("ошибка в валидации токена! Err: %w", err).Error())
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  "something get wrong! Please write to nick-005",
+			})
 			return
 		}
 
@@ -178,22 +193,22 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 		uid, err := storage.AddUser(body.Email, body.Password, body.Name, body.PhoneNumber)
 		if err != nil {
 			ctx.JSON(400, gin.H{
-				"Status": "Error",
-				"Info":   err.Error(),
+				"status": "Er",
+				"error":  err.Error(),
 			})
 			return
 		}
 		token, err := storage.CreateAccessToken(body.Email)
 		if err != nil {
 			ctx.JSON(400, gin.H{
-				"Status": "Error",
-				"Info":   err.Error(),
+				"status": "Err",
+				"error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"Status": "OK",
-			"Token":  token,
+			"status": "OK",
+			"token":  token,
 			"UID":    uid,
 		})
 	}
@@ -206,16 +221,16 @@ func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
 			ctx.JSON(200, gin.H{
-				"status": "Error",
-				"info":   "Error in get id's from URL parametr! PLS check ur id",
+				"status": "Err",
+				"error":  err.Error(),
 			})
 			return
 		}
 		result, err := storage.GetAllVacsForEmployee(id)
 		if err != nil {
 			ctx.JSON(400, gin.H{
-				"status": "Error",
-				"info":   err.Error(),
+				"status": "Err",
+				"error":  err.Error(),
 			})
 			return
 		}

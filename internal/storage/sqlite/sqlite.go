@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mattn/go-sqlite3"
@@ -580,17 +581,25 @@ func (s *Storage) CreateAccessToken(email string) (string, error) {
 	if err != nil {
 		return "Error", fmt.Errorf("%s: %w", op, err)
 	}
+	token = strings.ReplaceAll(token, "+", "-")
+	token = strings.ReplaceAll(token, "/", "_")
 	return token, nil
 }
 
+/*
+name TEXT NOT NULL,
+phoneNumber TEXT NOT NULL UNIQUE,
+email TEXT NOT NULL UNIQUE,
+password TEXT NOT NULL,
+*/
 func (s *Storage) AddUser(email string, password string, name string, phoneNumber string) (int, error) {
 	const op = "storage.sqlite.Add.User"
-	stmtUser, err := s.db.Prepare("INSERT INTO user(email, password, name , phoneNumber, status_id) VALUES (?,?,?,?,?)")
+	stmtUser, err := s.db.Prepare("INSERT INTO user(name, phoneNumber,email ,password , status_id) VALUES (?,?,?,?,?)")
 	if err != nil {
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 	defer stmtUser.Close()
-	indexd, err := stmtUser.Exec(email, password, name, phoneNumber, 8)
+	indexd, err := stmtUser.Exec(name, phoneNumber, email, password, 8)
 	if err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return -1, fmt.Errorf("%s: %s", op, "такой пользователь уже существует!")
