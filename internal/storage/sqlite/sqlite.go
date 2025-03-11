@@ -14,6 +14,10 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
+type RequestNewToken struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 type Storage struct {
 	db *sql.DB
 }
@@ -321,7 +325,6 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 
 	row, err := s.db.Query("SELECT * FROM vacancy")
 	if err != nil {
-		fmt.Println(err, "Error")
 		return nil, fmt.Errorf("error in exec sql script")
 	}
 	for row.Next() {
@@ -331,7 +334,6 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 			fmt.Println(err)
 			continue
 		}
-		// r.Status = resp.OK().Status
 		result = append(result, r)
 	}
 	fmt.Println()
@@ -614,4 +616,16 @@ func (s *Storage) AddUser(email string, password string, name string, phoneNumbe
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 	return int(uid), nil
+}
+
+func (s *Storage) CheckPasswordNEmail(email, password string) (RequestNewToken, error) {
+	const op = "sqlite.CheckPasswordNEmail.New.Token"
+
+	row := s.db.QueryRow("select email, password from user where email = $1 and password = $2", email, password)
+	var body RequestNewToken
+	err := row.Scan(&body.Email, &body.Password)
+	if err != nil {
+		return body, fmt.Errorf("%s: %w", op, err)
+	}
+	return body, nil
 }

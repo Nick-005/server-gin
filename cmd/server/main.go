@@ -34,6 +34,10 @@ type RequestVac struct {
 	Last_id int `json:"last_id"`
 }
 
+type RequestNewToken struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 type RequestAdd struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phoneNumber"`
@@ -84,10 +88,14 @@ func main() {
 
 	router.POST("/user", PostUser(storage))
 
+	router.POST("/user/otklik", AuthMiddleWare())
+
+	router.GET("/auth/user", GetTokenForUser(storage))
+
 	router.GET("/auth/otklik", AuthMiddleWare(), func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"status": "OK!",
-			"auth":   "Success!",
+			"auth":   "some text!",
 		})
 	})
 
@@ -127,6 +135,12 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	}
 
 	return storage, nil
+}
+
+func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+	}
 }
 
 // @Success 200 {string} GetTimeToken
@@ -245,6 +259,38 @@ func AuthMiddleWare() gin.HandlerFunc {
 		// 	return
 		// }
 		ctx.Next()
+	}
+}
+
+func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var body RequestNewToken
+		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			return
+		}
+
+		data, err := storage.CheckPasswordNEmail(body.Email, body.Password)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		token, err := storage.CreateAccessToken(data.Email)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "OK",
+			"token":  token,
+		})
 	}
 }
 
