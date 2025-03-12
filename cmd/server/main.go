@@ -88,7 +88,7 @@ func main() {
 
 	router.POST("/user", PostUser(storage))
 
-	router.POST("/user/otklik", AuthMiddleWare())
+	router.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
 
 	router.GET("/auth/user", GetTokenForUser(storage))
 
@@ -101,7 +101,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("0.0.0.0:8089")
+	router.Run("localhost:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -139,6 +139,48 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 
 func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		type RequestResponse struct {
+			UID       int `json:"UID"`
+			VacancyID int `json:"vac_id"`
+		}
+		var body RequestResponse
+		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  "Error in parse body! Please check our body in request!",
+			})
+			return
+		}
+
+		err := storage.CheckVacancyExist(body.VacancyID)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		err = storage.CheckUserExist(body.UID)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		respID, err := storage.MakeResponse(body.UID, body.VacancyID)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":     "OK!",
+			"responseID": respID,
+		})
 
 	}
 }

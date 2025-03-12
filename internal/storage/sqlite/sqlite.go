@@ -370,6 +370,14 @@ func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVac, error) {
 	return result, nil
 }
 
+// type AllResponse struct {
+
+// }
+
+// func (s *Storage) GetAllResponse(UID int) ([]){
+
+// }
+
 func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	const op = "storage.sqlite.Get.EmployeeByIDs"
 	var result RequestEmployee
@@ -551,7 +559,7 @@ func CreateToken(email string) (string, error) {
 	payload.Iss = "Nick005-aka-monkeyZV"
 	payload.Sub = email
 	payload.Iat = time.Now().Unix()
-	payload.Exp = time.Now().Add(time.Minute * 1).Unix()
+	payload.Exp = time.Now().Add(time.Minute * 15).Unix()
 
 	headerJSON, err := json.Marshal(header)
 	if err != nil {
@@ -586,6 +594,37 @@ func (s *Storage) CreateAccessToken(email string) (string, error) {
 	token = strings.ReplaceAll(token, "+", "-")
 	token = strings.ReplaceAll(token, "/", "_")
 	return token, nil
+}
+
+func (s *Storage) CheckVacancyExist(vacancyID int) error {
+	_, err := s.db.Exec("SELECT * from vacancy where id = $1", vacancyID)
+	if err != nil {
+		return fmt.Errorf("this id doesn't exist! Pls check ur request! Err: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) CheckUserExist(UID int) error {
+	_, err := s.db.Exec("SELECT * from user where id = $1", UID)
+	if err != nil {
+		return fmt.Errorf("this id doesn't exist! Pls check ur request! Err: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) MakeResponse(UID, vacancyID int) (int64, error) {
+
+	// fmt.Println("ASD")
+	result, err := s.db.Exec("Insert into response (user_id, vacancy_id, status_id) values ($1, $2, $3)", UID, vacancyID, 6)
+	if err != nil {
+		return -1, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	return id, nil
 }
 
 /*
