@@ -190,6 +190,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Error in vacancy part",
 				"error":  err.Error(),
 			})
 			return
@@ -199,6 +200,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Error in user part",
 				"error":  err.Error(),
 			})
 			return
@@ -207,6 +209,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Error in 'MakeResponse' part",
 				"error":  err.Error(),
 			})
 			return

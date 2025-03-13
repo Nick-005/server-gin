@@ -623,24 +623,26 @@ func (s *Storage) CreateAccessToken(email string) (string, error) {
 }
 
 func (s *Storage) CheckVacancyExist(vacancyID int) error {
-	_, err := s.db.Exec("SELECT * from vacancy where id = $1", vacancyID)
+	row := s.db.QueryRow("SELECT id from vacancy where vacancy.id = $1", vacancyID)
+	var id int
+	err := row.Scan(&id)
 	if err != nil {
-		return fmt.Errorf("this id doesn't exist! Pls check ur request! Err: %w", err)
+		return fmt.Errorf("your vacancyID doesn't exist! Pls check ur request and try again")
 	}
 	return nil
 }
 
 func (s *Storage) CheckUserExist(UID int) error {
-	_, err := s.db.Exec("SELECT * from user where id = $1", UID)
+	row := s.db.QueryRow("SELECT id from user where id = $1", UID)
+	var id int
+	err := row.Scan(&id)
 	if err != nil {
-		return fmt.Errorf("this id doesn't exist! Pls check ur request! Err: %w", err)
+		return fmt.Errorf("your UID doesn't exist! Pls check ur request and try again")
 	}
 	return nil
 }
 
 func (s *Storage) MakeResponse(UID, vacancyID int) (int64, error) {
-
-	// fmt.Println("ASD")
 	result, err := s.db.Exec("Insert into response (user_id, vacancy_id, status_id) values ($1, $2, $3)", UID, vacancyID, 6)
 	if err != nil {
 		return -1, err
