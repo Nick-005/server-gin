@@ -370,13 +370,39 @@ func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVac, error) {
 	return result, nil
 }
 
-// type AllResponse struct {
+type AllResponse struct {
+	Name             string `json:"name"`
+	Price            int    `json:"price"`
+	NameOrganization string `json:"nameOrg"`
+	Location         string `json:"location"`
+	Experience       string `json:"exp"`
+	Status           string `json:"status"`
+}
 
-// }
-
-// func (s *Storage) GetAllResponse(UID int) ([]){
-
-// }
+func (s *Storage) GetAllResponse(UID int) ([]AllResponse, error) {
+	var result []AllResponse
+	rows, err := s.db.Query(`SELECT vacancy.name, vacancy.price, employer.nameOrganization, vacancy.location, experience.name, status.name from response
+							INNER JOIN user on response.user_id = user.id
+							INNER JOIN vacancy on response.vacancy_id = vacancy.id
+							INNER JOIN employer on vacancy.emp_id = employer.id
+							INNER JOIN experience on vacancy.experience_id = experience.id
+							INNER JOIN status on response.status_id = status.id
+							where response.user_id = $1`, UID)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var response AllResponse
+		err := rows.Scan(&response.Name, &response.Price, &response.NameOrganization, &response.Location, &response.Experience, &response.Status)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		result = append(result, response)
+	}
+	return result, nil
+}
 
 func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	const op = "storage.sqlite.Get.EmployeeByIDs"

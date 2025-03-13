@@ -69,6 +69,8 @@ func main() {
 	if err != nil {
 		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
+	// Только для деплоя
+	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "api/v1"
 
@@ -90,9 +92,11 @@ func main() {
 
 	router.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
 
+	router.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
+
 	router.GET("/auth/user", GetTokenForUser(storage))
 
-	router.GET("/auth/otklik", AuthMiddleWare(), func(ctx *gin.Context) {
+	router.GET("/auth/test", AuthMiddleWare(), func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"status": "OK!",
 			"auth":   "some text!",
@@ -137,6 +141,36 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	return storage, nil
 }
 
+// @Success 200 {string} GetAllUserResponse
+// @Router /user/otkliks/:id [get]
+func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi(ctx.Param("id"))
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		result, err := storage.GetAllResponse(id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":  "OK!",
+			"otkliks": result,
+		})
+
+	}
+}
+
+// @Success 200 {string} PostResponseOnVacancy
+// @Router /user/otklik [post]
 func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		type RequestResponse struct {
@@ -495,8 +529,8 @@ func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} GetVacancy
-// @Router /vac [get]
+// @Success 200 {string} GetAllVacancy
+// @Router /all/vac [get]
 func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := storage.GetAllVacancy()
@@ -509,7 +543,7 @@ func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} GetVacancy
+// @Success 200 {string} GetLimitVacancy
 // @Router /vac [get]
 func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
