@@ -453,16 +453,28 @@ func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
 	return result, nil
 }
 
-func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseVac, error) {
+type VacancyTake struct {
+	ID               int    `json:"ID"`
+	Emp_ID           int    `json:"emp_id"`
+	Vac_Name         string `json:"vac_name"`
+	NameOrganization string `json:"nameOrg"`
+	Price            int    `json:"price"`
+	Email            string `json:"email"`
+	PhoneNumber      string `json:"phoneNumber"`
+	Location         string `json:"location"`
+	Experience       string `json:"exp"`
+	About            string `json:"about"`
+	Is_visible       bool   `json:"is_visible"`
+}
+
+func (s *Storage) VacancyByLimit(limit, last_id int) ([]VacancyTake, error) {
 	const op = "storage.sqlite.Get.VacancyByIDs"
-	var result []ResponseVac
-	_, err := s.db.Prepare("SELECT * FROM vacancy where id > ? order by id limit ?")
-
-	if err != nil {
-		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
-	}
-
-	rows, err := s.db.Query("SELECT * FROM vacancy where id > ? order by id limit ?", last_id, limit)
+	var result []VacancyTake
+	rows, err := s.db.Query(`SELECT vacancy.id, emp_id, vacancy.name , employer.nameOrganization, price, employer.email, employer.phoneNumber,  location, experience.name, is_visible, aboutWork FROM vacancy 
+							INNER JOIN employer on vacancy.emp_id = employer.id
+							INNER JOIN experience on vacancy.experience_id = experience.id
+							where vacancy.id > ? order by vacancy.id limit ?
+							`, last_id, limit)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return result, fmt.Errorf("%s: ошибка в бд (xdd). %w", op, err)
@@ -474,10 +486,11 @@ func (s *Storage) VacancyByLimit(limit, last_id int) ([]ResponseVac, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		vac := ResponseVac{}
+		vac := VacancyTake{}
 		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name,
+			&vac.NameOrganization,
 			&vac.Price, &vac.Email, &vac.PhoneNumber, &vac.Location,
-			&vac.Experience, &vac.About, &vac.Is_visible)
+			&vac.Experience, &vac.Is_visible, &vac.About)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -643,6 +656,12 @@ func (s *Storage) CheckUserExist(UID int) error {
 }
 
 func (s *Storage) MakeResponse(UID, vacancyID int) (int64, error) {
+	row := s.db.QueryRow("Select id from response where user_id = $1 and vacancy_id = $2", UID, vacancyID)
+	var userID int
+	err := row.Scan(&userID)
+	if err != sql.ErrNoRows {
+		return -1, fmt.Errorf("you have already applied for this position. Please check ur request")
+	}
 	result, err := s.db.Exec("Insert into response (user_id, vacancy_id, status_id) values ($1, $2, $3)", UID, vacancyID, 6)
 	if err != nil {
 		return -1, err

@@ -552,15 +552,24 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestVac
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
-			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  "Error in parse body! Please check our body in request!",
+			})
 			return
 		}
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
-			ctx.JSON(200, fmt.Errorf("error in GET vacancies! %w", err).Error())
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  fmt.Errorf("error in GET vacancies! %w", err).Error(),
+			})
 			return
 		}
-		ctx.JSON(200, response)
+		ctx.JSON(200, gin.H{
+			"status":    "OK!",
+			"vacancies": response,
+		})
 	}
 
 }
