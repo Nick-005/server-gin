@@ -54,15 +54,6 @@ type RequestEmployee struct {
 
 const secretKEY = "ISP-7-21-borodinna"
 
-// @BasePath /api/v1
-
-// PingExample godoc
-// @Summary ping example
-// @Schemes
-// @Description do ping
-// @Tags example
-// @Accept json
-// @Produce json
 func main() {
 	cfg := config.MustLoad()
 	storage, err := InitStorage(cfg)
@@ -141,8 +132,15 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	return storage, nil
 }
 
-// @Success 200 {string} GetAllUserResponse
-// @Router /user/otkliks/:id [get]
+// @Summary Получение списка всех откликов для пользователя
+// @Description Возвращает список всех откликов для определенного пользователя по его ID
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Param UID path int true "ID пользователя"
+// @Success 200 {object} map[string]string "Возвращает статус и массив откликов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 404 {object} map[string]string "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
+// @Router /user/otkliks/{id} [get]
 func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
@@ -169,7 +167,14 @@ func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Success 200 {string} PostResponseOnVacancy
+// @Summary Создание отклика на вакансию
+// @Description Создает отклик на вакансию при помощи ID пользователя и вакансии. Статус отклика автоматически присваевается "Ожидание"
+// @Tags vacancy
+// @Accept  json
+// @Produce  json
+// @Param IDs body map[string]string true "ID пользователя и вакансии, на которую нужно добавить отклик"
+// @Success 200 {int} respID "Возвращает ID отклика. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить request body. К ответу прикрепляется ID, который получил сервер, а также где именно произошла ошибка."
 // @Router /user/otklik [post]
 func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -189,9 +194,10 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		err := storage.CheckVacancyExist(body.VacancyID)
 		if err != nil {
 			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Error in vacancy part",
-				"error":  err.Error(),
+				"status":    "Err",
+				"info":      "Error in vacancy part",
+				"vacancyID": body.VacancyID,
+				"error":     err.Error(),
 			})
 			return
 		}
@@ -201,6 +207,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
 				"info":   "Error in user part",
+				"UID":    body.UID,
 				"error":  err.Error(),
 			})
 			return
@@ -222,7 +229,14 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Success 200 {string} GetTimeToken
+// @Summary Узнать время актуальности 'Bearer Token' пользователя
+// @Description Позволяет узнать текущее время и время, когда 'Bearer Token' пользователя перестанет быть актуальным. Время учитывается в системе UNIX. Зачем нужен этот endpoint? А я и не знаю... по приколу...
+// @Tags token
+// @Accept  json
+// @Produce  json
+// @Param UserToken header string true "Токен пользователя"
+// @Success 200 {object} map[string]string "Возвращает время, когда 'Bearer Token' перестанет быть актуальным. Время учитывается в системе UNIX. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось распарсить header, который отвечает за токен или когда токен не соответствует 'Bearer Token'"
 // @Router /token/check [get]
 func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -321,26 +335,20 @@ func AuthMiddleWare() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-
-		// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// 	// fmt.Println("Expires at:", time.Unix(int64(claims["exp"].(float64)), 0))
-		// 	ctx.JSON(200, gin.H{
-		// 		"status":      "OK",
-		// 		"token":       "valid",
-		// 		"expiredTime": int64(claims["exp"].(float64)),
-		// 		"nowTime":     time.Now().Unix(),
-		// 	})
-		// } else {
-		// 	ctx.JSON(200, gin.H{
-		// 		"status": "Err",
-		// 		"error":  "something get wrong! Please write to nick-005",
-		// 	})
-		// 	return
-		// }
 		ctx.Next()
 	}
 }
 
+// @Summary Выдать новый токен пользователю
+// @Description Позволяет выдать новый токен пользователю, если у него нету актуального 'Bearer Token' или был, но он уже не действителен.
+// @Tags token
+// @Accept  json
+// @Produce  json
+// @Param UserEmailNPassword body map[string]string true "Актуальные логин (почта) и пароль пользователя"
+// @Success 200 {object} map[string]string "Возвращает актуальный и новый токен для пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
+// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось найти пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
+// @Router /auth/user [get]
 func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestNewToken
@@ -373,7 +381,15 @@ func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Success 200 {string} PostUser
+// @Summary Создать нового пользователя
+// @Description Позволяет добавить нового пользователя в систему, если пользователя с такими данными не существовало!
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Param UserData body map[string]string true "Данные пользователя. А именно: Почта (email), пароль (password), name (имя), номер телефона (phoneNumber)"
+// @Success 200 {object} map[string]string "Возвращает актуальный токен для пользователя, а также ID пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
+// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось добавить пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса или не удалось создать для него токен! Конкретная ошибка будет в результате запроса!"
 // @Router /user [post]
 func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -384,7 +400,7 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 		}
 		uid, err := storage.AddUser(body.Email, body.Password, body.Name, body.PhoneNumber)
 		if err != nil {
-			ctx.JSON(400, gin.H{
+			ctx.JSON(401, gin.H{
 				"status": "Er",
 				"error":  err.Error(),
 			})
@@ -392,7 +408,7 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 		}
 		token, err := storage.CreateAccessToken(body.Email)
 		if err != nil {
-			ctx.JSON(400, gin.H{
+			ctx.JSON(401, gin.H{
 				"status": "Err",
 				"error":  err.Error(),
 			})

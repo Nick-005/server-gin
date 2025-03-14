@@ -1,7 +1,13 @@
-basePath: /api/v1
 info:
   contact: {}
 paths:
+  /all/vac:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
   /emp:
     post:
       responses:
@@ -23,13 +29,163 @@ paths:
           description: OK
           schema:
             type: string
-  /user:
-    post:
+  /token/check:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет выдать новый токен пользователю, если у него нету актуального
+        'Bearer Token' или был, но он уже не действителен.
+      parameters:
+      - description: Актуальные логин (почта) и пароль пользователя
+        in: body
+        name: UserEmailNPassword
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
       responses:
         "200":
-          description: OK
+          description: Возвращает актуальный и новый токен для пользователя. Если
+            произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!
+            Также будет известно, где именно произошла ошибка!
           schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body, который
+            отвечает за данные пользователя!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Возвращает ошибку, если не удалось найти пользователя в БД,
+            который соответствовал бы данным, которые были получены сервером в результате
+            этого запроса!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Выдать новый токен пользователю
+      tags:
+      - token
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить нового пользователя в систему, если пользователя
+        с такими данными не существовало!
+      parameters:
+      - description: 'Данные пользователя. А именно: Почта (email), пароль (password),
+          name (имя), номер телефона (phoneNumber)'
+        in: body
+        name: UserData
+        required: true
+        schema:
+          additionalProperties:
             type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает актуальный токен для пользователя, а также ID пользователя.
+            Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!
+            Также будет известно, где именно произошла ошибка!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body, который
+            отвечает за данные пользователя!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Возвращает ошибку, если не удалось добавить пользователя в
+            БД, который соответствовал бы данным, которые были получены сервером в
+            результате этого запроса или не удалось создать для него токен! Конкретная
+            ошибка будет в результате запроса!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать нового пользователя
+      tags:
+      - user
+  /user/otklik:
+    post:
+      consumes:
+      - application/json
+      description: Создает отклик на вакансию при помощи ID пользователя и вакансии.
+        Статус отклика автоматически присваевается "Ожидание"
+      parameters:
+      - description: ID пользователя и вакансии, на которую нужно добавить отклик
+        in: body
+        name: IDs
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID отклика. Если произошла ошибка - статус будет
+            'Err' и будет возвращен текст ошибки! Также будет известно, где именно
+            произошла ошибка!
+          schema:
+            type: int
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить request body.
+            К ответу прикрепляется ID, который получил сервер, а также где именно
+            произошла ошибка.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создание отклика на вакансию
+      tags:
+      - vacancy
+  /user/otkliks/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех откликов для определенного пользователя
+        по его ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: UID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус и массив откликов. Если произошла ошибка
+            - статус будет 'Err' и будет возвращен текст ошибки!
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Возвращает ошибку, если не удалось преобразовать передаваемый
+            параметр (ID) через URL.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение списка всех откликов для пользователя
+      tags:
+      - user
   /vac:
     get:
       responses:
