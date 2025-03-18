@@ -31,6 +31,13 @@ definitions:
       status:
         type: string
     type: object
+  main.NewVacancy:
+    properties:
+      status:
+        type: string
+      vacancyID:
+        type: integer
+    type: object
   main.RequestAdd:
     properties:
       email:
@@ -79,6 +86,27 @@ definitions:
       status:
         type: string
       token:
+        type: string
+    type: object
+  main.Vacancy_Body:
+    properties:
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: integer
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      vac_name:
         type: string
     type: object
   sqlite.ResponseVac:
@@ -184,11 +212,36 @@ paths:
       - employer
   /emp/:id:
     get:
+      consumes:
+      - application/json
+      description: Позволяет получить данные работодателя по его ID. Будет возвращен
+        ID вакансии!
+      parameters:
+      - description: Данные вакансии
+        in: body
+        name: VacData
+        required: true
+        schema:
+          $ref: '#/definitions/main.Vacancy_Body'
+      produces:
+      - application/json
       responses:
         "200":
-          description: OK
+          description: Возвращает ID вакансии.
           schema:
-            type: string
+            $ref: '#/definitions/main.NewVacancy'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body-request!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось добавить вакансию с переданными
+            данными. Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить данные работодателя по его ID
+      tags:
+      - vacancy
   /emp/vacs/id:
     get:
       description: Позволяет получить массив данных о всех вакансиях, которые есть
@@ -323,11 +376,36 @@ paths:
           schema:
             type: string
     post:
+      consumes:
+      - application/json
+      description: Позволяет создать новую вакансию в системе. Будет возвращен ID
+        вакансии!
+      parameters:
+      - description: Данные вакансии
+        in: body
+        name: VacData
+        required: true
+        schema:
+          $ref: '#/definitions/main.Vacancy_Body'
+      produces:
+      - application/json
       responses:
         "200":
-          description: OK
+          description: Возвращает ID вакансии.
           schema:
-            type: string
+            $ref: '#/definitions/main.NewVacancy'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body-request!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось добавить вакансию с переданными
+            данными. Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Создать вакансию
+      tags:
+      - vacancy
   /vac/:id:
     get:
       responses:

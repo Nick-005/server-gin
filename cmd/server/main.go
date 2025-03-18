@@ -97,7 +97,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("localhost:8089")
+	router.Run("0.0.0.0:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -531,18 +531,38 @@ func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} PostVacancy
+type NewVacancy struct {
+	Status    string
+	VacancyID int64
+}
+
+// @Summary Создать вакансию
+// @Description Позволяет создать новую вакансию в системе. Будет возвращен ID вакансии!
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param VacData body Vacancy_Body true "Данные вакансии"
+// @Success 200 {object} NewVacancy "Возвращает ID вакансии."
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!"
 // @Router /vac [post]
 func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body Vacancy_Body
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
-			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
 			return
 		}
 		vac_id, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Email, body.PhoneNumber, body.Location, body.Experience, body.About, body.Is_visible)
 		if err != nil {
-			ctx.JSON(200, fmt.Errorf("error in add vacancy! Error is: %w", err).Error())
+			ctx.JSON(401, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
 			return
 		}
 		ctx.JSON(200, gin.H{
@@ -553,7 +573,15 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} GetEmployerByID
+// @Summary Получить данные работодателя по его ID
+// @Description Позволяет получить данные работодателя по его ID. Будет возвращен ID вакансии!
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param VacData body Vacancy_Body true "Данные вакансии"
+// @Success 200 {object} NewVacancy "Возвращает ID вакансии."
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!"
 // @Router /emp/:id [get]
 func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

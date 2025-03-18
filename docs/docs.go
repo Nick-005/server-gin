@@ -121,11 +121,45 @@ const docTemplate = `{
         },
         "/emp/:id": {
             "get": {
+                "description": "Позволяет получить данные работодателя по его ID. Будет возвращен ID вакансии!",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Получить данные работодателя по его ID",
+                "parameters": [
+                    {
+                        "description": "Данные вакансии",
+                        "name": "VacData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Vacancy_Body"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Возвращает ID вакансии.",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.NewVacancy"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось распарсить body-request!",
+                        "schema": {
+                            "$ref": "#/definitions/main.InfoError"
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.SimpleError"
                         }
                     }
                 }
@@ -308,11 +342,45 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "description": "Позволяет создать новую вакансию в системе. Будет возвращен ID вакансии!",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Создать вакансию",
+                "parameters": [
+                    {
+                        "description": "Данные вакансии",
+                        "name": "VacData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Vacancy_Body"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Возвращает ID вакансии.",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.NewVacancy"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось распарсить body-request!",
+                        "schema": {
+                            "$ref": "#/definitions/main.InfoError"
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.SimpleError"
                         }
                     }
                 }
@@ -379,6 +447,17 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "main.NewVacancy": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "vacancyID": {
+                    "type": "integer"
                 }
             }
         },
@@ -456,6 +535,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.Vacancy_Body": {
+            "type": "object",
+            "properties": {
+                "about": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emp_id": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "vac_name": {
                     "type": "string"
                 }
             }
