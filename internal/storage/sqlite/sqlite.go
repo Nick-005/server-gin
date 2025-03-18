@@ -24,7 +24,6 @@ type Storage struct {
 
 type RequestEmployee struct {
 	ID               int    `json:"ID"`
-	Limit            int    `json:"limit"`
 	NameOrganization string `json:"nameOrg"`
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
@@ -413,7 +412,7 @@ func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	}
 	_ = stmtVacancy
 
-	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.Limit, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.INN, &result.Geography, &result.About)
+	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.INN, &result.Geography, &result.About)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -17,6 +17,10 @@ const docTemplate = `{
     "paths": {
         "/all/vac": {
             "get": {
+                "tags": [
+                    "delete"
+                ],
+                "summary": "не использовать! УДАЛИТЬ!",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -121,43 +125,38 @@ const docTemplate = `{
         },
         "/emp/:id": {
             "get": {
-                "description": "Позволяет получить данные работодателя по его ID. Будет возвращен ID вакансии!",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Позволяет получить данные работодателя по его ID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "vacancy"
+                    "employer"
                 ],
                 "summary": "Получить данные работодателя по его ID",
                 "parameters": [
                     {
-                        "description": "Данные вакансии",
-                        "name": "VacData",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.Vacancy_Body"
-                        }
+                        "type": "integer",
+                        "description": "ID работодателя",
+                        "name": "EmpID",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Возвращает ID вакансии.",
                         "schema": {
-                            "$ref": "#/definitions/main.NewVacancy"
+                            "$ref": "#/definitions/sqlite.RequestEmployee"
                         }
                     },
                     "400": {
-                        "description": "Возвращает ошибку, если не удалось распарсить body-request!",
+                        "description": "Возвращает ошибку, если не удалось распарсить ID работодателя из path!",
                         "schema": {
                             "$ref": "#/definitions/main.InfoError"
                         }
                     },
                     "401": {
-                        "description": "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!",
+                        "description": "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!",
                         "schema": {
                             "$ref": "#/definitions/main.SimpleError"
                         }
@@ -332,11 +331,45 @@ const docTemplate = `{
         },
         "/vac": {
             "get": {
+                "description": "Позволяет получить определенное кол-во вакансий.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Получить список вакансий",
+                "parameters": [
+                    {
+                        "description": "Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с которой начать отсчёт.",
+                        "name": "RequsetLimit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.RequestVac"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Возвращает список данных вакансий",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.ListOfVacancies"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось распарсить body вакансий!",
+                        "schema": {
+                            "$ref": "#/definitions/main.InfoError"
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если не удалось получить данные вакансий. Конкретная ошибка будет в результате запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.SimpleError"
                         }
                     }
                 }
@@ -388,11 +421,40 @@ const docTemplate = `{
         },
         "/vac/:id": {
             "get": {
+                "description": "Позволяет получить данные о вакансии по её ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Получить данные о вакансии по её ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии",
+                        "name": "VacancyID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Возвращает данные вакансии",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.TakeVacancyByID"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось распарсить ID вакансии из строки запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.InfoError"
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.SimpleError"
                         }
                     }
                 }
@@ -433,6 +495,20 @@ const docTemplate = `{
                 },
                 "info": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.ListOfVacancies": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sqlite.VacancyTake"
+                    }
                 },
                 "status": {
                     "type": "string"
@@ -517,6 +593,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main.RequestVac": {
+            "type": "object",
+            "properties": {
+                "last_id": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
         "main.SimpleError": {
             "type": "object",
             "properties": {
@@ -524,6 +611,44 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.TakeVacancyByID": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "integer"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emp_id": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "string"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "vac_name": {
                     "type": "string"
                 }
             }
@@ -571,6 +696,35 @@ const docTemplate = `{
                 }
             }
         },
+        "sqlite.RequestEmployee": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "integer"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "geography": {
+                    "type": "string"
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "nameOrg": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                }
+            }
+        },
         "sqlite.ResponseVac": {
             "type": "object",
             "properties": {
@@ -593,6 +747,44 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "vac_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlite.VacancyTake": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "integer"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emp_id": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "string"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "nameOrg": {
                     "type": "string"
                 },
                 "phoneNumber": {

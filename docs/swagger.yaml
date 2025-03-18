@@ -24,6 +24,15 @@ definitions:
       status:
         type: string
     type: object
+  main.ListOfVacancies:
+    properties:
+      response:
+        items:
+          $ref: '#/definitions/sqlite.VacancyTake'
+        type: array
+      status:
+        type: string
+    type: object
   main.NewEmployer:
     properties:
       emp_id:
@@ -74,11 +83,43 @@ definitions:
       vac_id:
         type: integer
     type: object
+  main.RequestVac:
+    properties:
+      last_id:
+        type: integer
+      limit:
+        type: integer
+    type: object
   main.SimpleError:
     properties:
       error:
         type: string
       status:
+        type: string
+    type: object
+  main.TakeVacancyByID:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: string
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      status:
+        type: string
+      vac_name:
         type: string
     type: object
   main.TokenForUser:
@@ -109,6 +150,25 @@ definitions:
       vac_name:
         type: string
     type: object
+  sqlite.RequestEmployee:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      geography:
+        type: string
+      inn:
+        type: string
+      limit:
+        type: integer
+      nameOrg:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
   sqlite.ResponseVac:
     properties:
       ID:
@@ -132,6 +192,31 @@ definitions:
       vac_name:
         type: string
     type: object
+  sqlite.VacancyTake:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: string
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      nameOrg:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      vac_name:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -142,6 +227,9 @@ paths:
           description: OK
           schema:
             type: string
+      summary: не использовать! УДАЛИТЬ!
+      tags:
+      - delete
   /auth/user:
     get:
       consumes:
@@ -212,36 +300,34 @@ paths:
       - employer
   /emp/:id:
     get:
-      consumes:
-      - application/json
-      description: Позволяет получить данные работодателя по его ID. Будет возвращен
-        ID вакансии!
+      description: Позволяет получить данные работодателя по его ID.
       parameters:
-      - description: Данные вакансии
-        in: body
-        name: VacData
+      - description: ID работодателя
+        in: path
+        name: EmpID
         required: true
-        schema:
-          $ref: '#/definitions/main.Vacancy_Body'
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: Возвращает ID вакансии.
           schema:
-            $ref: '#/definitions/main.NewVacancy'
+            $ref: '#/definitions/sqlite.RequestEmployee'
         "400":
-          description: Возвращает ошибку, если не удалось распарсить body-request!
+          description: Возвращает ошибку, если не удалось распарсить ID работодателя
+            из path!
           schema:
             $ref: '#/definitions/main.InfoError'
         "401":
-          description: Возвращает ошибку, если не удалось добавить вакансию с переданными
-            данными. Конкретная ошибка будет в результате запроса!
+          description: Возвращает ошибку, если не удалось получить данные работодателя,
+            который соответствует переданному ID. Конкретная ошибка будет в результате
+            запроса!
           schema:
             $ref: '#/definitions/main.SimpleError'
       summary: Получить данные работодателя по его ID
       tags:
-      - vacancy
+      - employer
   /emp/vacs/id:
     get:
       description: Позволяет получить массив данных о всех вакансиях, которые есть
@@ -370,11 +456,36 @@ paths:
       - user
   /vac:
     get:
+      consumes:
+      - application/json
+      description: Позволяет получить определенное кол-во вакансий.
+      parameters:
+      - description: Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с
+          которой начать отсчёт.
+        in: body
+        name: RequsetLimit
+        required: true
+        schema:
+          $ref: '#/definitions/main.RequestVac'
+      produces:
+      - application/json
       responses:
         "200":
-          description: OK
+          description: Возвращает список данных вакансий
           schema:
-            type: string
+            $ref: '#/definitions/main.ListOfVacancies'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body вакансий!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные вакансий.
+            Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить список вакансий
+      tags:
+      - vacancy
     post:
       consumes:
       - application/json
@@ -408,9 +519,32 @@ paths:
       - vacancy
   /vac/:id:
     get:
+      description: Позволяет получить данные о вакансии по её ID.
+      parameters:
+      - description: ID вакансии
+        in: path
+        name: VacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
       responses:
         "200":
-          description: OK
+          description: Возвращает данные вакансии
           schema:
-            type: string
+            $ref: '#/definitions/main.TakeVacancyByID'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить ID вакансии из
+            строки запроса!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные работодателя,
+            который соответствует переданному ID. Конкретная ошибка будет в результате
+            запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить данные о вакансии по её ID
+      tags:
+      - vacancy
 swagger: "2.0"

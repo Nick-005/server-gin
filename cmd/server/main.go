@@ -97,7 +97,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("0.0.0.0:8089")
+	router.Run("localhost:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -186,6 +186,7 @@ type ResponseOnVacancy struct {
 	Status string
 	RespID int64
 }
+
 type RequestResponse struct {
 	UID       int `json:"UID"`
 	VacancyID int `json:"vac_id"`
@@ -574,31 +575,31 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 }
 
 // @Summary Получить данные работодателя по его ID
-// @Description Позволяет получить данные работодателя по его ID. Будет возвращен ID вакансии!
-// @Tags vacancy
-// @Accept json
+// @Description Позволяет получить данные работодателя по его ID.
+// @Tags employer
 // @Produce json
-// @Param VacData body Vacancy_Body true "Данные вакансии"
-// @Success 200 {object} NewVacancy "Возвращает ID вакансии."
-// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
-// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!"
+// @Param EmpID path int true "ID работодателя"
+// @Success 200 {object} sqlite.RequestEmployee "Возвращает ID вакансии."
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID работодателя из path!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
 // @Router /emp/:id [get]
 func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Error",
-				"info":   "Error in get id's from URL parametr! PLS check ur id",
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse ID in path! Please check our id in request! He must be an integer type!",
+				"error":  err.Error(),
 			})
 			return
 		}
 
 		res, err := storage.GetEmployee(id)
 		if err != nil {
-			ctx.JSON(400, gin.H{
+			ctx.JSON(401, gin.H{
 				"status": "Error",
-				"info":   "Произошла какая-то ошибка в методе. Напишите об этом разработчику",
+				"error":  err.Error(),
 			})
 			return
 		}
@@ -608,32 +609,50 @@ func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} GetVacancyByID
+type TakeVacancyByID struct {
+	Status string
+	sqlite.ResponseVac
+}
+
+// @Summary Получить данные о вакансии по её ID
+// @Description Позволяет получить данные о вакансии по её ID.
+// @Tags vacancy
+// @Produce json
+// @Param VacancyID path int true "ID вакансии"
+// @Success 200 {object} TakeVacancyByID "Возвращает данные вакансии"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID вакансии из строки запроса!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
 // @Router /vac/:id [get]
 func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Error",
-				"info":   "Error in get id's from URL parametr! PLS check ur id",
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse ID in path! Please check our id in request! He must be an integer type!",
+				"error":  err.Error(),
 			})
 			return
 		}
 		response, err := storage.VacancyByID(id)
 		if err != nil {
-			ctx.JSON(400, gin.H{
-				"status": "Error",
-				"info":   fmt.Errorf("ошибка: %w", err).Error(),
+			ctx.JSON(401, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
 			})
 			return
 		}
-		ctx.JSON(200, response)
+		ctx.JSON(200, gin.H{
+			"status":      "OK!",
+			"vacancyData": response,
+		})
 
 	}
 
 }
 
+// @Summary не использовать! УДАЛИТЬ!
+// @Tags delete
 // @Success 200 {string} GetAllVacancy
 // @Router /all/vac [get]
 func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
@@ -648,7 +667,20 @@ func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 
 }
 
-// @Success 200 {string} GetLimitVacancy
+type ListOfVacancies struct {
+	Status   string
+	Response []sqlite.VacancyTake
+}
+
+// @Summary Получить список вакансий
+// @Description Позволяет получить определенное кол-во вакансий.
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param RequsetLimit body RequestVac true "Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с которой начать отсчёт."
+// @Success 200 {object} ListOfVacancies "Возвращает список данных вакансий"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body вакансий!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные вакансий. Конкретная ошибка будет в результате запроса!"
 // @Router /vac [get]
 func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -656,15 +688,16 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"error":  "Error in parse body! Please check our body in request!",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
 			})
 			return
 		}
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(401, gin.H{
 				"status": "Err",
-				"error":  fmt.Errorf("error in GET vacancies! %w", err).Error(),
+				"error":  err.Error(),
 			})
 			return
 		}
