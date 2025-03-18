@@ -12,7 +12,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	swaggerfiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
-	docs "main.go/cmd/server/docs"
+
+	"main.go/docs"
 	"main.go/internal/config"
 	"main.go/internal/storage/sqlite"
 )
@@ -96,7 +97,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("0.0.0.0:8089")
+	router.Run("localhost:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -132,14 +133,28 @@ func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
 	return storage, nil
 }
 
+type AllUserResponseOK struct {
+	Status  string
+	Otkliks string
+}
+
+type SimpleError struct {
+	Status string
+	Error  string
+}
+
+type InfoError struct {
+	SimpleError
+	Info string
+}
+
 // @Summary Получение списка всех откликов для пользователя
 // @Description Возвращает список всех откликов для определенного пользователя по его ID
 // @Tags user
-// @Accept  json
 // @Produce  json
 // @Param UID path int true "ID пользователя"
-// @Success 200 {object} map[string]string "Возвращает статус и массив откликов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
-// @Failure 404 {object} map[string]string "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
+// @Success 200 {object} AllUserResponseOK "Возвращает статус и массив откликов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 404 {object} SimpleError "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
 // @Router /user/otkliks/{id} [get]
 func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -167,26 +182,33 @@ func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
+type ResponseOnVacancy struct {
+	Status string
+	RespID int64
+}
+type RequestResponse struct {
+	UID       int `json:"UID"`
+	VacancyID int `json:"vac_id"`
+}
+
 // @Summary Создание отклика на вакансию
 // @Description Создает отклик на вакансию при помощи ID пользователя и вакансии. Статус отклика автоматически присваевается "Ожидание"
 // @Tags vacancy
 // @Accept  json
 // @Produce  json
-// @Param IDs body map[string]string true "ID пользователя и вакансии, на которую нужно добавить отклик"
-// @Success 200 {int} respID "Возвращает ID отклика. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
-// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить request body. К ответу прикрепляется ID, который получил сервер, а также где именно произошла ошибка."
+// @Param IDs body RequestResponse true "ID пользователя и вакансии, на которую нужно добавить отклик"
+// @Success 200 {integer} ResponseOnVacancy "Возвращает ID отклика. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить request body. К ответу прикрепляется ID, который получил сервер, а также где именно произошла ошибка."
 // @Router /user/otklik [post]
 func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		type RequestResponse struct {
-			UID       int `json:"UID"`
-			VacancyID int `json:"vac_id"`
-		}
+
 		var body RequestResponse
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"error":  "Error in parse body! Please check our body in request!",
+				"info":   "Please check our body in request!",
+				"error":  "Error in parse body!",
 			})
 			return
 		}
@@ -194,10 +216,9 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		err := storage.CheckVacancyExist(body.VacancyID)
 		if err != nil {
 			ctx.JSON(200, gin.H{
-				"status":    "Err",
-				"info":      "Error in vacancy part",
-				"vacancyID": body.VacancyID,
-				"error":     err.Error(),
+				"status": "Err",
+				"info":   fmt.Sprintf("Error in vacancy part. VacancyID: %d", body.VacancyID),
+				"error":  err.Error(),
 			})
 			return
 		}
@@ -206,8 +227,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
-				"info":   "Error in user part",
-				"UID":    body.UID,
+				"info":   fmt.Sprintf("Error in user part. UID: %d", body.UID),
 				"error":  err.Error(),
 			})
 			return
@@ -216,7 +236,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
-				"info":   "Error in 'MakeResponse' part",
+				"info":   fmt.Sprintf("Error in 'MakeResponse' part. UID: %d. VacancyID: %d", body.UID, body.VacancyID),
 				"error":  err.Error(),
 			})
 			return
@@ -229,15 +249,6 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Summary Узнать время актуальности 'Bearer Token' пользователя
-// @Description Позволяет узнать текущее время и время, когда 'Bearer Token' пользователя перестанет быть актуальным. Время учитывается в системе UNIX. Зачем нужен этот endpoint? А я и не знаю... по приколу...
-// @Tags token
-// @Accept  json
-// @Produce  json
-// @Param UserToken header string true "Токен пользователя"
-// @Success 200 {object} map[string]string "Возвращает время, когда 'Bearer Token' перестанет быть актуальным. Время учитывается в системе UNIX. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
-// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось распарсить header, который отвечает за токен или когда токен не соответствует 'Bearer Token'"
-// @Router /token/check [get]
 func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
@@ -339,21 +350,30 @@ func AuthMiddleWare() gin.HandlerFunc {
 	}
 }
 
+type TokenForUser struct {
+	Status string
+	Token  string
+}
+
 // @Summary Выдать новый токен пользователю
 // @Description Позволяет выдать новый токен пользователю, если у него нету актуального 'Bearer Token' или был, но он уже не действителен.
 // @Tags token
 // @Accept  json
 // @Produce  json
-// @Param UserEmailNPassword body map[string]string true "Актуальные логин (почта) и пароль пользователя"
-// @Success 200 {object} map[string]string "Возвращает актуальный и новый токен для пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
-// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
-// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось найти пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
+// @Param UserEmailNPassword body RequestNewToken true "Актуальные логин (почта) и пароль пользователя"
+// @Success 200 {object} TokenForUser "Возвращает актуальный и новый токен для пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось найти пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
 // @Router /auth/user [get]
 func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestNewToken
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
-			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body! Please check our body in request!",
+				"error":  err.Error(),
+			})
 			return
 		}
 
@@ -381,21 +401,30 @@ func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
+type AddNewUser struct {
+	TokenForUser
+	UID int64
+}
+
 // @Summary Создать нового пользователя
 // @Description Позволяет добавить нового пользователя в систему, если пользователя с такими данными не существовало!
 // @Tags user
 // @Accept  json
 // @Produce  json
-// @Param UserData body map[string]string true "Данные пользователя. А именно: Почта (email), пароль (password), name (имя), номер телефона (phoneNumber)"
-// @Success 200 {object} map[string]string "Возвращает актуальный токен для пользователя, а также ID пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
-// @Failure 400 {object} map[string]string "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
-// @Failure 401 {object} map[string]string "Возвращает ошибку, если не удалось добавить пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса или не удалось создать для него токен! Конкретная ошибка будет в результате запроса!"
+// @Param UserData body RequestAdd true "Данные пользователя. А именно: Почта (email), пароль (password), name (имя), номер телефона (phoneNumber)"
+// @Success 200 {object} AddNewUser "Возвращает актуальный токен для пользователя, а также ID пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса или не удалось создать для него токен! Конкретная ошибка будет в результате запроса!"
 // @Router /user [post]
 func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestAdd
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
-			ctx.JSON(http.StatusBadRequest, "Error in parse body! Please check our body in request!")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body! Please check our body in request!",
+				"error":  err.Error(),
+			})
 			return
 		}
 		uid, err := storage.AddUser(body.Email, body.Password, body.Name, body.PhoneNumber)
@@ -422,21 +451,31 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Success 200 {string} GetVacancyByEmployer
+// TODO: Переделать так, чтобы не было видно другие вакансий, у которых is_visible == false
+
+// @Summary Получить все вакансии работодателя
+// @Description Позволяет получить массив данных о всех вакансиях, которые есть у работодателя. Для этого нужно передать ID работодателя!
+// @Tags employer
+// @Produce  json
+// @Param EmpID path int true "ID работодателя"
+// @Success 200 {object} []sqlite.ResponseVac "Возвращает массив актуальных вакансий от одного работодателя."
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить список всех вакансий! Конкретная ошибка будет в результате запроса!"
 // @Router /emp/vacs/id [get]
 func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
+				"info":   "Error in parse ID in path! Please check our id in request! He must be an integer type!",
 				"error":  err.Error(),
 			})
 			return
 		}
 		result, err := storage.GetAllVacsForEmployee(id)
 		if err != nil {
-			ctx.JSON(400, gin.H{
+			ctx.JSON(401, gin.H{
 				"status": "Err",
 				"error":  err.Error(),
 			})
@@ -446,13 +485,32 @@ func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-// @Success 200 {string} PostEmployer
+type NewEmployer struct {
+	Status string
+	Emp_id int64
+}
+
+// TODO: Сделать так, чтобы этот endpoint выдавал еще и токен
+
+// @Summary Создать работодателя
+// @Description Позволяет создать работодателя в системе. Будет возвращен ID и токен для работодателя!
+// @Tags employer
+// @Accept json
+// @Produce  json
+// @Param EmpData body RequestEmployee true "Данные работодателя"
+// @Success 200 {object} NewEmployer "Возвращает ID (И попозже будет Token) работодателя."
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не добавить работодателя с корректными данными. Конкретная ошибка будет в результате запроса!"
 // @Router /emp [post]
 func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req RequestEmployee
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, "error in parse body! Please check our body in request!")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
 			return
 		}
 		// status = 1  == Заблокирован
