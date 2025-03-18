@@ -97,7 +97,7 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Run("localhost:8089")
+	router.Run("0.0.0.0:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
