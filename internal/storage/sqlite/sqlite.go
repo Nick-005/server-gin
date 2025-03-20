@@ -71,7 +71,7 @@ func CreateVacancyTable(storagePath string) (*Storage, error) {
 			email TEXT,
 			phoneNumber TEXT,
 			location TEXT,
-			experience_id INTEGER,
+			experience_id INTEGER NOT NULL,
 			aboutWork TEXT,
 			is_visible BOOLEAN DEFAULT TRUE,
 			FOREIGN KEY (emp_id) REFERENCES employer(id) ON DELETE CASCADE,
@@ -136,10 +136,10 @@ func CreateEmployeeTable(storagPath string) (*Storage, error) {
 		phoneNumber TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE ,
 		INN TEXT NOT NULL UNIQUE,
-		status_id INTEGER,
+		status_id INTEGER NOT NULL,
 		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE
 		);
-		CREATE INDEX IF NOT EXISTS about ON employer(limitVac);
+		CREATE INDEX IF NOT EXISTS about ON employer(status_id);
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -167,8 +167,8 @@ func CreateTableUser(storagePath string) (*Storage, error) {
 		phoneNumber TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL,
-		resume_id INTEGER,
-		status_id INTEGER,
+		resume_id INTEGER UNIQUE,
+		status_id INTEGER NOT NULL,
 		FOREIGN KEY (status_id) REFERENCES status(id) ON DELETE CASCADE,
 		FOREIGN KEY (resume_id) REFERENCES resume(id)
 	);
@@ -201,7 +201,7 @@ func CreateStatusTable(storagePath string) (*Storage, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS status(
 		id INTEGER PRIMARY KEY,
-		name TEXT NOT NULL
+		name TEXT NOT NULL UNIQUE
 	);`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -256,7 +256,7 @@ func CreateResumeTable(storagePath string) (*Storage, error) {
 	res, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS resume(
 		id INTEGER PRIMARY KEY,
-		experience_id INTEGER,
+		experience_id INTEGER NOT NULL,
 		description TEXT NOT NULL,
 		FOREIGN KEY (experience_id) REFERENCES experience(id)
 	);

@@ -253,6 +253,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
+		fmt.Println(authHeader)
 		if authHeader == "" {
 			ctx.JSON(401, gin.H{
 				"status": "Err",
