@@ -559,6 +559,17 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 			})
 			return
 		}
+
+		_, err := storage.GetEmployee(body.Emp_ID)
+		if err != nil {
+			ctx.JSON(401, gin.H{
+				"status": "Error",
+				"info":   "That employer doesn't exist! Please check ur request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
 		vac_id, err := storage.AddVacancy(body.Emp_ID, body.Vac_Name, body.Price, body.Email, body.PhoneNumber, body.Location, body.Experience, body.About, body.Is_visible)
 		if err != nil {
 			ctx.JSON(401, gin.H{
@@ -604,7 +615,10 @@ func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 			})
 			return
 		}
-		ctx.JSON(200, res)
+		ctx.JSON(200, gin.H{
+			"status":  "OK!",
+			"EmpData": res,
+		})
 
 	}
 

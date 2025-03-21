@@ -28,8 +28,7 @@ type RequestEmployee struct {
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
 	INN              string `json:"inn"`
-	Geography        string `json:"geography"`
-	About            string `json:"about"`
+	Status           string `json:"status"`
 }
 
 type ResponseVac struct {
@@ -406,20 +405,24 @@ func (s *Storage) GetAllResponse(UID int) ([]AllResponse, error) {
 func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	const op = "storage.sqlite.Get.EmployeeByIDs"
 	var result RequestEmployee
-	stmtVacancy, err := s.db.Prepare("SELECT * FROM employee WHERE id = ?")
+	stmtVacancy, err := s.db.Prepare(`SELECT employer.id, nameOrganization, phoneNumber, email, INN, status.name from employer
+									INNER JOIN status on employer.status_id = status.id 
+									where employer.id = $1`)
 	if err != nil {
 		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
 	}
 	_ = stmtVacancy
 
-	err = s.db.QueryRow("SELECT * FROM employee WHERE id = ?", ID).Scan(&result.ID, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.INN, &result.Geography, &result.About)
+	err = s.db.QueryRow(`SELECT employer.id, nameOrganization, phoneNumber, email, INN, status.name from employer
+						INNER JOIN status on employer.status_id = status.id
+						where employer.id = $1`, ID).Scan(&result.ID, &result.NameOrganization, &result.PhoneNumber, &result.Email, &result.INN, &result.Status)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return result, fmt.Errorf("%s: %w", op, err)
 
 		} else {
-			return result, fmt.Errorf("%s: какая-то ошибка в получении работодателя по его id. Если вы это видите, то напишите разрабу и скажите что он даун xdd", op)
+			return result, fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
