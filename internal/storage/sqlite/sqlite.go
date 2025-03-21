@@ -429,17 +429,41 @@ func (s *Storage) GetEmployee(ID int) (RequestEmployee, error) {
 	return result, nil
 }
 
-func (s *Storage) VacancyByID(ID int) (ResponseVac, error) {
+type ResponseVacancyByIDs struct {
+	ID            int    `json:"ID"`
+	Emp_ID        int    `json:"emp_id"`
+	Employer_Name string `json:"emp_name"`
+	Vac_Name      string `json:"vac_name"`
+	Price         int    `json:"price"`
+	Email         string `json:"email"`
+	PhoneNumber   string `json:"phoneNumber"`
+	Location      string `json:"location"`
+	Experience    string `json:"exp"`
+	About         string `json:"about"`
+	Is_visible    bool   `json:"is_visible"`
+}
+
+func (s *Storage) VacancyByID(ID int) (ResponseVacancyByIDs, error) {
 	const op = "storage.sqlite.Get.VacancyByIDs"
-	var result ResponseVac
-	_, err := s.db.Prepare("SELECT * FROM vacancy WHERE id = ?")
+	var result ResponseVacancyByIDs
+	_, err := s.db.Prepare(`select vacancy.id, emp_id, employer.nameOrganization, vacancy.name, vacancy.price, vacancy.email, vacancy.phoneNumber, vacancy.location, experience.name, vacancy.aboutWork, vacancy.is_visible
+							from vacancy
+							INNER JOIN employer on vacancy.emp_id = employer.id
+							INNER JOIN experience on vacancy.experience_id = experience.id
+							where vacancy.id = $1`)
 
 	if err != nil {
 		return result, fmt.Errorf("%s: ошибка в создании запроса к бд", op)
 	}
 
-	err = s.db.QueryRow("SELECT * FROM vacancy WHERE id = ?", ID).Scan(
-		&result.ID, &result.Emp_ID, &result.Vac_Name,
+	err = s.db.QueryRow(`select vacancy.id, emp_id, employer.nameOrganization, vacancy.name,
+								vacancy.price, vacancy.email, vacancy.phoneNumber, vacancy.location,
+								experience.name, vacancy.aboutWork, vacancy.is_visible
+								from vacancy
+								INNER JOIN employer on vacancy.emp_id = employer.id
+								INNER JOIN experience on vacancy.experience_id = experience.id
+								where vacancy.id = $1`, ID).Scan(
+		&result.ID, &result.Emp_ID, &result.Employer_Name, &result.Vac_Name,
 		&result.Price, &result.Email, &result.PhoneNumber, &result.Location,
 		&result.Experience, &result.About, &result.Is_visible)
 
