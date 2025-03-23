@@ -83,13 +83,6 @@ definitions:
       vac_id:
         type: integer
     type: object
-  main.RequestVac:
-    properties:
-      last_id:
-        type: integer
-      limit:
-        type: integer
-    type: object
   main.SimpleError:
     properties:
       error:
@@ -154,19 +147,15 @@ definitions:
     properties:
       ID:
         type: integer
-      about:
-        type: string
       email:
-        type: string
-      geography:
         type: string
       inn:
         type: string
-      limit:
-        type: integer
       nameOrg:
         type: string
       phoneNumber:
+        type: string
+      status:
         type: string
     type: object
   sqlite.ResponseVac:
@@ -298,44 +287,14 @@ paths:
       summary: Создать работодателя
       tags:
       - employer
-  /emp/:id:
-    get:
-      description: Позволяет получить данные работодателя по его ID.
-      parameters:
-      - description: ID работодателя
-        in: path
-        name: EmpID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Возвращает ID вакансии.
-          schema:
-            $ref: '#/definitions/sqlite.RequestEmployee'
-        "400":
-          description: Возвращает ошибку, если не удалось распарсить ID работодателя
-            из path!
-          schema:
-            $ref: '#/definitions/main.InfoError'
-        "401":
-          description: Возвращает ошибку, если не удалось получить данные работодателя,
-            который соответствует переданному ID. Конкретная ошибка будет в результате
-            запроса!
-          schema:
-            $ref: '#/definitions/main.SimpleError'
-      summary: Получить данные работодателя по его ID
-      tags:
-      - employer
-  /emp/vacs/id:
+  /emp/vacs:
     get:
       description: Позволяет получить массив данных о всех вакансиях, которые есть
         у работодателя. Для этого нужно передать ID работодателя!
       parameters:
       - description: ID работодателя
-        in: path
-        name: EmpID
+        in: query
+        name: id
         required: true
         type: integer
       produces:
@@ -357,6 +316,36 @@ paths:
           schema:
             $ref: '#/definitions/main.SimpleError'
       summary: Получить все вакансии работодателя
+      tags:
+      - employer
+  /empID:
+    get:
+      description: Позволяет получить данные работодателя по его ID.
+      parameters:
+      - description: ID работодателя
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID вакансии.
+          schema:
+            $ref: '#/definitions/sqlite.RequestEmployee'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить ID работодателя
+            из path!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные работодателя,
+            который соответствует переданному ID. Конкретная ошибка будет в результате
+            запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить данные работодателя по его ID
       tags:
       - employer
   /user:
@@ -425,6 +414,8 @@ paths:
             произошла ошибка.
           schema:
             $ref: '#/definitions/main.InfoError'
+      security:
+      - ApiKeyAuth: []
       summary: Создание отклика на вакансию
       tags:
       - vacancy
@@ -460,13 +451,16 @@ paths:
       - application/json
       description: Позволяет получить определенное кол-во вакансий.
       parameters:
-      - description: Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с
-          которой начать отсчёт.
-        in: body
-        name: RequsetLimit
+      - description: Лимит сколько вакансий
+        in: query
+        name: limit
         required: true
-        schema:
-          $ref: '#/definitions/main.RequestVac'
+        type: integer
+      - description: С какого ID надо показывать вакансии
+        in: query
+        name: lastID
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -517,13 +511,13 @@ paths:
       summary: Создать вакансию
       tags:
       - vacancy
-  /vac/:id:
+  /vacID:
     get:
       description: Позволяет получить данные о вакансии по её ID.
       parameters:
       - description: ID вакансии
-        in: path
-        name: VacancyID
+        in: query
+        name: id
         required: true
         type: integer
       produces:
@@ -547,4 +541,9 @@ paths:
       summary: Получить данные о вакансии по её ID
       tags:
       - vacancy
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

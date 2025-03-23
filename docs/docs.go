@@ -123,48 +123,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/emp/:id": {
-            "get": {
-                "description": "Позволяет получить данные работодателя по его ID.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "employer"
-                ],
-                "summary": "Получить данные работодателя по его ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID работодателя",
-                        "name": "EmpID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Возвращает ID вакансии.",
-                        "schema": {
-                            "$ref": "#/definitions/sqlite.RequestEmployee"
-                        }
-                    },
-                    "400": {
-                        "description": "Возвращает ошибку, если не удалось распарсить ID работодателя из path!",
-                        "schema": {
-                            "$ref": "#/definitions/main.InfoError"
-                        }
-                    },
-                    "401": {
-                        "description": "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!",
-                        "schema": {
-                            "$ref": "#/definitions/main.SimpleError"
-                        }
-                    }
-                }
-            }
-        },
-        "/emp/vacs/id": {
+        "/emp/vacs": {
             "get": {
                 "description": "Позволяет получить массив данных о всех вакансиях, которые есть у работодателя. Для этого нужно передать ID работодателя!",
                 "produces": [
@@ -178,8 +137,8 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID работодателя",
-                        "name": "EmpID",
-                        "in": "path",
+                        "name": "id",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -201,6 +160,47 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Возвращает ошибку, если не удалось получить список всех вакансий! Конкретная ошибка будет в результате запроса!",
+                        "schema": {
+                            "$ref": "#/definitions/main.SimpleError"
+                        }
+                    }
+                }
+            }
+        },
+        "/empID": {
+            "get": {
+                "description": "Позволяет получить данные работодателя по его ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employer"
+                ],
+                "summary": "Получить данные работодателя по его ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID работодателя",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает ID вакансии.",
+                        "schema": {
+                            "$ref": "#/definitions/sqlite.RequestEmployee"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось распарсить ID работодателя из path!",
+                        "schema": {
+                            "$ref": "#/definitions/main.InfoError"
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!",
                         "schema": {
                             "$ref": "#/definitions/main.SimpleError"
                         }
@@ -256,6 +256,11 @@ const docTemplate = `{
         },
         "/user/otklik": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Создает отклик на вакансию при помощи ID пользователя и вакансии. Статус отклика автоматически присваевается \"Ожидание\"",
                 "consumes": [
                     "application/json"
@@ -344,13 +349,18 @@ const docTemplate = `{
                 "summary": "Получить список вакансий",
                 "parameters": [
                     {
-                        "description": "Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с которой начать отсчёт.",
-                        "name": "RequsetLimit",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.RequestVac"
-                        }
+                        "type": "integer",
+                        "description": "Лимит сколько вакансий",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "С какого ID надо показывать вакансии",
+                        "name": "lastID",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -419,7 +429,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/vac/:id": {
+        "/vacID": {
             "get": {
                 "description": "Позволяет получить данные о вакансии по её ID.",
                 "produces": [
@@ -433,8 +443,8 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID вакансии",
-                        "name": "VacancyID",
-                        "in": "path",
+                        "name": "id",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -593,17 +603,6 @@ const docTemplate = `{
                 }
             }
         },
-        "main.RequestVac": {
-            "type": "object",
-            "properties": {
-                "last_id": {
-                    "type": "integer"
-                },
-                "limit": {
-                    "type": "integer"
-                }
-            }
-        },
         "main.SimpleError": {
             "type": "object",
             "properties": {
@@ -702,25 +701,19 @@ const docTemplate = `{
                 "ID": {
                     "type": "integer"
                 },
-                "about": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "geography": {
                     "type": "string"
                 },
                 "inn": {
                     "type": "string"
                 },
-                "limit": {
-                    "type": "integer"
-                },
                 "nameOrg": {
                     "type": "string"
                 },
                 "phoneNumber": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -797,6 +790,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

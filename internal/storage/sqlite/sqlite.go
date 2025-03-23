@@ -338,15 +338,23 @@ func (s *Storage) GetAllVacancy() ([]ResponseVac, error) {
 	return result, nil
 }
 
-func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVac, error) {
+func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVacancyByIDs, error) {
 	const op = "storage.sqlite.Get.AllVacancy"
-	_, err := s.db.Prepare("SELECT * FROM vacancy WHERE employee_id = ?")
+	_, err := s.db.Prepare(`select vacancy.id, vacancy.emp_id, employer.nameOrganization,vacancy.name,vacancy.price, vacancy.email, vacancy.phoneNumber, vacancy.location, experience.name, vacancy.aboutWork, vacancy.is_visible 
+							from vacancy 
+							INNER JOIN employer on vacancy.emp_id = employer.id 
+							INNER JOIN experience on vacancy.experience_id = experience.id
+							where vacancy.emp_id = ?`)
 	if err != nil {
 		fmt.Println("ERROR IN CREATING REQUEST OT DB!", op)
-		return nil, fmt.Errorf("ERROR IN CREATING REQUEST OT DB")
+		return nil, err
 	}
-	result := []ResponseVac{}
-	row, err := s.db.Query("SELECT * FROM vacancy WHERE employee_id = ?", emp_id)
+	result := []ResponseVacancyByIDs{}
+	row, err := s.db.Query(`select vacancy.id, vacancy.emp_id, employer.nameOrganization,vacancy.name,vacancy.price, vacancy.email, vacancy.phoneNumber, vacancy.location, experience.name, vacancy.aboutWork, vacancy.is_visible 
+							from vacancy 
+							INNER JOIN employer on vacancy.emp_id = employer.id 
+							INNER JOIN experience on vacancy.experience_id = experience.id
+							where vacancy.emp_id = ?`, emp_id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return result, fmt.Errorf("%s: ошибка в бд (xdd)", op)
@@ -356,8 +364,8 @@ func (s *Storage) GetAllVacsForEmployee(emp_id int) ([]ResponseVac, error) {
 		}
 	}
 	for row.Next() {
-		r := ResponseVac{}
-		err := row.Scan(&r.ID, &r.Emp_ID, &r.Vac_Name, &r.Price, &r.Location, &r.Experience)
+		r := ResponseVacancyByIDs{}
+		err := row.Scan(&r.ID, &r.Emp_ID, &r.Employer_Name, &r.Vac_Name, &r.Price, &r.Email, &r.PhoneNumber, &r.Location, &r.Experience, &r.About, &r.Is_visible)
 		if err != nil {
 			fmt.Println(err)
 			continue

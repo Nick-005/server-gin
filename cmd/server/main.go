@@ -55,6 +55,9 @@ type RequestEmployee struct {
 
 const secretKEY = "ISP-7-21-borodinna"
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.MustLoad()
 	storage, err := InitStorage(cfg)
@@ -64,40 +67,43 @@ func main() {
 	// Только для деплоя
 	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	docs.SwaggerInfo.BasePath = "api/v1"
+	docs.SwaggerInfo.BasePath = "/api/v1"
 
-	router.GET("/token/check", GetTimeToken(storage))
+	apiV1 := router.Group("/api/v1")
+	{
+		apiV1.GET("/token/check", GetTimeToken(storage))
 
-	router.GET("/all/vacs", GetAllVacancy(storage))
+		apiV1.GET("/all/vacs", GetAllVacancy(storage))
 
-	router.GET("/vac", GetVacancy(storage))
+		apiV1.GET("/vac", GetVacancy(storage))
 
-	router.GET("/vac/:id", GetVacancyByID(storage))
-	router.GET("/emp/:id", GetEmployerByID(storage))
+		apiV1.GET("/vacID", GetVacancyByID(storage))
+		apiV1.GET("/empID", GetEmployerByID(storage))
 
-	router.GET("/emp/vacs/:id", GetVacancyByEmployer(storage))
+		apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
 
-	router.POST("/vac", PostVacancy(storage))
-	router.POST("/emp", PostEmployer(storage))
+		apiV1.POST("/vac", PostVacancy(storage))
+		apiV1.POST("/emp", PostEmployer(storage))
 
-	router.POST("/user", PostUser(storage))
+		apiV1.POST("/user", PostUser(storage))
 
-	router.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
+		apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
 
-	router.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
+		apiV1.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
 
-	router.GET("/auth/user", GetTokenForUser(storage))
+		apiV1.GET("/auth/user", GetTokenForUser(storage))
 
-	router.GET("/auth/test", AuthMiddleWare(), func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"status": "OK!",
-			"auth":   "some text!",
+		apiV1.GET("/auth/test", AuthMiddleWare(), func(ctx *gin.Context) {
+			ctx.JSON(200, gin.H{
+				"status": "OK!",
+				"auth":   "some text!",
+			})
 		})
-	})
 
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
 
-	router.Run("localhost:8089")
+	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	router.Run("0.0.0.0:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -195,6 +201,7 @@ type RequestResponse struct {
 // @Summary Создание отклика на вакансию
 // @Description Создает отклик на вакансию при помощи ID пользователя и вакансии. Статус отклика автоматически присваевается "Ожидание"
 // @Tags vacancy
+// @Security ApiKeyAuth
 // @Accept  json
 // @Produce  json
 // @Param IDs body RequestResponse true "ID пользователя и вакансии, на которую нужно добавить отклик"
@@ -459,14 +466,14 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 // @Description Позволяет получить массив данных о всех вакансиях, которые есть у работодателя. Для этого нужно передать ID работодателя!
 // @Tags employer
 // @Produce  json
-// @Param EmpID path int true "ID работодателя"
+// @Param id query int true "ID работодателя"
 // @Success 200 {object} []sqlite.ResponseVac "Возвращает массив актуальных вакансий от одного работодателя."
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить список всех вакансий! Конкретная ошибка будет в результате запроса!"
-// @Router /emp/vacs/id [get]
+// @Router /emp/vacs [get]
 func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, err := strconv.Atoi(ctx.Param("id"))
+		id, err := strconv.Atoi(ctx.Query("id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -590,14 +597,14 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 // @Description Позволяет получить данные работодателя по его ID.
 // @Tags employer
 // @Produce json
-// @Param EmpID path int true "ID работодателя"
+// @Param id query int true "ID работодателя"
 // @Success 200 {object} sqlite.RequestEmployee "Возвращает ID вакансии."
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID работодателя из path!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
-// @Router /emp/:id [get]
+// @Router /empID [get]
 func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, err := strconv.Atoi(ctx.Param("id"))
+		id, err := strconv.Atoi(ctx.Query("id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -633,14 +640,16 @@ type TakeVacancyByID struct {
 // @Description Позволяет получить данные о вакансии по её ID.
 // @Tags vacancy
 // @Produce json
-// @Param VacancyID path int true "ID вакансии"
+// @Param id query int true "ID вакансии"
 // @Success 200 {object} TakeVacancyByID "Возвращает данные вакансии"
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID вакансии из строки запроса!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
-// @Router /vac/:id [get]
+// @Router /vacID [get]
 func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, err := strconv.Atoi(ctx.Param("id"))
+		ab := ctx.Query("id")
+		fmt.Println(ab)
+		id, err := strconv.Atoi(ab)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -692,7 +701,8 @@ type ListOfVacancies struct {
 // @Tags vacancy
 // @Accept json
 // @Produce json
-// @Param RequsetLimit body RequestVac true "Limit - кол-во вакансий для выдачи. Last_id - id вакансии, с которой начать отсчёт."
+// @Param limit query int true "Лимит сколько вакансий"
+// @Param lastID query int true "С какого ID надо показывать вакансии"
 // @Success 200 {object} ListOfVacancies "Возвращает список данных вакансий"
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body вакансий!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные вакансий. Конкретная ошибка будет в результате запроса!"
@@ -700,7 +710,9 @@ type ListOfVacancies struct {
 func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestVac
-		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+
+		limit, err := strconv.Atoi(ctx.Query("limit"))
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
 				"info":   "Error in parse body in request! Please check your body in request!",
@@ -708,6 +720,26 @@ func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 			})
 			return
 		}
+		lastID, err := strconv.Atoi(ctx.Query("lastID"))
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+		body.Last_id = lastID
+		body.Limit = limit
+		// if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+		// ctx.JSON(http.StatusBadRequest, gin.H{
+		// 	"status": "Err",
+		// 	"info":   "Error in parse body in request! Please check your body in request!",
+		// 	"error":  err.Error(),
+		// })
+		// return
+		// }
 		response, err := storage.VacancyByLimit(body.Limit, body.Last_id)
 		if err != nil {
 			ctx.JSON(401, gin.H{
