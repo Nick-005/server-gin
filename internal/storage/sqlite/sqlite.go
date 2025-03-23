@@ -745,6 +745,9 @@ func (s *Storage) CheckPasswordNEmail(email, password string) (RequestNewToken, 
 	var body RequestNewToken
 	err := row.Scan(&body.Email, &body.Password)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return body, fmt.Errorf("there are no records that match your data on the server. Recheck your request and try again ")
+		}
 		return body, fmt.Errorf("%s: %w", op, err)
 	}
 	return body, nil

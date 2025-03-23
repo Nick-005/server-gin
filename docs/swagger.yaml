@@ -220,7 +220,7 @@ paths:
       tags:
       - delete
   /auth/user:
-    get:
+    post:
       consumes:
       - application/json
       description: Позволяет выдать новый токен пользователю, если у него нету актуального

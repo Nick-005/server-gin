@@ -91,7 +91,7 @@ func main() {
 
 		apiV1.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
 
-		apiV1.GET("/auth/user", GetTokenForUser(storage))
+		apiV1.POST("/auth/user", GetTokenForUser(storage))
 
 		apiV1.GET("/auth/test", AuthMiddleWare(), func(ctx *gin.Context) {
 			ctx.JSON(200, gin.H{
@@ -103,7 +103,7 @@ func main() {
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	router.Run("0.0.0.0:8089")
+	router.Run("localhost:8089")
 }
 
 func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
@@ -373,7 +373,7 @@ type TokenForUser struct {
 // @Success 200 {object} TokenForUser "Возвращает актуальный и новый токен для пользователя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось найти пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
-// @Router /auth/user [get]
+// @Router /auth/user [post]
 func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestNewToken

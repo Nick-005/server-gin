@@ -32,7 +32,7 @@ const docTemplate = `{
             }
         },
         "/auth/user": {
-            "get": {
+            "post": {
                 "description": "Позволяет выдать новый токен пользователю, если у него нету актуального 'Bearer Token' или был, но он уже не действителен.",
                 "consumes": [
                     "application/json"
