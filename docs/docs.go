@@ -301,6 +301,11 @@ const docTemplate = `{
         },
         "/user/otkliks/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Возвращает список всех откликов для определенного пользователя по его ID",
                 "produces": [
                     "application/json"
@@ -313,7 +318,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID пользователя",
-                        "name": "UID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }

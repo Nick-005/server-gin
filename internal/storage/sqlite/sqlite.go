@@ -610,7 +610,7 @@ func (s *Storage) GetLimit(ID int) int {
 	return update
 }
 
-func CreateToken(email string) (string, error) {
+func CreateToken(email, user string) (string, error) {
 	type Header struct {
 		Alg string `json:"alg"` // Алгоритм подписи
 		Typ string `json:"typ"` // Тип токена
@@ -622,7 +622,12 @@ func CreateToken(email string) (string, error) {
 		Iat int64  `json:"iat"` // Issued at - время в которое был выдан токен
 		Exp int64  `json:"exp"` // Время истечения токена (в Unix timestamp)
 	}
-	var secretKEY string = "ISP-7-21-borodinna"
+	var secretKEY string
+	if user == "emp" {
+		secretKEY = "jokerge-palmadav@student.21-school.ru" + email
+	} else {
+		secretKEY = "ISP-7-21-borodinna" + email
+	}
 
 	var header Header
 	header.Alg = "HS256"
@@ -658,9 +663,9 @@ func CreateToken(email string) (string, error) {
 	return tokenJWT, nil
 }
 
-func (s *Storage) CreateAccessToken(email string) (string, error) {
+func (s *Storage) CreateAccessToken(email, user string) (string, error) {
 	const op = "sqlite.CreateAccessToken.User"
-	token, err := CreateToken(email)
+	token, err := CreateToken(email, user)
 	if err != nil {
 		return "Error", fmt.Errorf("%s: %w", op, err)
 	}
@@ -739,11 +744,31 @@ func (s *Storage) AddUser(email string, password string, name string, phoneNumbe
 }
 
 func (s *Storage) CheckPasswordNEmail(email, password string) (RequestNewToken, error) {
-	const op = "sqlite.CheckPasswordNEmail.New.Token"
+	const op = "sqlite.CheckPasswordNEmail.New.Token.User"
 
 	row := s.db.QueryRow("select email, password from user where email = $1 and password = $2", email, password)
 	var body RequestNewToken
 	err := row.Scan(&body.Email, &body.Password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return body, fmt.Errorf("there are no records that match your data on the server. Recheck your request and try again ")
+		}
+		return body, fmt.Errorf("%s: %w", op, err)
+	}
+	return body, nil
+}
+
+type RequestEmployer struct {
+	INN      string `json:"inn"`
+	Password string `json:"password"`
+}
+
+func (s *Storage) CheckEmpPasswordNEmail(INN, password string) (RequestEmployer, error) {
+	const op = "sqlite.CheckPasswordNEmail.New.Token.Emp"
+
+	row := s.db.QueryRow("select INN, password from user where INN = $1 and password = $2", INN, password)
+	var body RequestEmployer
+	err := row.Scan(&body.INN, &body.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return body, fmt.Errorf("there are no records that match your data on the server. Recheck your request and try again ")

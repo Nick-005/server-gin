@@ -156,9 +156,10 @@ type InfoError struct {
 
 // @Summary Получение списка всех откликов для пользователя
 // @Description Возвращает список всех откликов для определенного пользователя по его ID
+// @Security ApiKeyAuth
 // @Tags user
 // @Produce  json
-// @Param UID path int true "ID пользователя"
+// @Param id path int true "ID пользователя"
 // @Success 200 {object} AllUserResponseOK "Возвращает статус и массив откликов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
 // @Failure 404 {object} SimpleError "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
 // @Router /user/otkliks/{id} [get]
@@ -395,7 +396,58 @@ func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
 			return
 		}
 
-		token, err := storage.CreateAccessToken(data.Email)
+		token, err := storage.CreateAccessToken(data.Email, "user")
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "OK",
+			"token":  token,
+		})
+	}
+}
+
+type RequestEmployer struct {
+	INN      string `json:"inn"`
+	Password string `json:"password"`
+}
+
+// @Summary Выдать новый токен работодателю
+// @Description Позволяет выдать новый токен работодателю, если у него нету актуального 'Bearer Token' или был, но он уже не действителен.
+// @Tags token
+// @Accept  json
+// @Produce  json
+// @Param ДанныеРаботодателя body RequestNewToken true "Актуальные логин (ИНН?) и пароль работодателя"
+// @Success 200 {object} TokenForUser "Возвращает актуальный и новый токен для работодателя. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
+// @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные работодателя!"
+// @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось найти работодателя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
+// @Router /auth/user [post]
+func GetTokenForEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var body RequestEmployer
+		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body! Please check our body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		data, err := storage.CheckPasswordNEmail(body.INN, body.Password)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		token, err := storage.CreateAccessToken(data.Email, "user")
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -444,7 +496,7 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 			})
 			return
 		}
-		token, err := storage.CreateAccessToken(body.Email)
+		token, err := storage.CreateAccessToken(body.Email, "user")
 		if err != nil {
 			ctx.JSON(401, gin.H{
 				"status": "Err",
@@ -531,8 +583,17 @@ func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
 			ctx.JSON(200, fmt.Errorf("error in add employer. Error is: %w", err).Error())
 			return
 		}
+		token, err := storage.CreateAccessToken(req.Email, "emp")
+		if err != nil {
+			ctx.JSON(401, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
 		ctx.JSON(200, gin.H{
 			"emp_id": id,
+			"token":  token,
 			"status": "OK",
 		})
 

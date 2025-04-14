@@ -426,7 +426,7 @@ paths:
       parameters:
       - description: ID пользователя
         in: path
-        name: UID
+        name: id
         required: true
         type: integer
       produces:
@@ -442,6 +442,8 @@ paths:
             параметр (ID) через URL.
           schema:
             $ref: '#/definitions/main.SimpleError'
+      security:
+      - ApiKeyAuth: []
       summary: Получение списка всех откликов для пользователя
       tags:
       - user
