@@ -1,0 +1,551 @@
+definitions:
+  main.AddNewUser:
+    properties:
+      status:
+        type: string
+      token:
+        type: string
+      uid:
+        type: integer
+    type: object
+  main.AllUserResponseOK:
+    properties:
+      otkliks:
+        type: string
+      status:
+        type: string
+    type: object
+  main.InfoError:
+    properties:
+      error:
+        type: string
+      info:
+        type: string
+      status:
+        type: string
+    type: object
+  main.ListOfVacancies:
+    properties:
+      response:
+        items:
+          $ref: '#/definitions/sqlite.VacancyTake'
+        type: array
+      status:
+        type: string
+    type: object
+  main.NewEmployer:
+    properties:
+      emp_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  main.NewVacancy:
+    properties:
+      status:
+        type: string
+      vacancyID:
+        type: integer
+    type: object
+  main.RequestAdd:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
+  main.RequestEmployee:
+    properties:
+      email:
+        type: string
+      inn:
+        type: string
+      nameOrg:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
+  main.RequestNewToken:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  main.RequestResponse:
+    properties:
+      UID:
+        type: integer
+      vac_id:
+        type: integer
+    type: object
+  main.SimpleError:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  main.TakeVacancyByID:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: string
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      status:
+        type: string
+      vac_name:
+        type: string
+    type: object
+  main.TokenForUser:
+    properties:
+      status:
+        type: string
+      token:
+        type: string
+    type: object
+  main.Vacancy_Body:
+    properties:
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: integer
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      vac_name:
+        type: string
+    type: object
+  sqlite.RequestEmployee:
+    properties:
+      ID:
+        type: integer
+      email:
+        type: string
+      inn:
+        type: string
+      nameOrg:
+        type: string
+      phoneNumber:
+        type: string
+      status:
+        type: string
+    type: object
+  sqlite.ResponseVac:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: string
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      vac_name:
+        type: string
+    type: object
+  sqlite.VacancyTake:
+    properties:
+      ID:
+        type: integer
+      about:
+        type: string
+      email:
+        type: string
+      emp_id:
+        type: integer
+      exp:
+        type: string
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      nameOrg:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: integer
+      vac_name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /all/vac:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: не использовать! УДАЛИТЬ!
+      tags:
+      - delete
+  /auth/user:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет выдать новый токен работодателю, если у него нету актуального
+        'Bearer Token' или был, но он уже не действителен.
+      parameters:
+      - description: Актуальные логин (ИНН?) и пароль работодателя
+        in: body
+        name: ДанныеРаботодателя
+        required: true
+        schema:
+          $ref: '#/definitions/main.RequestNewToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает актуальный и новый токен для работодателя. Если
+            произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!
+            Также будет известно, где именно произошла ошибка!
+          schema:
+            $ref: '#/definitions/main.TokenForUser'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body, который
+            отвечает за данные работодателя!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось найти работодателя в БД,
+            который соответствовал бы данным, которые были получены сервером в результате
+            этого запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Выдать новый токен работодателю
+      tags:
+      - token
+  /emp:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет создать работодателя в системе. Будет возвращен ID и
+        токен для работодателя!
+      parameters:
+      - description: Данные работодателя
+        in: body
+        name: EmpData
+        required: true
+        schema:
+          $ref: '#/definitions/main.RequestEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID (И попозже будет Token) работодателя.
+          schema:
+            $ref: '#/definitions/main.NewEmployer'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body-request!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не добавить работодателя с корректными
+            данными. Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Создать работодателя
+      tags:
+      - employer
+  /emp/vacs:
+    get:
+      description: Позволяет получить массив данных о всех вакансиях, которые есть
+        у работодателя. Для этого нужно передать ID работодателя!
+      parameters:
+      - description: ID работодателя
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает массив актуальных вакансий от одного работодателя.
+          schema:
+            items:
+              $ref: '#/definitions/sqlite.ResponseVac'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить ID
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить список всех вакансий!
+            Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить все вакансии работодателя
+      tags:
+      - employer
+  /empID:
+    get:
+      description: Позволяет получить данные работодателя по его ID.
+      parameters:
+      - description: ID работодателя
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID вакансии.
+          schema:
+            $ref: '#/definitions/sqlite.RequestEmployee'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить ID работодателя
+            из path!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные работодателя,
+            который соответствует переданному ID. Конкретная ошибка будет в результате
+            запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить данные работодателя по его ID
+      tags:
+      - employer
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить нового пользователя в систему, если пользователя
+        с такими данными не существовало!
+      parameters:
+      - description: 'Данные пользователя. А именно: Почта (email), пароль (password),
+          name (имя), номер телефона (phoneNumber)'
+        in: body
+        name: UserData
+        required: true
+        schema:
+          $ref: '#/definitions/main.RequestAdd'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает актуальный токен для пользователя, а также ID пользователя.
+            Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!
+            Также будет известно, где именно произошла ошибка!
+          schema:
+            $ref: '#/definitions/main.AddNewUser'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body, который
+            отвечает за данные пользователя!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось добавить пользователя в
+            БД, который соответствовал бы данным, которые были получены сервером в
+            результате этого запроса или не удалось создать для него токен! Конкретная
+            ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Создать нового пользователя
+      tags:
+      - user
+  /user/otklik:
+    post:
+      consumes:
+      - application/json
+      description: Создает отклик на вакансию при помощи ID пользователя и вакансии.
+        Статус отклика автоматически присваевается "Ожидание"
+      parameters:
+      - description: ID пользователя и вакансии, на которую нужно добавить отклик
+        in: body
+        name: IDs
+        required: true
+        schema:
+          $ref: '#/definitions/main.RequestResponse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID отклика. Если произошла ошибка - статус будет
+            'Err' и будет возвращен текст ошибки! Также будет известно, где именно
+            произошла ошибка!
+          schema:
+            type: integer
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить request body.
+            К ответу прикрепляется ID, который получил сервер, а также где именно
+            произошла ошибка.
+          schema:
+            $ref: '#/definitions/main.InfoError'
+      security:
+      - ApiKeyAuth: []
+      summary: Создание отклика на вакансию
+      tags:
+      - vacancy
+  /user/otkliks/{id}:
+    get:
+      description: Возвращает список всех откликов для определенного пользователя
+        по его ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус и массив откликов. Если произошла ошибка
+            - статус будет 'Err' и будет возвращен текст ошибки!
+          schema:
+            $ref: '#/definitions/main.AllUserResponseOK'
+        "404":
+          description: Возвращает ошибку, если не удалось преобразовать передаваемый
+            параметр (ID) через URL.
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка всех откликов для пользователя
+      tags:
+      - user
+  /vac:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить определенное кол-во вакансий.
+      parameters:
+      - description: Лимит сколько вакансий
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: С какого ID надо показывать вакансии
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает список данных вакансий
+          schema:
+            $ref: '#/definitions/main.ListOfVacancies'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body вакансий!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные вакансий.
+            Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить список вакансий
+      tags:
+      - vacancy
+    post:
+      consumes:
+      - application/json
+      description: Позволяет создать новую вакансию в системе. Будет возвращен ID
+        вакансии!
+      parameters:
+      - description: Данные вакансии
+        in: body
+        name: VacData
+        required: true
+        schema:
+          $ref: '#/definitions/main.Vacancy_Body'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает ID вакансии.
+          schema:
+            $ref: '#/definitions/main.NewVacancy'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить body-request!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось добавить вакансию с переданными
+            данными. Конкретная ошибка будет в результате запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Создать вакансию
+      tags:
+      - vacancy
+  /vacID:
+    get:
+      description: Позволяет получить данные о вакансии по её ID.
+      parameters:
+      - description: ID вакансии
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает данные вакансии
+          schema:
+            $ref: '#/definitions/main.TakeVacancyByID'
+        "400":
+          description: Возвращает ошибку, если не удалось распарсить ID вакансии из
+            строки запроса!
+          schema:
+            $ref: '#/definitions/main.InfoError'
+        "401":
+          description: Возвращает ошибку, если не удалось получить данные работодателя,
+            который соответствует переданному ID. Конкретная ошибка будет в результате
+            запроса!
+          schema:
+            $ref: '#/definitions/main.SimpleError'
+      summary: Получить данные о вакансии по её ID
+      tags:
+      - vacancy
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

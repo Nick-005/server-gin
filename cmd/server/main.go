@@ -8,11 +8,13 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 	swaggerfiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
-
 	"main.go/docs"
 	"main.go/internal/config"
 	"main.go/internal/storage/sqlite"
@@ -60,7 +62,7 @@ const secretKEY = "ISP-7-21-borodinna"
 // @name Authorization
 func main() {
 	cfg := config.MustLoad()
-	storage, err := InitStorage(cfg)
+	storage, err := sqlx.Connect("pgx", cfg.StoragePath)
 	if err != nil {
 		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
@@ -106,39 +108,6 @@ func main() {
 	router.Run("localhost:8089")
 }
 
-func InitStorage(cfg *config.Config) (*sqlite.Storage, error) {
-	_, err := sqlite.CreateVacancyTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateVacancy Table")
-	}
-	_, err = sqlite.CreateResponeVacTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateResponeVacTable Table. %w", err)
-	}
-	_, err = sqlite.CreateEmployeeTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateEmployee Table. %w", err)
-	}
-	_, err = sqlite.CreateTableUser(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateTableUser Table. %w", err)
-	}
-	_, err = sqlite.CreateStatusTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateStatusTable Table. %w", err)
-	}
-	_, err = sqlite.CreateExperienceTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateExperienceTable Table. %w", err)
-	}
-	storage, err := sqlite.CreateResumeTable(cfg.StoragePath)
-	if err != nil {
-		return nil, fmt.Errorf("error in CreateResumeTable Table. %w", err)
-	}
-
-	return storage, nil
-}
-
 type AllUserResponseOK struct {
 	Status  string
 	Otkliks string
@@ -163,7 +132,7 @@ type InfoError struct {
 // @Success 200 {object} AllUserResponseOK "Возвращает статус и массив откликов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
 // @Failure 404 {object} SimpleError "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
 // @Router /user/otkliks/{id} [get]
-func GetAllUserResponse(storage *sqlite.Storage) gin.HandlerFunc {
+func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
@@ -209,7 +178,7 @@ type RequestResponse struct {
 // @Success 200 {integer} ResponseOnVacancy "Возвращает ID отклика. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки! Также будет известно, где именно произошла ошибка!"
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить request body. К ответу прикрепляется ID, который получил сервер, а также где именно произошла ошибка."
 // @Router /user/otklik [post]
-func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+func PostResponseOnVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		var body RequestResponse
@@ -258,7 +227,7 @@ func PostResponseOnVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 	}
 }
 
-func GetTimeToken(storage *sqlite.Storage) gin.HandlerFunc {
+func GetTimeToken(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		fmt.Println(authHeader)
@@ -375,7 +344,7 @@ type TokenForUser struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось найти пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
 // @Router /auth/user [post]
-func GetTokenForUser(storage *sqlite.Storage) gin.HandlerFunc {
+func GetTokenForUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestNewToken
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -426,7 +395,7 @@ type RequestEmployer struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные работодателя!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось найти работодателя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса!"
 // @Router /auth/user [post]
-func GetTokenForEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+func GetTokenForEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestEmployer
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -477,7 +446,7 @@ type AddNewUser struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body, который отвечает за данные пользователя!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить пользователя в БД, который соответствовал бы данным, которые были получены сервером в результате этого запроса или не удалось создать для него токен! Конкретная ошибка будет в результате запроса!"
 // @Router /user [post]
-func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
+func PostUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestAdd
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -523,7 +492,7 @@ func PostUser(storage *sqlite.Storage) gin.HandlerFunc {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить список всех вакансий! Конкретная ошибка будет в результате запроса!"
 // @Router /emp/vacs [get]
-func GetVacancyByEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+func GetVacancyByEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Query("id"))
 		if err != nil {
@@ -563,7 +532,7 @@ type NewEmployer struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не добавить работодателя с корректными данными. Конкретная ошибка будет в результате запроса!"
 // @Router /emp [post]
-func PostEmployer(storage *sqlite.Storage) gin.HandlerFunc {
+func PostEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req RequestEmployee
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
@@ -616,7 +585,7 @@ type NewVacancy struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body-request!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось добавить вакансию с переданными данными. Конкретная ошибка будет в результате запроса!"
 // @Router /vac [post]
-func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+func PostVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body Vacancy_Body
 		if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -663,7 +632,7 @@ func PostVacancy(storage *sqlite.Storage) gin.HandlerFunc {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID работодателя из path!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
 // @Router /empID [get]
-func GetEmployerByID(storage *sqlite.Storage) gin.HandlerFunc {
+func GetEmployerByID(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi(ctx.Query("id"))
 		if err != nil {
@@ -706,7 +675,7 @@ type TakeVacancyByID struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить ID вакансии из строки запроса!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные работодателя, который соответствует переданному ID. Конкретная ошибка будет в результате запроса!"
 // @Router /vacID [get]
-func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
+func GetVacancyByID(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ab := ctx.Query("id")
 		fmt.Println(ab)
@@ -740,7 +709,7 @@ func GetVacancyByID(storage *sqlite.Storage) gin.HandlerFunc {
 // @Tags delete
 // @Success 200 {string} GetAllVacancy
 // @Router /all/vac [get]
-func GetAllVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+func GetAllVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := storage.GetAllVacancy()
 		if err != nil {
@@ -768,7 +737,7 @@ type ListOfVacancies struct {
 // @Failure 400 {object} InfoError "Возвращает ошибку, если не удалось распарсить body вакансий!"
 // @Failure 401 {object} SimpleError "Возвращает ошибку, если не удалось получить данные вакансий. Конкретная ошибка будет в результате запроса!"
 // @Router /vac [get]
-func GetVacancy(storage *sqlite.Storage) gin.HandlerFunc {
+func GetVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body RequestVac
 
