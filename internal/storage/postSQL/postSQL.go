@@ -67,3 +67,16 @@ func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
 	}
 	return result, nil
 }
+
+func PostNewStatus(storage *sqlx.DB, name string) error {
+
+	query, args, err := psql.Insert("status").Columns("name").Values(name).ToSql()
+	if err != nil {
+		return err
+	}
+	_, err = storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}

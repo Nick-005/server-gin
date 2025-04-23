@@ -10,7 +10,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"main.go/docs"
 	"main.go/internal/config"
-	post "main.go/internal/storage/postSQL"
+	sqlp "main.go/internal/storage/postSQL"
 )
 
 type Vacancy_Body struct {
@@ -88,6 +88,7 @@ func main() {
 	apiV1 := router.Group("/api/v1")
 	{
 		apiV1.GET("/status", GetAllStatus(storage))
+		apiV1.POST("/status", AddNewStatus(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
 		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
@@ -138,19 +139,26 @@ type InfoError struct {
 	Info string
 }
 
+func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Query("name")
+		err := sqlp.PostNewStatus(storage, name)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+		})
+	}
+}
+
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
-		// if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
-		// 	ctx.JSON(http.StatusBadRequest, gin.H{
-		// 		"status": "Err",
-		// 		"info":   "Please check our body in request!",
-		// 		"error":  "Error in parse body!",
-		// 	})
-		// 	return
-		// }
-
-		data, err := post.GetAllStatus(storage)
+		data, err := sqlp.GetAllStatus(storage)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
