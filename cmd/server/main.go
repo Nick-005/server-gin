@@ -53,7 +53,7 @@ type RequestEmployee struct {
 	INN              string `json:"inn"`
 }
 
-const secretKEY = "ISP-7-21-borodinna"
+const secretKEY = "ISP-7-21-borodinna_test"
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
