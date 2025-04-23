@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -141,8 +143,20 @@ type InfoError struct {
 
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		tx, err := storage.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+		}
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
 		name := ctx.Query("name")
-		err := sqlp.PostNewStatus(storage, name)
+		err = sqlp.PostNewStatus(tx, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -153,11 +167,33 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"status": "Ok!",
 		})
+		// panic("hello")
+		if err := tx.Commit(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"error":  "failed to commit transaction: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+		})
+
+		tx.Commit()
 	}
 }
 
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		tx, err := storage.Begin()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+		}
+		defer tx.Rollback()
 		data, err := sqlp.GetAllStatus(storage)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -171,7 +207,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 			"status":    "OK!",
 			"AllStatus": data,
 		})
-
+		tx.Commit()
 	}
 }
 
