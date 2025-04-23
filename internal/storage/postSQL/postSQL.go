@@ -54,7 +54,7 @@ type GetStatus struct {
 
 func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
 	var result []GetStatus
-	const op = "storage.sqlite.Get.AllVacancy"
+	const op = "storage.sqlite.Get.Status"
 	query, args, err := psql.Select("*").From("status").ToSql()
 	if err != nil {
 		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
