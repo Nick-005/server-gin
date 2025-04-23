@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	Env         string `yaml:"env" env-default:"local"`
-	StoragePath string `yaml:"storage_path" env-default:"user=postgres dbname=ProBD password=palmadav host=localhost sslmode=disable" env-required:"true"`
+	StoragePath string `yaml:"storage_path" env-default:"postgres://postgres:palmadav@localhost:5432/postgres`
 	HTTPServer  `yaml:"http_server"`
 }
 
