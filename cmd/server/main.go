@@ -108,6 +108,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
 				"error":  err.Error(),
 			})
 		}
@@ -121,17 +122,16 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return
 		}
-		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-		})
 		// panic("hello")
 		if err := tx.Commit(); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в коммите транзакции",
 				"error":  "failed to commit transaction: " + err.Error(),
 			})
 			return
@@ -150,6 +150,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
 				"error":  err.Error(),
 			})
 		}
@@ -167,6 +168,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return
@@ -186,6 +188,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
 				"error":  err.Error(),
 			})
 		}
@@ -194,6 +197,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
+				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return
