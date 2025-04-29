@@ -11,51 +11,10 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"main.go/docs"
+	structs "main.go/internal/api/Struct"
 	"main.go/internal/config"
 	sqlp "main.go/internal/storage/postSQL"
 )
-
-type Vacancy_Body struct {
-	Emp_ID      int    `json:"emp_id"`
-	Vac_Name    string `json:"vac_name"`
-	Price       int    `json:"price"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phoneNumber"`
-	Location    string `json:"location"`
-	Experience  int    `json:"exp"`
-	About       string `json:"about"`
-	Is_visible  bool   `json:"is_visible"`
-}
-
-type RequestVac struct {
-	Limit   int `json:"limit"`
-	Last_id int `json:"last_id"`
-}
-
-type RequestNewToken struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-type RequestAdd struct {
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phoneNumber"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-}
-
-type RequestEmployee struct {
-	NameOrganization string `json:"nameOrg"`
-	PhoneNumber      string `json:"phoneNumber"`
-	Email            string `json:"email"`
-	INN              string `json:"inn"`
-}
-
-// const secretKEY = "ISP-7-21-borodinna"
-
-type Status struct {
-	ID   int    `db:"id"`
-	Name string `db:"name"`
-}
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -91,6 +50,8 @@ func main() {
 	{
 		apiV1.GET("/status", GetAllStatus(storage))
 		apiV1.POST("/status", AddNewStatus(storage))
+
+		apiV1.POST("/emp", PostNewEmployer(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
 		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
@@ -156,7 +117,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			}
 		}()
 		name := ctx.Query("name")
-		err = sqlp.PostNewStatus(tx, name)
+		err = sqlp.PostNewStatus(storage, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -179,7 +140,42 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"status": "Ok!",
 		})
+		tx.Commit()
+	}
+}
 
+func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storage.Begin()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+		}
+		defer tx.Rollback()
+		var req structs.RequestEmployee
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+		data, err := sqlp.PostNewEmployer(storage, req)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":    "OK!",
+			"AllStatus": data,
+		})
 		tx.Commit()
 	}
 }

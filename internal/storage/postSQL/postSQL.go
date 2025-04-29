@@ -2,58 +2,16 @@ package sqlite
 
 import (
 	"fmt"
-	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	structs "main.go/internal/api/Struct"
 )
-
-type RequestNewToken struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-type RequestEmployee struct {
-	ID               int    `json:"ID"`
-	NameOrganization string `json:"nameOrg"`
-	PhoneNumber      string `json:"phoneNumber"`
-	Email            string `json:"email"`
-	INN              string `json:"inn"`
-	Status           string `json:"status"`
-}
-
-type ResponseVac struct {
-	ID          int    `json:"ID"`
-	Emp_ID      int    `json:"emp_id"`
-	Vac_Name    string `json:"vac_name"`
-	Price       int    `json:"price"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phoneNumber"`
-	Location    string `json:"location"`
-	Experience  string `json:"exp"`
-	About       string `json:"about"`
-	Is_visible  bool   `json:"is_visible"`
-}
-
-type ResponseSearchVac struct {
-	ID         int    `json:"ID"`
-	Emp_ID     int    `json:"emp_id"`
-	Vac_Name   string `json:"vac_name"`
-	Price      int    `json:"price"`
-	Location   string `json:"location"`
-	Experience string `json:"exp"`
-}
-
-type GetStatus struct {
-	ID        int       `db:"id"`
-	Name      string    `db:"name"`
-	Crated_At time.Time `db:"created_at"`
-}
-
-func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
-	var result []GetStatus
+func GetAllStatus(storage *sqlx.DB) ([]structs.GetStatus, error) {
+	var result []structs.GetStatus
 	const op = "storage.sqlite.Get.Status"
 	query, args, err := psql.Select("*").From("status").ToSql()
 	if err != nil {
@@ -68,7 +26,7 @@ func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
 	return result, nil
 }
 
-func PostNewStatus(storage *sqlx.Tx, name string) error {
+func PostNewStatus(storage *sqlx.DB, name string) error {
 
 	query, args, err := psql.Insert("status").Columns("name").Values(name).ToSql()
 	if err != nil {
@@ -79,4 +37,49 @@ func PostNewStatus(storage *sqlx.Tx, name string) error {
 		return err
 	}
 	return nil
+}
+
+// func GetVacancies(storage *sqlx.Tx, limit int, last_id int) ([]Vacancies, error) {
+// 	const op = "storage.postgres.Get.Vacancies"
+// 	var result []Vacancies
+// 	query, args, err := psql.Select("v.id as vacancy_id", "v.emp_id as employee_id", "e.name_organization", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "ex.name as experience", "v.about_work", "v.is_visible as visible", "v.created_at", "v.updated_at").
+// 	From("vacancy v").
+// 	InnerJoin("employer e ON e.id").
+// }
+
+func PostNewExperience(storage *sqlx.DB, name string) error {
+	query, args, err := psql.Insert("experience").Columns("name").Values(name).ToSql()
+	if err != nil {
+		return err
+	}
+	_, err = storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func PostNewEmployer(storage *sqlx.DB, body structs.RequestEmployee) (structs.SuccessEmployer, error) {
+	var result structs.SuccessEmployer
+
+	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": body.Status}).ToSql()
+	if err != nil {
+		return result, err
+	}
+	var status_id int
+	err = storage.Get(&status_id, query, args...)
+	if err != nil {
+		return result, err
+	}
+
+	queryMain, argsMain, err := psql.Insert("employer").Columns("name_organization", "phone_number", "email", "inn", "status_id").
+		Values(body.NameOrganization, body.PhoneNumber, body.Email, body.INN, status_id).Suffix("RETURNING *").ToSql()
+	if err != nil {
+		return result, err
+	}
+	err = storage.Get(&result, queryMain, argsMain...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
 }
