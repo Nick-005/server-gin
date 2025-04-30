@@ -10,6 +10,31 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
+func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
+	query, args, err := psql.Select("id").From("experience").Where(sq.Eq{"name": req.Experience}).ToSql()
+	if err != nil {
+		return err
+	}
+
+	var expId int
+
+	err = storage.Get(&expId, query, args...)
+	if err != nil {
+		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
+	}
+
+	MainQuery, MainArgs, err := psql.Insert("resume").Columns("experience_id", "description").Values(expId, req.Description).ToSql()
+	if err != nil {
+		return fmt.Errorf("неполучилось сформировать sql скрипты для добавления в БД. error: %s", err.Error())
+	}
+
+	_, err = storage.Exec(MainQuery, MainArgs...)
+	if err != nil {
+		return fmt.Errorf("неполучилось выполнить добавление в БД. error: %s", err.Error())
+	}
+	return nil
+}
+
 func GetAllStatus(storage *sqlx.DB) ([]structs.GetStatus, error) {
 	var result []structs.GetStatus
 	const op = "storage.sqlite.Get.Status"
@@ -47,6 +72,22 @@ func PostNewStatus(storage *sqlx.DB, name string) error {
 // 	InnerJoin("employer e ON e.id").
 // }
 
+func GetAllExperience(storage *sqlx.DB) ([]structs.GetStatus, error) {
+	var result []structs.GetStatus
+	const op = "storage.sqlite.Get.Experience"
+	query, args, err := psql.Select("*").From("experience").ToSql()
+	if err != nil {
+		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
+		return result, fmt.Errorf("error in creating request to DB")
+	}
+
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 func PostNewExperience(storage *sqlx.DB, name string) error {
 	query, args, err := psql.Insert("experience").Columns("name").Values(name).ToSql()
 	if err != nil {
@@ -57,6 +98,23 @@ func PostNewExperience(storage *sqlx.DB, name string) error {
 		return err
 	}
 	return nil
+}
+
+func GetAllEmployee(storage *sqlx.DB) ([]structs.SuccessEmployer, error) {
+	var result []structs.SuccessEmployer
+
+	query, args, err := psql.Select("*").From("employer").ToSql()
+	if err != nil {
+		return result, err
+	}
+
+	err = storage.Get(&result, query, args...)
+
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
 
 func PostNewEmployer(storage *sqlx.DB, body structs.RequestEmployee) (structs.SuccessEmployer, error) {

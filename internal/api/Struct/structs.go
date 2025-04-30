@@ -30,6 +30,11 @@ type RequestVac struct {
 	Last_id int `json:"last_id"`
 }
 
+type RequestResume struct {
+	Experience  string `json:"exp_name"`
+	Description string `json:"description"`
+}
+
 type RequestAdd struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phoneNumber"`
@@ -92,6 +97,14 @@ type GetStatus struct {
 	ID        int       `db:"id"`
 	Name      string    `db:"name"`
 	Crated_At time.Time `db:"created_at"`
+}
+
+type SuccessResume struct {
+	Id           int       `db:"id"`
+	ExperienceId int       `db:"experience_id"`
+	Description  string    `db:"description"`
+	Created_at   time.Time `db:"created_at"`
+	Updated_at   time.Time `db:"updated_at"`
 }
 
 type RequestNewToken struct {

@@ -52,6 +52,12 @@ func main() {
 		apiV1.POST("/status", AddNewStatus(storage))
 
 		apiV1.POST("/emp", PostNewEmployer(storage))
+		apiV1.GET("/emp", GetAllEmployee(storage))
+
+		apiV1.POST("/exp", PostNewExperience(storage))
+		apiV1.GET("/exp", GetAllExperience(storage))
+
+		apiV1.POST("/resume", PostNewResume(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
 		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
@@ -102,7 +108,88 @@ type InfoError struct {
 	Info string
 }
 
-func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
+func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+
+		var req structs.RequestResume
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		err = sqlp.PostNewResume(storag, req)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+		})
+		tx.Commit()
+
+	}
+}
+
+func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storage.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+			return
+		}
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("Ошибка в откате транзакции: %v", err)
+			}
+		}()
+		data, err := sqlp.GetAllExperience(storage)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":        "Ok!",
+			"AllExperience": data,
+		})
+
+		tx.Commit()
+
+	}
+}
+
+func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx, err := storage.Beginx()
 		if err != nil {
@@ -118,7 +205,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			}
 		}()
 		name := ctx.Query("name")
-		err = sqlp.PostNewStatus(storage, name)
+		err = sqlp.PostNewExperience(storage, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -132,7 +219,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в коммите транзакции",
-				"error":  "failed to commit transaction: " + err.Error(),
+				"error":  err.Error(),
 			})
 			return
 		}
@@ -177,6 +264,85 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"status":    "OK!",
 			"AllStatus": data,
+		})
+		tx.Commit()
+	}
+}
+
+func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+			return
+		}
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("Ошибка в откате транзакции: %v", err)
+			}
+		}()
+
+		data, err := sqlp.GetAllEmployee(storag)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":        "Ok!",
+			"Info_Employes": data,
+		})
+
+		tx.Commit()
+
+	}
+}
+
+func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storage.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+		name := ctx.Query("name")
+		err = sqlp.PostNewStatus(storage, name)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		// panic("hello")
+		if err := tx.Commit(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в коммите транзакции",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
 		})
 		tx.Commit()
 	}
