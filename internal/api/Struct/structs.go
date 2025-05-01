@@ -120,11 +120,12 @@ type GetStatus struct {
 }
 
 type SuccessResume struct {
-	Id           int       `db:"id"`
-	ExperienceId int       `db:"experience_id"`
-	Description  string    `db:"description"`
-	Created_at   time.Time `db:"created_at"`
-	Updated_at   time.Time `db:"updated_at"`
+	Id            int       `db:"id"`
+	Candidate_id  int       `db:"candidate_id"`
+	Experience_id int       `db:"experience_id"`
+	Description   string    `db:"description"`
+	Created_at    time.Time `db:"created_at"`
+	Updated_at    time.Time `db:"updated_at"`
 }
 
 type RequestNewToken struct {

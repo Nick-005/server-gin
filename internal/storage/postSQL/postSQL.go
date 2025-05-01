@@ -10,6 +10,38 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
+func GetCandidateById(storage *sqlx.DB, id int) ([]structs.InfoCandidate, error) {
+	var result []structs.InfoCandidate
+
+	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
+	if err != nil {
+		return result, err
+	}
+
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func GetAllResumeByCandidate(storage *sqlx.DB, id int) ([]structs.SuccessResume, error) {
+	var result []structs.SuccessResume
+
+	query, args, err := psql.Select("*").From("resume").Where(sq.Eq{"candidate_id": id}).ToSql()
+	if err != nil {
+		return result, err
+	}
+
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 func GetAllCandidates(storage *sqlx.DB) ([]structs.InfoCandidate, error) {
 	var result []structs.InfoCandidate
 

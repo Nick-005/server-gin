@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -61,6 +62,7 @@ func main() {
 		apiV1.GET("/user", GetAllCandidates(storage))
 
 		apiV1.POST("/resume", PostNewResume(storage))
+		apiV1.GET("/resume", GetResumeOfCandidates(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
 		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
@@ -111,6 +113,59 @@ type InfoError struct {
 	Info string
 }
 
+func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+		var id int
+		id, err = strconv.Atoi(ctx.Query("user_id"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в получении данных из строки",
+				"error":  err.Error(),
+			})
+			return
+		}
+		candidateInfo, err := sqlp.GetCandidateById(storag, id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле инфы пользователя",
+				"error":  err.Error(),
+			})
+			return
+		}
+		data, err := sqlp.GetAllResumeByCandidate(storag, id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":          "Ok!",
+			"Resumies":        data,
+			"Candidates_Info": candidateInfo,
+		})
+		tx.Commit()
+	}
+}
+
 func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx, err := storag.Beginx()
@@ -145,8 +200,6 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 	}
 }
-
-//	 89939305028
 
 func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
