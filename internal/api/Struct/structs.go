@@ -8,7 +8,7 @@ type SuccessEmployer struct {
 	PhoneNumber      string    `db:"phone_number"`
 	Email            string    `db:"email"`
 	INN              string    `db:"inn"`
-	Status           string    `db:"status_id"`
+	Status_id        int       `db:"status_id"`
 	Created_at       time.Time `db:"created_at"`
 	Updated_at       time.Time `db:"updated_at"`
 }
@@ -25,7 +25,7 @@ type Vacancy_Body struct {
 	Is_visible  bool   `json:"is_visible"`
 }
 
-type RequestCondidate struct {
+type RequestCandidate struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
 	Email       string `json:"email"`
@@ -33,7 +33,7 @@ type RequestCondidate struct {
 	UserStatus  string `json:"u_status"`
 }
 
-type SuccessCondidate struct {
+type InfoCandidate struct {
 	ID          int       `db:"id"`
 	Name        string    `db:"name"`
 	PhoneNumber string    `db:"phone_number"`

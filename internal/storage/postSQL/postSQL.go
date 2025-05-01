@@ -10,8 +10,8 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-func GetAllCandidates(storage *sqlx.DB) ([]structs.SuccessCondidate, error) {
-	var result []structs.SuccessCondidate
+func GetAllCandidates(storage *sqlx.DB) ([]structs.InfoCandidate, error) {
+	var result []structs.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").ToSql()
 	if err != nil {
@@ -26,8 +26,8 @@ func GetAllCandidates(storage *sqlx.DB) ([]structs.SuccessCondidate, error) {
 
 }
 
-func PostNewCondidate(storage *sqlx.DB, req structs.RequestCondidate) (structs.SuccessCondidate, error) {
-	var result structs.SuccessCondidate
+func PostNewCandidate(storage *sqlx.DB, req structs.RequestCandidate) (structs.InfoCandidate, error) {
+	var result structs.InfoCandidate
 
 	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": req.UserStatus}).ToSql()
 	if err != nil {
@@ -72,7 +72,18 @@ func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
 		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
 	}
 
-	MainQuery, MainArgs, err := psql.Insert("resume").Columns("experience_id", "description").Values(expId, req.Description).ToSql()
+	var userID int
+	query, args, err = psql.Select("id").From("candidates").Where(sq.Eq{"email": req.UserEmail}).ToSql()
+	if err != nil {
+		return err
+	}
+
+	err = storage.Get(&userID, query, args...)
+	if err != nil {
+		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
+	}
+
+	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, expId, req.Description).ToSql()
 	if err != nil {
 		return fmt.Errorf("неполучилось сформировать sql скрипты для добавления в БД. error: %s", err.Error())
 	}
@@ -154,11 +165,10 @@ func GetAllEmployee(storage *sqlx.DB) ([]structs.SuccessEmployer, error) {
 
 	query, args, err := psql.Select("*").From("employer").ToSql()
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в формировании скрипта запроса. error: %s", err.Error())
 	}
 
-	err = storage.Get(&result, query, args...)
-
+	err = storage.Select(&result, query, args...)
 	if err != nil {
 		return result, err
 	}

@@ -57,6 +57,9 @@ func main() {
 		apiV1.POST("/exp", PostNewExperience(storage))
 		apiV1.GET("/exp", GetAllExperience(storage))
 
+		apiV1.POST("/user", PostNewCandidate(storage))
+		apiV1.GET("/user", GetAllCandidates(storage))
+
 		apiV1.POST("/resume", PostNewResume(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
@@ -106,6 +109,88 @@ type SimpleError struct {
 type InfoError struct {
 	SimpleError
 	Info string
+}
+
+func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+
+		data, err := sqlp.GetAllCandidates(storag)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":          "Ok!",
+			"Candidates_Info": data,
+		})
+
+	}
+}
+
+//	 89939305028
+
+func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+
+		var req structs.RequestCandidate
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		data, err := sqlp.PostNewCandidate(storag, req)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":         "Ok!",
+			"condidate_Info": data,
+		})
+		tx.Commit()
+	}
 }
 
 func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
