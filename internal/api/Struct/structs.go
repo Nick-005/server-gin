@@ -92,8 +92,7 @@ type RequestEmployee struct {
 }
 
 type ResponseVac struct {
-	ID          int    `json:"ID"`
-	Emp_ID      int    `json:"emp_id"`
+	Emp_Email   string `json:"emp_email"`
 	Vac_Name    string `json:"vac_name"`
 	Price       int    `json:"price"`
 	Email       string `json:"email"`

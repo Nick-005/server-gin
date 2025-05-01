@@ -10,6 +10,26 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
+func PostNewVacancy(storage *sqlx.DB, req structs.ResponseVac) error {
+
+	query, args, err := psql.Select("id").From("employer").Where(sq.Eq{"email": req.Emp_Email}).ToSql()
+	if err != nil {
+		return err
+	}
+
+	var e_id int
+
+	err = storage.Get(&e_id, query, args...)
+	if err != nil {
+		return err
+	}
+
+	query, args, err = psql.Insert("vacancy").Columns("emp_id", "name", "price", "email", "phone_number", "location", "experience_id", "about_work", "is_visible").
+		Values(e_id, req.Vac_Name, req.Price, req.Email, req.PhoneNumber, req.Location)
+
+	return nil
+}
+
 func GetCandidateById(storage *sqlx.DB, id int) ([]structs.InfoCandidate, error) {
 	var result []structs.InfoCandidate
 
