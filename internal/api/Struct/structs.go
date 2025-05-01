@@ -18,11 +18,30 @@ type Vacancy_Body struct {
 	Vac_Name    string `json:"vac_name"`
 	Price       int    `json:"price"`
 	Email       string `json:"email"`
-	PhoneNumber string `json:"phoneNumber"`
+	PhoneNumber string `json:"phone_number"`
 	Location    string `json:"location"`
 	Experience  int    `json:"exp"`
 	About       string `json:"about"`
 	Is_visible  bool   `json:"is_visible"`
+}
+
+type RequestCondidate struct {
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	UserStatus  string `json:"u_status"`
+}
+
+type SuccessCondidate struct {
+	ID          int       `db:"id"`
+	Name        string    `db:"name"`
+	PhoneNumber string    `db:"phone_number"`
+	Email       string    `db:"email"`
+	Password    string    `db:"password"`
+	Status_Id   int       `db:"status_id"`
+	Created_at  time.Time `db:"created_at"`
+	Updated_at  time.Time `db:"updated_at"`
 }
 
 type RequestVac struct {
@@ -31,13 +50,14 @@ type RequestVac struct {
 }
 
 type RequestResume struct {
+	UserEmail   string `json:"user_email"`
 	Experience  string `json:"exp_name"`
 	Description string `json:"description"`
 }
 
 type RequestAdd struct {
 	Name        string `json:"name"`
-	PhoneNumber string `json:"phoneNumber"`
+	PhoneNumber string `json:"phone_number"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 }

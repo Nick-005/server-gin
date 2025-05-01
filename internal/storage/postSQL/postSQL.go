@@ -10,7 +10,56 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
+func GetAllCandidates(storage *sqlx.DB) ([]structs.SuccessCondidate, error) {
+	var result []structs.SuccessCondidate
+
+	query, args, err := psql.Select("*").From("candidates").ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в формировании запроса на получения данных из таблицы. error: %s", err.Error())
+	}
+
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
+	}
+	return result, nil
+
+}
+
+func PostNewCondidate(storage *sqlx.DB, req structs.RequestCondidate) (structs.SuccessCondidate, error) {
+	var result structs.SuccessCondidate
+
+	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": req.UserStatus}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в формировании запроса на получения данных из таблицы. error: %s", err.Error())
+	}
+	var Ids int
+
+	err = storage.Get(&Ids, query, args...)
+
+	if err != nil {
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
+	}
+
+	query, args, err = psql.Insert("candidates").
+		Columns("name", "phone_number", "email", "password", "status_id").
+		Values(req.Name, req.PhoneNumber, req.Email, req.Password, Ids).
+		Suffix("RETURNING *").
+		ToSql()
+
+	if err != nil {
+		return result, fmt.Errorf("ошибка в формировании запроса на добавление новых данных в таблицу. error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге добавленных данных. error: %s", err.Error())
+	}
+	return result, nil
+}
+
 func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
+
 	query, args, err := psql.Select("id").From("experience").Where(sq.Eq{"name": req.Experience}).ToSql()
 	if err != nil {
 		return err
@@ -41,12 +90,12 @@ func GetAllStatus(storage *sqlx.DB) ([]structs.GetStatus, error) {
 	query, args, err := psql.Select("*").From("status").ToSql()
 	if err != nil {
 		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
-		return result, fmt.Errorf("error in creating request to DB")
+		return result, fmt.Errorf("error in creating request to DB. error: %s", err.Error())
 	}
 
 	err = storage.Select(&result, query, args...)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
 	}
 	return result, nil
 }
