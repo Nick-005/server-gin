@@ -5,69 +5,99 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	structs "main.go/internal/api/Struct"
+	s "main.go/internal/api/Struct"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-func PostNewVacancy(storage *sqlx.DB, req structs.ResponseVac) error {
+func GetStatusByName(storage *sqlx.DB, name string) {
 
-	query, args, err := psql.Select("id").From("employer").Where(sq.Eq{"email": req.Emp_Email}).ToSql()
-	if err != nil {
-		return err
-	}
-
-	var e_id int
-
-	err = storage.Get(&e_id, query, args...)
-	if err != nil {
-		return err
-	}
-
-	query, args, err = psql.Insert("vacancy").Columns("emp_id", "name", "price", "email", "phone_number", "location", "experience_id", "about_work", "is_visible").
-		Values(e_id, req.Vac_Name, req.Price, req.Email, req.PhoneNumber, req.Location)
-
-	return nil
 }
 
-func GetCandidateById(storage *sqlx.DB, id int) ([]structs.InfoCandidate, error) {
-	var result []structs.InfoCandidate
+func GetEmployeeByEmail(storage *sqlx.DB, email string) (s.SuccessEmployer, error) {
+	var result s.SuccessEmployer
+	query, args, err := psql.Select("*").From("employer").Where(sq.Eq{"email": email}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+
+	return result, nil
+}
+
+func PostNewVacancy(storage *sqlx.DB, req s.ResponseVac) (s.Vacancies, s.SuccessEmployer, s.GetStatus, error) {
+	var vac s.Vacancies
+	var emf s.SuccessEmployer
+
+	exp, err := GetExperienceByName(storage, req.Experience)
+	if err != nil {
+		return vac, emf, exp, fmt.Errorf("ошибка в получении данных из таблицы experience! error: %s", err.Error())
+	}
+
+	employee, err := GetEmployeeByEmail(storage, req.Emp_Email)
+	if err != nil {
+		return vac, employee, exp, fmt.Errorf("ошибка в получении данных из таблицы employee! error: %s", err.Error())
+	}
+
+	// дописать
+	query, args, err := psql.Insert("vacancy").
+		Columns("emp_id", "name", "price", "email", "phone_number", "location", "experience_id", "about_work", "is_visible").
+		Values(employee.ID, req.Vac_Name, req.Price, req.Email, req.PhoneNumber, req.Location, exp.ID, req.About, req.Is_visible).
+		Suffix("RETURNING *").ToSql()
+	if err != nil {
+		return vac, employee, exp, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&vac, query, args...)
+	if err != nil {
+		return vac, employee, exp, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+
+	return vac, employee, exp, nil
+}
+
+func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
+	var result s.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
-	err = storage.Select(&result, query, args...)
+	err = storage.Get(&result, query, args...)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 
 	return result, nil
 }
 
-func GetAllResumeByCandidate(storage *sqlx.DB, id int) ([]structs.SuccessResume, error) {
-	var result []structs.SuccessResume
+func GetAllResumeByCandidate(storage *sqlx.DB, id int) ([]s.SuccessResume, error) {
+	var result []s.SuccessResume
 
 	query, args, err := psql.Select("*").From("resume").Where(sq.Eq{"candidate_id": id}).ToSql()
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
 	err = storage.Select(&result, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 
 	return result, nil
 }
 
-func GetAllCandidates(storage *sqlx.DB) ([]structs.InfoCandidate, error) {
-	var result []structs.InfoCandidate
+func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
+	var result []s.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").ToSql()
 	if err != nil {
-		return result, fmt.Errorf("ошибка в формировании запроса на получения данных из таблицы. error: %s", err.Error())
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
 	err = storage.Select(&result, query, args...)
@@ -78,8 +108,8 @@ func GetAllCandidates(storage *sqlx.DB) ([]structs.InfoCandidate, error) {
 
 }
 
-func PostNewCandidate(storage *sqlx.DB, req structs.RequestCandidate) (structs.InfoCandidate, error) {
-	var result structs.InfoCandidate
+func PostNewCandidate(storage *sqlx.DB, req s.RequestCandidate) (s.InfoCandidate, error) {
+	var result s.InfoCandidate
 
 	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": req.UserStatus}).ToSql()
 	if err != nil {
@@ -110,22 +140,14 @@ func PostNewCandidate(storage *sqlx.DB, req structs.RequestCandidate) (structs.I
 	return result, nil
 }
 
-func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
+func PostNewResume(storage *sqlx.DB, req s.RequestResume) error {
 
-	query, args, err := psql.Select("id").From("experience").Where(sq.Eq{"name": req.Experience}).ToSql()
+	exp, err := GetExperienceByName(storage, req.Experience)
 	if err != nil {
 		return err
 	}
-
-	var expId int
-
-	err = storage.Get(&expId, query, args...)
-	if err != nil {
-		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
-	}
-
 	var userID int
-	query, args, err = psql.Select("id").From("candidates").Where(sq.Eq{"email": req.UserEmail}).ToSql()
+	query, args, err := psql.Select("id").From("candidates").Where(sq.Eq{"email": req.UserEmail}).ToSql()
 	if err != nil {
 		return err
 	}
@@ -135,7 +157,7 @@ func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
 		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
 	}
 
-	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, expId, req.Description).ToSql()
+	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, exp.ID, req.Description).ToSql()
 	if err != nil {
 		return fmt.Errorf("неполучилось сформировать sql скрипты для добавления в БД. error: %s", err.Error())
 	}
@@ -147,13 +169,11 @@ func PostNewResume(storage *sqlx.DB, req structs.RequestResume) error {
 	return nil
 }
 
-func GetAllStatus(storage *sqlx.DB) ([]structs.GetStatus, error) {
-	var result []structs.GetStatus
-	const op = "storage.sqlite.Get.Status"
+func GetAllStatus(storage *sqlx.DB) ([]s.GetStatus, error) {
+	var result []s.GetStatus
 	query, args, err := psql.Select("*").From("status").ToSql()
 	if err != nil {
-		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
-		return result, fmt.Errorf("error in creating request to DB. error: %s", err.Error())
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
 	err = storage.Select(&result, query, args...)
@@ -167,11 +187,11 @@ func PostNewStatus(storage *sqlx.DB, name string) error {
 
 	query, args, err := psql.Insert("status").Columns("name").Values(name).ToSql()
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
 	}
 	_, err = storage.Exec(query, args...)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
 	}
 	return nil
 }
@@ -184,18 +204,32 @@ func PostNewStatus(storage *sqlx.DB, name string) error {
 // 	InnerJoin("employer e ON e.id").
 // }
 
-func GetAllExperience(storage *sqlx.DB) ([]structs.GetStatus, error) {
-	var result []structs.GetStatus
-	const op = "storage.sqlite.Get.Experience"
+func GetExperienceByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
+	var result s.GetStatus
+
+	query, args, err := psql.Select("*").From("experience").Where(sq.Eq{"name": name}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
+	}
+	return result, nil
+}
+
+func GetAllExperience(storage *sqlx.DB) ([]s.GetStatus, error) {
+	var result []s.GetStatus
+
 	query, args, err := psql.Select("*").From("experience").ToSql()
 	if err != nil {
-		fmt.Println("ERROR IN CREATING REQUEST TO DB!", op)
-		return result, fmt.Errorf("error in creating request to DB")
+
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
 	err = storage.Select(&result, query, args...)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
 	}
 	return result, nil
 }
@@ -203,17 +237,17 @@ func GetAllExperience(storage *sqlx.DB) ([]structs.GetStatus, error) {
 func PostNewExperience(storage *sqlx.DB, name string) error {
 	query, args, err := psql.Insert("experience").Columns("name").Values(name).ToSql()
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
 	}
 	_, err = storage.Exec(query, args...)
 	if err != nil {
-		return err
+		return fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
 	}
 	return nil
 }
 
-func GetAllEmployee(storage *sqlx.DB) ([]structs.SuccessEmployer, error) {
-	var result []structs.SuccessEmployer
+func GetAllEmployee(storage *sqlx.DB) ([]s.SuccessEmployer, error) {
+	var result []s.SuccessEmployer
 
 	query, args, err := psql.Select("*").From("employer").ToSql()
 	if err != nil {
@@ -222,14 +256,14 @@ func GetAllEmployee(storage *sqlx.DB) ([]structs.SuccessEmployer, error) {
 
 	err = storage.Select(&result, query, args...)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
 	}
 
 	return result, nil
 }
 
-func PostNewEmployer(storage *sqlx.DB, body structs.RequestEmployee) (structs.SuccessEmployer, error) {
-	var result structs.SuccessEmployer
+func PostNewEmployer(storage *sqlx.DB, body s.RequestEmployee) (s.SuccessEmployer, error) {
+	var result s.SuccessEmployer
 
 	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": body.Status}).ToSql()
 	if err != nil {

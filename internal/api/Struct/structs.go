@@ -91,10 +91,24 @@ type RequestEmployee struct {
 	Status           string `json:"status"`
 }
 
+type DBResponse struct {
+	ID            int       `db:"id"`
+	Candidates_id int       `db:"candidates_id"`
+	Vacancy_id    int       `db:"vacancy_id"`
+	Created_at    time.Time `db:"created_at"`
+	Status_id     int       `db:"status_id"`
+}
+
+type RequestResponse struct {
+	Candidate_email string `json:"can_email"`
+	Vacancy_id      int    `json:"vac_id"`
+	Status_name     string `json:"status"`
+}
+
 type ResponseVac struct {
 	Emp_Email   string `json:"emp_email"`
 	Vac_Name    string `json:"vac_name"`
-	Price       int    `json:"price"`
+	Price       string `json:"price"`
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phoneNumber"`
 	Location    string `json:"location"`
