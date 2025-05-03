@@ -129,14 +129,18 @@ type ResumeResult struct {
 	Resumes   []SuccessResume
 }
 type InfoCandidate struct {
-	ID          int       `db:"id"`
-	Name        string    `db:"name"`
-	PhoneNumber string    `db:"phone_number"`
-	Email       string    `db:"email"`
-	Password    string    `db:"password"`
-	Status_Id   int       `db:"status_id"`
-	Created_at  time.Time `db:"created_at"`
-	Updated_at  time.Time `db:"updated_at"`
+	ID          int    `db:"id"`
+	Name        string `db:"name"`
+	PhoneNumber string `db:"phone_number"`
+	Email       string `db:"email"`
+	Password    string `db:"password"`
+	Status      struct {
+		ID        int       `db:"id"`
+		Name      string    `db:"name"`
+		Crated_At time.Time `db:"created_at"`
+	} `db:"status"`
+	Created_at time.Time `db:"created_at"`
+	Updated_at time.Time `db:"updated_at"`
 }
 
 type SuccessResume struct {

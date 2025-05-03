@@ -115,7 +115,10 @@ func GetAllResumeByCandidate(storage *sqlx.DB, id int) (s.ResumeResult, error) {
 func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
 	var result []s.InfoCandidate
 
-	query, args, err := psql.Select("*").From("candidates").ToSql()
+	query, args, err := psql.Select(
+		"c.id", "c.name", "c.phone_number", "c.email", "c.password", "c.created_at", "c.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).From("candidates c").Join("status s ON c.status_id = s.id").ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
