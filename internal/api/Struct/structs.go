@@ -3,14 +3,18 @@ package structs
 import "time"
 
 type SuccessEmployer struct {
-	ID               int       `db:"id"`
-	NameOrganization string    `db:"name_organization"`
-	PhoneNumber      string    `db:"phone_number"`
-	Email            string    `db:"email"`
-	INN              string    `db:"inn"`
-	Status_id        int       `db:"status_id"`
-	Created_at       time.Time `db:"created_at"`
-	Updated_at       time.Time `db:"updated_at"`
+	ID               int    `db:"id"`
+	NameOrganization string `db:"name_organization"`
+	PhoneNumber      string `db:"phone_number"`
+	Email            string `db:"email"`
+	INN              string `db:"inn"`
+	Status           struct {
+		ID        int       `db:"id"`
+		Name      string    `db:"name"`
+		CreatedAt time.Time `db:"created_at"`
+	} `db:"status"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 type Vacancy_Body struct {
@@ -31,17 +35,6 @@ type RequestCandidate struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	UserStatus  string `json:"u_status"`
-}
-
-type InfoCandidate struct {
-	ID          int       `db:"id"`
-	Name        string    `db:"name"`
-	PhoneNumber string    `db:"phone_number"`
-	Email       string    `db:"email"`
-	Password    string    `db:"password"`
-	Status_Id   int       `db:"status_id"`
-	Created_at  time.Time `db:"created_at"`
-	Updated_at  time.Time `db:"updated_at"`
 }
 
 type RequestVac struct {
@@ -130,6 +123,20 @@ type GetStatus struct {
 	ID        int       `db:"id"`
 	Name      string    `db:"name"`
 	Crated_At time.Time `db:"created_at"`
+}
+type ResumeResult struct {
+	Candidate InfoCandidate
+	Resumes   []SuccessResume
+}
+type InfoCandidate struct {
+	ID          int       `db:"id"`
+	Name        string    `db:"name"`
+	PhoneNumber string    `db:"phone_number"`
+	Email       string    `db:"email"`
+	Password    string    `db:"password"`
+	Status_Id   int       `db:"status_id"`
+	Created_at  time.Time `db:"created_at"`
+	Updated_at  time.Time `db:"updated_at"`
 }
 
 type SuccessResume struct {

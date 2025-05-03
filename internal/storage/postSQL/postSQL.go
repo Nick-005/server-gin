@@ -10,8 +10,23 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-func GetStatusByName(storage *sqlx.DB, name string) {
+func GetAllVacanciesByEmployee(storage *sqlx.DB, id int) {
 
+}
+
+func GetStatusByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
+
+	var result s.GetStatus
+	query, args, err := psql.Select("*").From("status").Where(sq.Eq{"name": name}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+	return result, nil
 }
 
 func GetEmployeeByEmail(storage *sqlx.DB, email string) (s.SuccessEmployer, error) {
@@ -76,17 +91,22 @@ func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
 	return result, nil
 }
 
-func GetAllResumeByCandidate(storage *sqlx.DB, id int) ([]s.SuccessResume, error) {
-	var result []s.SuccessResume
+func GetAllResumeByCandidate(storage *sqlx.DB, id int) (s.ResumeResult, error) {
+	var result s.ResumeResult
 
+	candidateInfo, err := GetCandidateById(storage, id)
+	if err != nil {
+		return result, err
+	}
+	result.Candidate = candidateInfo
 	query, args, err := psql.Select("*").From("resume").Where(sq.Eq{"candidate_id": id}).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
-	err = storage.Select(&result, query, args...)
+	err = storage.Select(&result.Resumes, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 
 	return result, nil
@@ -249,7 +269,10 @@ func PostNewExperience(storage *sqlx.DB, name string) error {
 func GetAllEmployee(storage *sqlx.DB) ([]s.SuccessEmployer, error) {
 	var result []s.SuccessEmployer
 
-	query, args, err := psql.Select("*").From("employer").ToSql()
+	query, args, err := psql.Select(
+		"em.id", "em.name_organization", "em.phone_number", "em.email", "em.inn", "em.created_at", "em.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).From("employer em").Join("status s ON em.status_id = s.id").ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в формировании скрипта запроса. error: %s", err.Error())
 	}

@@ -115,6 +115,29 @@ type InfoError struct {
 	Info string
 }
 
+func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+
+		// var id int
+		// id, err = strconv.Atoi(ctx.Query("user_id"))
+
+	}
+}
+
 func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx, err := storag.Beginx()
@@ -140,22 +163,22 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vacancy, employer, experience, err := sqlp.PostNewVacancy(storag, req)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
-			})
-			return
-		}
+		// vacancy, employer, experience, err := sqlp.PostNewVacancy(storag, req)
+		// if err != nil {
+		// 	ctx.JSON(200, gin.H{
+		// 		"status": "Err",
+		// 		"info":   "Ошибка в SQL файле",
+		// 		"error":  err.Error(),
+		// 	})
+		// 	return
+		// }
 
-		ctx.JSON(200, gin.H{
-			"status":          "Ok!",
-			"vacancy_info":    vacancy,
-			"employee_info":   employer,
-			"experience_info": experience,
-		})
+		// ctx.JSON(200, gin.H{
+		// 	"status":          "Ok!",
+		// 	"vacancy_info":    vacancy,
+		// 	"employee_info":   employer,
+		// 	"experience_info": experience,
+		// })
 
 		tx.Commit()
 	}
@@ -215,15 +238,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		candidateInfo, err := sqlp.GetCandidateById(storag, id)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле инфы пользователя",
-				"error":  err.Error(),
-			})
-			return
-		}
+
 		data, err := sqlp.GetAllResumeByCandidate(storag, id)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -234,9 +249,8 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":          "Ok!",
-			"Resumies":        data,
-			"Candidates_Info": candidateInfo,
+			"status": "Ok!",
+			"Info":   data,
 		})
 		tx.Commit()
 	}
