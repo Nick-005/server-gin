@@ -81,7 +81,7 @@ type RequestEmployee struct {
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
 	INN              string `json:"inn"`
-	Status           string `json:"status"`
+	Status_id        int    `json:"status_id"`
 }
 
 type DBResponse struct {
