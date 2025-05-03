@@ -94,24 +94,84 @@ func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
 func GetAllResumeByCandidate(storage *sqlx.DB, id int) (s.ResumeResult, error) {
 	var result s.ResumeResult
 
-	candidateInfo, err := GetCandidateById(storage, id)
-	if err != nil {
-		return result, err
-	}
-	result.Candidate = candidateInfo
-	query, args, err := psql.Select("*").From("resume").Where(sq.Eq{"candidate_id": id}).ToSql()
+	// query, args, err := psql.Select(
+	// ! resume
+	// 	"r.id", "r.description", "r.created_at", "r.updated_at",
+	// ! candidates
+	// "c.id as \"candidate.id\"",
+	// "c.name as \"candidate.name\"",
+	// "c.phone_number as \"candidate.phone_number\"",
+	// "c.email as \"candidate.email\"",
+	// "c.password as \"candidate.password\"",
+	// "c.created_at as \"candidate.created_at\"",
+	// "c.updated_at as \"candidate.updated_at\"",
+	// ! status
+	// "s.id as \"candidate.status.id\"",
+	// "s.name as \"candidate.status.name\"",
+	// "s.created_at as \"candidate.status.created_at\"",
+	// ! experience
+	// 	"ex.id as \"experience.id\"",
+	// 	"ex.name as \"experience.name\"",
+	// 	"ex.created_at as \"experience.created_at\"",
+	// ).From("resume r").
+	// 	Join("candidates c ON r.candidate_id = c.id").
+	// 	Join("status s ON c.status_id = s.id").
+	// 	Join("experience ex ON r.experience_id = ex.id").
+	// 	Where(sq.Eq{"r.candidate_id": id}).ToSql()
+	// ~ candidates
+	query, args, err := psql.Select(
+		"c.id",
+		"c.name",
+		"c.phone_number",
+		"c.email ",
+		"c.password",
+		"c.created_at ",
+		"c.updated_at ",
+		// ! status
+		"s.id as \"status.id\"",
+		"s.name as \"status.name\"",
+		"s.created_at as \"status.created_at\"",
+	).From("candidates c").
+		Join("status s ON c.status_id = s.id").
+		Where(sq.Eq{"c.id": id}).
+		ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
-
-	err = storage.Select(&result.Resumes, query, args...)
+	// fmt.Println(query)
+	err = storage.Get(&result.Candidate, query, args...)
 	if err != nil {
-		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+		return result, fmt.Errorf("ошибка в маппинге данных кандидата! error: %s", err.Error())
 	}
 
+	// ~ resume
+	query, args, err = psql.Select(
+		"r.id ",
+		"r.description ",
+		"r.created_at ",
+		"r.updated_at",
+
+		"ex.id as \"experience.id\"",
+		"ex.name as \"experience.name\"",
+		"ex.created_at as \"experience.created_at\"",
+	).
+		From("resume r").
+		Join("experience ex ON r.experience_id = ex.id").
+		Where(sq.Eq{"r.candidate_id": id}).
+		ToSql()
+
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+	// fmt.Println(query)
+	err = storage.Select(&result.Resumes, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных резюме ! error: %s", err.Error())
+	}
 	return result, nil
 }
 
+// нормализовал, всё норм
 func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
 	var result []s.InfoCandidate
 

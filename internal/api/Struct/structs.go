@@ -124,9 +124,16 @@ type GetStatus struct {
 	Name      string    `db:"name"`
 	Crated_At time.Time `db:"created_at"`
 }
+type ResumeResult_slice struct {
+	Id          int       `db:"id"`
+	Experience  GetStatus `db:"experience"`
+	Description string    `db:"description"`
+	Created_at  time.Time `db:"created_at"`
+	Updated_at  time.Time `db:"updated_at"`
+}
 type ResumeResult struct {
-	Candidate InfoCandidate
-	Resumes   []SuccessResume
+	Resumes   []ResumeResult_slice `db:"resume"`
+	Candidate InfoCandidate        `db:"candidate"`
 }
 type InfoCandidate struct {
 	ID          int    `db:"id"`

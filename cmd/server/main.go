@@ -249,8 +249,9 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
+
 			"Info":   data,
+			"status": "Ok!",
 		})
 		tx.Commit()
 	}
