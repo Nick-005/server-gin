@@ -1,8 +1,6 @@
 package sqlite
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
@@ -260,39 +258,39 @@ func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
 // 	Is_visible       bool   `json:"is_visible"`
 // }
 
-func (s *Storage) VacancyByLimit(limit, last_id int) ([]VacancyTake, error) {
-	const op = "storage.sqlite.Get.VacancyByIDs"
-	var result []VacancyTake
-	rows, err := s.db.Query(`SELECT vacancy.id, emp_id, vacancy.name , employer.nameOrganization, price, employer.email, employer.phoneNumber,  location, experience.name, is_visible, aboutWork FROM vacancy
-							INNER JOIN employer on vacancy.emp_id = employer.id
-							INNER JOIN experience on vacancy.experience_id = experience.id
-							where vacancy.id > ? order by vacancy.id limit ?
-							`, last_id, limit)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return result, fmt.Errorf("%s: ошибка в бд (xdd). %w", op, err)
+// func (s *Storage) VacancyByLimit(limit, last_id int) ([]VacancyTake, error) {
+// 	const op = "storage.sqlite.Get.VacancyByIDs"
+// 	var result []VacancyTake
+// 	rows, err := s.db.Query(`SELECT vacancy.id, emp_id, vacancy.name , employer.nameOrganization, price, employer.email, employer.phoneNumber,  location, experience.name, is_visible, aboutWork FROM vacancy
+// 							INNER JOIN employer on vacancy.emp_id = employer.id
+// 							INNER JOIN experience on vacancy.experience_id = experience.id
+// 							where vacancy.id > ? order by vacancy.id limit ?
+// 							`, last_id, limit)
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return result, fmt.Errorf("%s: ошибка в бд (xdd). %w", op, err)
 
-		} else {
-			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd. %w", op, err)
-		}
-	}
-	defer rows.Close()
+// 		} else {
+// 			return result, fmt.Errorf("%s: какая-то ошибка в получении вакансии по её id. Если вы это видите, то напишите разрабу и скажите что он даун xdd. %w", op, err)
+// 		}
+// 	}
+// 	defer rows.Close()
 
-	for rows.Next() {
-		vac := VacancyTake{}
-		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name,
-			&vac.NameOrganization,
-			&vac.Price, &vac.Email, &vac.PhoneNumber, &vac.Location,
-			&vac.Experience, &vac.Is_visible, &vac.About)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		result = append(result, vac)
-	}
+// 	for rows.Next() {
+// 		vac := VacancyTake{}
+// 		err := rows.Scan(&vac.ID, &vac.Emp_ID, &vac.Vac_Name,
+// 			&vac.NameOrganization,
+// 			&vac.Price, &vac.Email, &vac.PhoneNumber, &vac.Location,
+// 			&vac.Experience, &vac.Is_visible, &vac.About)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			continue
+// 		}
+// 		result = append(result, vac)
+// 	}
 
-	return result, nil
-}
+// 	return result, nil
+// }
 
 // func (s *Storage) AddEmployee(nameOrganization string, phoneNumber string, email string, inn string, statusID int) (int64, error) {
 // 	const op = "storage.sqlite.Add.Emp"

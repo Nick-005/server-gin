@@ -34,7 +34,7 @@ type RequestCandidate struct {
 	PhoneNumber string `json:"phone_number"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
-	UserStatus  string `json:"u_status"`
+	Status_id   int    `json:"status_id"`
 }
 
 type RequestVac struct {

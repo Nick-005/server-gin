@@ -1,7 +1,13 @@
 package sqlite
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -50,6 +56,7 @@ func GetEmployeeByEmail(storage *sqlx.DB, email string) (s.SuccessEmployer, erro
 	return result, nil
 }
 
+// TODO переделать нахуй это. Что за хуйня тут...
 func PostNewVacancy(storage *sqlx.DB, req s.ResponseVac) (s.Vacancies, s.SuccessEmployer, s.GetStatus, error) {
 	var vac s.Vacancies
 	var emf s.SuccessEmployer
@@ -85,6 +92,26 @@ func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+
+	return result, nil
+}
+
+func GetCandidateByEmail(storage *sqlx.DB, email string) (s.InfoCandidate, error) {
+	var result s.InfoCandidate
+
+	query, args, err := psql.Select(
+		"c.id", "c.name", "c.phone_number", "c.email", "c.password", "c.created_at", "c.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).From("candidates c").Join("status s ON c.status_id = s.id").
+		Where(sq.Eq{"email": email}).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
@@ -174,35 +201,28 @@ func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
 func PostNewCandidate(storage *sqlx.DB, req s.RequestCandidate) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
-	query, args, err := psql.Select("id").From("status").Where(sq.Eq{"name": req.UserStatus}).ToSql()
-	if err != nil {
-		return result, fmt.Errorf("ошибка в формировании запроса на получения данных из таблицы. error: %s", err.Error())
-	}
-	var Ids int
-
-	err = storage.Get(&Ids, query, args...)
-
-	if err != nil {
-		return result, fmt.Errorf("ошибка в получении и маппинге данных. error: %s", err.Error())
-	}
-
-	query, args, err = psql.Insert("candidates").
+	query, args, err := psql.Insert("candidates").
 		Columns("name", "phone_number", "email", "password", "status_id").
-		Values(req.Name, req.PhoneNumber, req.Email, req.Password, Ids).
-		Suffix("RETURNING *").
+		Values(req.Name, req.PhoneNumber, req.Email, req.Password, req.Status_id).
 		ToSql()
 
 	if err != nil {
 		return result, fmt.Errorf("ошибка в формировании запроса на добавление новых данных в таблицу. error: %s", err.Error())
 	}
 
-	err = storage.Get(&result, query, args...)
+	_, err = storage.Exec(query, args...)
 	if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге добавленных данных. error: %s", err.Error())
+	}
+
+	result, err = GetCandidateByEmail(storage, req.Email)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в получении добавленных данных. error: %s", err.Error())
 	}
 	return result, nil
 }
 
+// TODO хуйня, ПЕРЕДЕЛЫВАЙ
 func PostNewResume(storage *sqlx.DB, req s.RequestResume) error {
 
 	exp, err := GetExperienceByName(storage, req.Experience)
@@ -346,4 +366,68 @@ func PostNewEmployer(storage *sqlx.DB, body s.RequestEmployee) (s.SuccessEmploye
 		return result, fmt.Errorf("ошибка в получении добавленных данных. error: %s", err.Error())
 	}
 	return result, nil
+}
+
+func CreateToken(email, user string) (string, error) {
+	type Header struct {
+		Alg string `json:"alg"` // Алгоритм подписи
+		Typ string `json:"typ"` // Тип токена
+	}
+
+	type Payload struct {
+		Iss string `json:"iss"`
+		Sub string `json:"sub"` // Subject (обычно идентификатор пользователя)
+		Iat int64  `json:"iat"` // Issued at - время в которое был выдан токен
+		Exp int64  `json:"exp"` // Время истечения токена (в Unix timestamp)
+	}
+	var secretKEY string
+	if user == "emp" {
+		secretKEY = "jokerge-palmadav@student.21-school.ru" + email
+	} else {
+		secretKEY = "ISP-7-21-borodinna" + email
+	}
+
+	var header Header
+	header.Alg = "HS256"
+	header.Typ = "JWT"
+
+	var payload Payload
+	payload.Iss = "Nick005-aka-monkeyZV"
+	payload.Sub = email
+	payload.Iat = time.Now().Unix()
+	payload.Exp = time.Now().Add(time.Minute * 15).Unix()
+
+	headerJSON, err := json.Marshal(header)
+	if err != nil {
+		return "error", fmt.Errorf("error in converting HEADER to JSON")
+	}
+	headerBASE64 := base64.RawURLEncoding.Strict().EncodeToString(headerJSON)
+
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return "error", fmt.Errorf("error in converting PAYLOAD to JSON")
+	}
+	payloadBASE64 := base64.RawURLEncoding.Strict().EncodeToString(payloadJSON)
+
+	// создаем подпись для JWTшки
+	signaturePayAndHeader := fmt.Sprintf("%s.%s", headerBASE64, payloadBASE64)
+
+	h := hmac.New(sha256.New, []byte(secretKEY))
+	h.Write([]byte(signaturePayAndHeader))
+	var signature string = base64.RawStdEncoding.EncodeToString(h.Sum(nil))
+
+	var tokenJWT string = fmt.Sprintf("%s.%s.%s", headerBASE64, payloadBASE64, signature)
+
+	return tokenJWT, nil
+}
+
+func CreateAccessToken(email, user string) (string, error) {
+	const op = "sqlite.CreateAccessToken.User"
+	token, err := CreateToken(email, user)
+	if err != nil {
+		return "Error", fmt.Errorf("%s: %w", op, err)
+	}
+	token = strings.ReplaceAll(token, "+", "-")
+	token = strings.ReplaceAll(token, "/", "_")
+	return token, nil
 }
