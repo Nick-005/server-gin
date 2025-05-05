@@ -47,8 +47,7 @@ type RequestVac struct {
 }
 
 type RequestResume struct {
-	UserEmail   string `json:"user_email"`
-	Experience  string `json:"exp_name"`
+	Experience  int    `json:"experience_id"`
 	Description string `json:"description"`
 }
 
@@ -58,8 +57,6 @@ type RequestAdd struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 }
-
-// const secretKEY = "ISP-7-21-borodinna"
 
 type Status struct {
 	ID   int    `db:"id"`

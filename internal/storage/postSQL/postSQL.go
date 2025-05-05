@@ -244,25 +244,9 @@ func PostNewCandidate(storage *sqlx.DB, req s.RequestCandidate) (s.InfoCandidate
 	return result, nil
 }
 
-// TODO хуйня, ПЕРЕДЕЛЫВАЙ
-func PostNewResume(storage *sqlx.DB, req s.RequestResume) error {
+func PostNewResume(storage *sqlx.DB, req s.RequestResume, userID int) error {
 
-	exp, err := GetExperienceByName(storage, req.Experience)
-	if err != nil {
-		return err
-	}
-	var userID int
-	query, args, err := psql.Select("id").From("candidates").Where(sq.Eq{"email": req.UserEmail}).ToSql()
-	if err != nil {
-		return err
-	}
-
-	err = storage.Get(&userID, query, args...)
-	if err != nil {
-		return fmt.Errorf("неправильно выбрали опыт. Такого нету в БД. error: %s", err.Error())
-	}
-
-	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, exp.ID, req.Description).ToSql()
+	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, req.Experience, req.Description).ToSql()
 	if err != nil {
 		return fmt.Errorf("неполучилось сформировать sql скрипты для добавления в БД. error: %s", err.Error())
 	}
