@@ -1,6 +1,10 @@
 package structs
 
-import "time"
+import (
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type SuccessEmployer struct {
 	ID               int    `db:"id"`
@@ -162,4 +166,11 @@ type SuccessResume struct {
 type RequestNewToken struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type Claims struct {
+	ID    int    `json:"uid"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	jwt.RegisteredClaims
 }

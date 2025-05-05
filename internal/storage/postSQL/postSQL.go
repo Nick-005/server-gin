@@ -6,10 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
 	s "main.go/internal/api/Struct"
 )
@@ -92,6 +94,26 @@ func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+
+	return result, nil
+}
+
+func GetCandidateByLogin(storage *sqlx.DB, email, password string) (s.InfoCandidate, error) {
+	var result s.InfoCandidate
+
+	query, args, err := psql.Select(
+		"c.id", "c.name", "c.phone_number", "c.email", "c.password", "c.created_at", "c.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).From("candidates c").Join("status s ON c.status_id = s.id").
+		Where(sq.Eq{"email": email, "password": password}).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
@@ -368,6 +390,30 @@ func PostNewEmployer(storage *sqlx.DB, body s.RequestEmployee) (s.SuccessEmploye
 	return result, nil
 }
 
+// func DecodingToken(tokenString string) (string, error) {
+// 	var
+// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+// 		}
+// 		return []byte(secretKEY), nil
+// 	})
+
+// 	return token, nil
+// }
+
+func CreateToken_Second(claim *s.Claims) (string, error) {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	result, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN_EMP")))
+	if err != nil {
+		return "error", err
+	}
+	result = strings.ReplaceAll(result, "+", "-")
+	result = strings.ReplaceAll(result, "/", "_")
+	return result, nil
+}
+
 func CreateToken(email, user string) (string, error) {
 	type Header struct {
 		Alg string `json:"alg"` // Алгоритм подписи
@@ -382,9 +428,9 @@ func CreateToken(email, user string) (string, error) {
 	}
 	var secretKEY string
 	if user == "emp" {
-		secretKEY = "jokerge-palmadav@student.21-school.ru" + email
+		secretKEY = os.Getenv("JWT_SECRET_TOKEN_EMP")
 	} else {
-		secretKEY = "ISP-7-21-borodinna" + email
+		secretKEY = os.Getenv("JWT_SECRET_TOKEN_USER")
 	}
 
 	var header Header

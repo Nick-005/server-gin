@@ -2,11 +2,16 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx" // swagger embed files
 	swaggerFiles "github.com/swaggo/files"
@@ -16,6 +21,8 @@ import (
 	"main.go/internal/config"
 	sqlp "main.go/internal/storage/postSQL"
 )
+
+var expirationTime = time.Now().Add(24 * time.Hour)
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -328,10 +335,28 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
+		claim := &s.Claims{
+			ID:    data.ID,
+			Role:  "candidate",
+			Email: data.Email,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		}
+		token, err := sqlp.CreateToken_Second(claim)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка при создании токена аутентификации",
+				"error":  err.Error(),
+			})
+			return
+		}
 		ctx.JSON(200, gin.H{
 			"status":         "Ok!",
 			"condidate_Info": data,
+			"token":          token,
 		})
 		tx.Commit()
 	}
@@ -768,49 +793,49 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 // 	}
 // }
 
-// func AuthMiddleWare() gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		authHeader := ctx.GetHeader("Authorization")
-// 		if authHeader == "" {
-// 			ctx.JSON(http.StatusUnauthorized, gin.H{
-// 				"status": "Err",
-// 				"error":  "Authorization header is required"},
-// 			)
-// 			ctx.Abort()
-// 			return
-// 		}
+func AuthMiddleWare() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "Authorization header is required"},
+			)
+			ctx.Abort()
+			return
+		}
 
-// 		// Проверяем, что заголовок начинается с "Bearer "
-// 		if !strings.HasPrefix(authHeader, "Bearer ") {
-// 			ctx.JSON(http.StatusUnauthorized, gin.H{
-// 				"status": "Err",
-// 				"error":  "Invalid authorization format"},
-// 			)
-// 			ctx.Abort()
-// 			return
-// 		}
+		// Проверяем, что заголовок начинается с "Bearer "
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "Invalid authorization format"},
+			)
+			ctx.Abort()
+			return
+		}
 
-// 		// Извлекаем токен, удаляя "Bearer " из строки
-// 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-// 		// fmt.Println(tokenString)
-// 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-// 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-// 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-// 			}
-// 			return []byte(secretKEY), nil
-// 		})
-// 		// fmt.Println(token)
-// 		if err != nil || !token.Valid {
-// 			ctx.JSON(http.StatusUnauthorized, gin.H{
-// 				"status": "Err",
-// 				"error":  err.Error(),
-// 			})
-// 			ctx.Abort()
-// 			return
-// 		}
-// 		ctx.Next()
-// 	}
-// }
+		// Извлекаем токен, удаляя "Bearer " из строки
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		// fmt.Println(tokenString)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
+		})
+		// fmt.Println(token)
+		if err != nil || !token.Valid {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+			})
+			ctx.Abort()
+			return
+		}
+		ctx.Next()
+	}
+}
 
 // type TokenForUser struct {
 // 	Status string
