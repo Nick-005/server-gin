@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"strings"
@@ -32,10 +33,33 @@ func GetStatusByName(storage *sqlx.Tx, name string) (s.GetStatus, error) {
 	return result, nil
 }
 
+func GetEmployeeLogin(storage *sqlx.Tx, email, password string) (s.SuccessEmployer, error) {
+	var result s.SuccessEmployer
+	query, args, err := psql.Select(
+		"e.id", "e.name_organization", "e.phone_number", "e.email", "e.inn", "e.password", "e.created_at", "e.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).
+		From("employer e").
+		Join("status s ON e.status_id = s.id").
+		Where(sq.Eq{"email": email, "password": password}).ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+
+	err = storage.Get(&result, query, args...)
+	if err == sql.ErrNoRows {
+		return result, err
+	} else if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
+	}
+
+	return result, nil
+}
+
 func GetEmployeeByEmail(storage *sqlx.Tx, email string) (s.SuccessEmployer, error) {
 	var result s.SuccessEmployer
 	query, args, err := psql.Select(
-		"e.id", "e.name_organization", "e.phone_number", "e.email", "e.inn", "e.created_at", "e.updated_at",
+		"e.id", "e.name_organization", "e.phone_number", "e.email", "e.inn", "e.password", "e.created_at", "e.updated_at",
 		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
 	).
 		From("employer e").
@@ -114,7 +138,9 @@ func GetCandidateByLogin(storage *sqlx.Tx, email, password string) (s.InfoCandid
 	}
 
 	err = storage.Get(&result, query, args...)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return result, err
+	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 
@@ -352,8 +378,8 @@ func GetAllEmployee(storage *sqlx.DB) ([]s.SuccessEmployer, error) {
 func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmployer, error) {
 	var result s.SuccessEmployer
 
-	queryMain, argsMain, err := psql.Insert("employer").Columns("name_organization", "phone_number", "email", "inn", "status_id").
-		Values(body.NameOrganization, body.PhoneNumber, body.Email, body.INN, body.Status_id).ToSql()
+	queryMain, argsMain, err := psql.Insert("employer").Columns("name_organization", "phone_number", "email", "inn", "password", "status_id").
+		Values(body.NameOrganization, body.PhoneNumber, body.Email, body.INN, body.Password, body.Status_id).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в формировании скрипта запроса. error: %s", err.Error())
 	}

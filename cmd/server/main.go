@@ -64,13 +64,14 @@ func main() {
 
 		apiV1.POST("/emp", PostNewEmployer(storage))
 		apiV1.GET("/emp", GetAllEmployee(storage))
+		apiV1.GET("/emp/auth", AuthorizationMethodEmp(storage))
 
 		apiV1.POST("/exp", PostNewExperience(storage))
 		apiV1.GET("/exp", GetAllExperience(storage))
 
 		apiV1.POST("/user", PostNewCandidate(storage))
 		apiV1.GET("/user", GetAllCandidates(storage))
-		apiV1.GET("/auth", AuthorizationMethod(storage))
+		apiV1.GET("/user/auth", AuthorizationMethod(storage))
 
 		apiV1.POST("/resume", AuthMiddleWare(), PostNewResume(storage))
 		apiV1.GET("/resume", AuthMiddleWare(), GetResumeOfCandidates(storage))
@@ -176,6 +177,77 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 			"status":         "Ok!",
 			"condidate_Info": data,
 			"token":          token,
+		})
+		tx.Commit()
+
+	}
+}
+
+func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+
+		var req s.Authorization
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		data, err := sqlp.GetEmployeeLogin(tx, req.Email, req.Password)
+		if err == sql.ErrNoRows {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Такого работодателя нету! Проверьте логин и пароль",
+				"error":  err.Error(),
+			})
+			return
+		} else if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		claim := &s.Claims{
+			ID:    data.ID,
+			Role:  "employee",
+			Email: data.Email,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		}
+		token, err := sqlp.CreateAccessToken(claim)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка при создании токена аутентификации",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":        "Ok!",
+			"Employee_Info": data,
+			"token":         token,
 		})
 		tx.Commit()
 

@@ -12,6 +12,7 @@ type SuccessEmployer struct {
 	PhoneNumber      string `db:"phone_number"`
 	Email            string `db:"email"`
 	INN              string `db:"inn"`
+	Password         string `db:"password"`
 	Status           struct {
 		ID        int       `db:"id"`
 		Name      string    `db:"name"`
@@ -102,6 +103,7 @@ type RequestEmployee struct {
 	PhoneNumber      string `json:"phoneNumber"`
 	Email            string `json:"email"`
 	INN              string `json:"inn"`
+	Password         string `json:"password"`
 	Status_id        int    `json:"status_id"`
 }
 
