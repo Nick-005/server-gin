@@ -1,12 +1,32 @@
 package main
 
+/*
+
+	id, isThere := ctx.Get("id")
+	if !isThere {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status": "Err",
+			"info":   "User ID not found in context",
+		})
+		return
+	}
+
+	uid, ok := id.(int)
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status": "Err",
+			"info":   "Invalid user ID type in context",
+		})
+		return
+	}
+
+*/
 import (
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -24,9 +44,6 @@ import (
 
 var expirationTime = time.Now().Add(24 * time.Hour)
 
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
 func main() {
 	cfg := config.MustLoad()
 	storage, err := sqlx.Connect("pgx", cfg.StoragePath)
@@ -34,20 +51,6 @@ func main() {
 		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
 	defer storage.Close()
-
-	// var addStatus Status
-	// addStatus.Name = "Без опыта"
-
-	// query, args, err := psql.Insert("status").Columns("name").Values(addStatus.Name).ToSql()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println("Nice")
-	// result, err := storage.Exec(query, args...)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println(result, "NICE VERY NICE")
 
 	// Только для деплоя
 	// gin.SetMode(gin.ReleaseMode)
@@ -67,9 +70,10 @@ func main() {
 
 		apiV1.POST("/user", PostNewCandidate(storage))
 		apiV1.GET("/user", GetAllCandidates(storage))
+		apiV1.GET("/auth", AuthorizationMethod(storage))
 
 		apiV1.POST("/resume", AuthMiddleWare(), PostNewResume(storage))
-		apiV1.GET("/resume", GetResumeOfCandidates(storage))
+		apiV1.GET("/resume", AuthMiddleWare(), GetResumeOfCandidates(storage))
 
 		apiV1.POST("/vac", PostNewVacancy(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
@@ -107,19 +111,75 @@ func main() {
 	router.Run("localhost:8089")
 }
 
-type AllUserResponseOK struct {
-	Status  string
-	Otkliks string
-}
+func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
 
-type SimpleError struct {
-	Status string
-	Error  string
-}
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
 
-type InfoError struct {
-	SimpleError
-	Info string
+		var req s.Authorization
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		data, err := sqlp.GetCandidateByLogin(tx, req.Email, req.Password)
+		if err == sql.ErrNoRows {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Такого пользователя нету! Проверьте логин и пароль",
+				"error":  err.Error(),
+			})
+			return
+		} else if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		claim := &s.Claims{
+			ID:    data.ID,
+			Role:  "candidate",
+			Email: data.Email,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		}
+		token, err := sqlp.CreateAccessToken(claim)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка при создании токена аутентификации",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":         "Ok!",
+			"condidate_Info": data,
+			"token":          token,
+		})
+		tx.Commit()
+
+	}
 }
 
 func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
@@ -235,18 +295,26 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 				log.Printf("failed to rollback transaction: %v", err)
 			}
 		}()
-		var id int
-		id, err = strconv.Atoi(ctx.Query("user_id"))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
+
+		id, isThere := ctx.Get("id")
+		if !isThere {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
-				"info":   "Ошибка в получении данных из строки",
-				"error":  err.Error(),
+				"info":   "User ID not found in context",
 			})
 			return
 		}
 
-		data, err := sqlp.GetAllResumeByCandidate(storag, id)
+		uid, ok := id.(int)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Invalid user ID type in context",
+			})
+			return
+		}
+
+		data, err := sqlp.GetAllResumeByCandidate(tx, uid)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -281,7 +349,7 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			}
 		}()
 
-		data, err := sqlp.GetAllCandidates(storag)
+		data, err := sqlp.GetAllCandidates(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -326,7 +394,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		data, err := sqlp.PostNewCandidate(storag, req)
+		data, err := sqlp.PostNewCandidate(tx, req)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -344,7 +412,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		}
-		token, err := sqlp.CreateToken_Second(claim)
+		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -406,7 +474,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		err = sqlp.PostNewResume(storag, req, uid)
+		err = sqlp.PostNewResume(tx, req, uid)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -415,7 +483,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
+		// panic("ASDASDSAD")
 		ctx.JSON(200, gin.H{
 			"status": "Ok!",
 		})
@@ -440,7 +508,7 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 				log.Printf("Ошибка в откате транзакции: %v", err)
 			}
 		}()
-		data, err := sqlp.GetAllExperience(storage)
+		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -504,7 +572,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 
 func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Begin()
+		tx, err := storage.Beginx()
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
@@ -522,7 +590,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		data, err := sqlp.PostNewEmployer(storage, req)
+		data, err := sqlp.PostNewEmployer(tx, req)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -540,7 +608,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		}
-		token, err := sqlp.CreateToken_Second(claim)
+		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -611,7 +679,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			}
 		}()
 		name := ctx.Query("name")
-		err = sqlp.PostNewStatus(storage, name)
+		err = sqlp.PostNewStatus(tx, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -639,7 +707,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Begin()
+		tx, err := storage.Beginx()
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
@@ -648,7 +716,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 			})
 		}
 		defer tx.Rollback()
-		data, err := sqlp.GetAllStatus(storage)
+		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",

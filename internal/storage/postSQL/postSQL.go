@@ -1,14 +1,9 @@
 package sqlite
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,11 +13,11 @@ import (
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-func GetAllVacanciesByEmployee(storage *sqlx.DB, id int) {
+func GetAllVacanciesByEmployee(storage *sqlx.Tx, id int) {
 
 }
 
-func GetStatusByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
+func GetStatusByName(storage *sqlx.Tx, name string) (s.GetStatus, error) {
 
 	var result s.GetStatus
 	query, args, err := psql.Select("*").From("status").Where(sq.Eq{"name": name}).ToSql()
@@ -37,7 +32,7 @@ func GetStatusByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
 	return result, nil
 }
 
-func GetEmployeeByEmail(storage *sqlx.DB, email string) (s.SuccessEmployer, error) {
+func GetEmployeeByEmail(storage *sqlx.Tx, email string) (s.SuccessEmployer, error) {
 	var result s.SuccessEmployer
 	query, args, err := psql.Select(
 		"e.id", "e.name_organization", "e.phone_number", "e.email", "e.inn", "e.created_at", "e.updated_at",
@@ -59,7 +54,7 @@ func GetEmployeeByEmail(storage *sqlx.DB, email string) (s.SuccessEmployer, erro
 }
 
 // TODO переделать нахуй это. Что за хуйня тут...
-func PostNewVacancy(storage *sqlx.DB, req s.ResponseVac) (s.Vacancies, s.SuccessEmployer, s.GetStatus, error) {
+func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac) (s.Vacancies, s.SuccessEmployer, s.GetStatus, error) {
 	var vac s.Vacancies
 	var emf s.SuccessEmployer
 
@@ -90,7 +85,7 @@ func PostNewVacancy(storage *sqlx.DB, req s.ResponseVac) (s.Vacancies, s.Success
 	return vac, employee, exp, nil
 }
 
-func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
+func GetCandidateById(storage *sqlx.Tx, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
@@ -106,7 +101,7 @@ func GetCandidateById(storage *sqlx.DB, id int) (s.InfoCandidate, error) {
 	return result, nil
 }
 
-func GetCandidateByLogin(storage *sqlx.DB, email, password string) (s.InfoCandidate, error) {
+func GetCandidateByLogin(storage *sqlx.Tx, email, password string) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Select(
@@ -126,7 +121,7 @@ func GetCandidateByLogin(storage *sqlx.DB, email, password string) (s.InfoCandid
 	return result, nil
 }
 
-func GetCandidateByEmail(storage *sqlx.DB, email string) (s.InfoCandidate, error) {
+func GetCandidateByEmail(storage *sqlx.Tx, email string) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Select(
@@ -146,7 +141,7 @@ func GetCandidateByEmail(storage *sqlx.DB, email string) (s.InfoCandidate, error
 	return result, nil
 }
 
-func GetAllResumeByCandidate(storage *sqlx.DB, id int) (s.ResumeResult, error) {
+func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 	var result s.ResumeResult
 	// ~ candidates
 	query, args, err := psql.Select(
@@ -201,7 +196,7 @@ func GetAllResumeByCandidate(storage *sqlx.DB, id int) (s.ResumeResult, error) {
 }
 
 // нормализовал, всё норм
-func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
+func GetAllCandidates(storage *sqlx.Tx) ([]s.InfoCandidate, error) {
 	var result []s.InfoCandidate
 
 	query, args, err := psql.Select(
@@ -220,7 +215,7 @@ func GetAllCandidates(storage *sqlx.DB) ([]s.InfoCandidate, error) {
 
 }
 
-func PostNewCandidate(storage *sqlx.DB, req s.RequestCandidate) (s.InfoCandidate, error) {
+func PostNewCandidate(storage *sqlx.Tx, req s.RequestCandidate) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
 	query, args, err := psql.Insert("candidates").
@@ -244,7 +239,7 @@ func PostNewCandidate(storage *sqlx.DB, req s.RequestCandidate) (s.InfoCandidate
 	return result, nil
 }
 
-func PostNewResume(storage *sqlx.DB, req s.RequestResume, userID int) error {
+func PostNewResume(storage *sqlx.Tx, req s.RequestResume, userID int) error {
 
 	MainQuery, MainArgs, err := psql.Insert("resume").Columns("candidate_id", "experience_id", "description").Values(userID, req.Experience, req.Description).ToSql()
 	if err != nil {
@@ -258,7 +253,7 @@ func PostNewResume(storage *sqlx.DB, req s.RequestResume, userID int) error {
 	return nil
 }
 
-func GetAllStatus(storage *sqlx.DB) ([]s.GetStatus, error) {
+func GetAllStatus(storage *sqlx.Tx) ([]s.GetStatus, error) {
 	var result []s.GetStatus
 	query, args, err := psql.Select("*").From("status").ToSql()
 	if err != nil {
@@ -272,7 +267,7 @@ func GetAllStatus(storage *sqlx.DB) ([]s.GetStatus, error) {
 	return result, nil
 }
 
-func PostNewStatus(storage *sqlx.DB, name string) error {
+func PostNewStatus(storage *sqlx.Tx, name string) error {
 
 	query, args, err := psql.Insert("status").Columns("name").Values(name).ToSql()
 	if err != nil {
@@ -293,7 +288,7 @@ func PostNewStatus(storage *sqlx.DB, name string) error {
 // 	InnerJoin("employer e ON e.id").
 // }
 
-func GetExperienceByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
+func GetExperienceByName(storage *sqlx.Tx, name string) (s.GetStatus, error) {
 	var result s.GetStatus
 
 	query, args, err := psql.Select("*").From("experience").Where(sq.Eq{"name": name}).ToSql()
@@ -307,7 +302,7 @@ func GetExperienceByName(storage *sqlx.DB, name string) (s.GetStatus, error) {
 	return result, nil
 }
 
-func GetAllExperience(storage *sqlx.DB) ([]s.GetStatus, error) {
+func GetAllExperience(storage *sqlx.Tx) ([]s.GetStatus, error) {
 	var result []s.GetStatus
 
 	query, args, err := psql.Select("*").From("experience").ToSql()
@@ -354,7 +349,7 @@ func GetAllEmployee(storage *sqlx.DB) ([]s.SuccessEmployer, error) {
 	return result, nil
 }
 
-func PostNewEmployer(storage *sqlx.DB, body s.RequestEmployee) (s.SuccessEmployer, error) {
+func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmployer, error) {
 	var result s.SuccessEmployer
 
 	queryMain, argsMain, err := psql.Insert("employer").Columns("name_organization", "phone_number", "email", "inn", "status_id").
@@ -386,7 +381,7 @@ func PostNewEmployer(storage *sqlx.DB, body s.RequestEmployee) (s.SuccessEmploye
 // 	return token, nil
 // }
 
-func CreateToken_Second(claim *s.Claims) (string, error) {
+func CreateAccessToken(claim *s.Claims) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	result, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN_EMP")))
@@ -398,66 +393,66 @@ func CreateToken_Second(claim *s.Claims) (string, error) {
 	return result, nil
 }
 
-func CreateToken(email, user string) (string, error) {
-	type Header struct {
-		Alg string `json:"alg"` // Алгоритм подписи
-		Typ string `json:"typ"` // Тип токена
-	}
+// func CreateToken(email, user string) (string, error) {
+// 	type Header struct {
+// 		Alg string `json:"alg"` // Алгоритм подписи
+// 		Typ string `json:"typ"` // Тип токена
+// 	}
 
-	type Payload struct {
-		Iss string `json:"iss"`
-		Sub string `json:"sub"` // Subject (обычно идентификатор пользователя)
-		Iat int64  `json:"iat"` // Issued at - время в которое был выдан токен
-		Exp int64  `json:"exp"` // Время истечения токена (в Unix timestamp)
-	}
-	var secretKEY string
-	if user == "emp" {
-		secretKEY = os.Getenv("JWT_SECRET_TOKEN_EMP")
-	} else {
-		secretKEY = os.Getenv("JWT_SECRET_TOKEN_USER")
-	}
+// 	type Payload struct {
+// 		Iss string `json:"iss"`
+// 		Sub string `json:"sub"` // Subject (обычно идентификатор пользователя)
+// 		Iat int64  `json:"iat"` // Issued at - время в которое был выдан токен
+// 		Exp int64  `json:"exp"` // Время истечения токена (в Unix timestamp)
+// 	}
+// 	var secretKEY string
+// 	if user == "emp" {
+// 		secretKEY = os.Getenv("JWT_SECRET_TOKEN_EMP")
+// 	} else {
+// 		secretKEY = os.Getenv("JWT_SECRET_TOKEN_USER")
+// 	}
 
-	var header Header
-	header.Alg = "HS256"
-	header.Typ = "JWT"
+// 	var header Header
+// 	header.Alg = "HS256"
+// 	header.Typ = "JWT"
 
-	var payload Payload
-	payload.Iss = "Nick005-aka-monkeyZV"
-	payload.Sub = email
-	payload.Iat = time.Now().Unix()
-	payload.Exp = time.Now().Add(time.Minute * 15).Unix()
+// 	var payload Payload
+// 	payload.Iss = "Nick005-aka-monkeyZV"
+// 	payload.Sub = email
+// 	payload.Iat = time.Now().Unix()
+// 	payload.Exp = time.Now().Add(time.Minute * 15).Unix()
 
-	headerJSON, err := json.Marshal(header)
-	if err != nil {
-		return "error", fmt.Errorf("error in converting HEADER to JSON")
-	}
-	headerBASE64 := base64.RawURLEncoding.Strict().EncodeToString(headerJSON)
+// 	headerJSON, err := json.Marshal(header)
+// 	if err != nil {
+// 		return "error", fmt.Errorf("error in converting HEADER to JSON")
+// 	}
+// 	headerBASE64 := base64.RawURLEncoding.Strict().EncodeToString(headerJSON)
 
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return "error", fmt.Errorf("error in converting PAYLOAD to JSON")
-	}
-	payloadBASE64 := base64.RawURLEncoding.Strict().EncodeToString(payloadJSON)
+// 	payloadJSON, err := json.Marshal(payload)
+// 	if err != nil {
+// 		return "error", fmt.Errorf("error in converting PAYLOAD to JSON")
+// 	}
+// 	payloadBASE64 := base64.RawURLEncoding.Strict().EncodeToString(payloadJSON)
 
-	// создаем подпись для JWTшки
-	signaturePayAndHeader := fmt.Sprintf("%s.%s", headerBASE64, payloadBASE64)
+// 	// создаем подпись для JWTшки
+// 	signaturePayAndHeader := fmt.Sprintf("%s.%s", headerBASE64, payloadBASE64)
 
-	h := hmac.New(sha256.New, []byte(secretKEY))
-	h.Write([]byte(signaturePayAndHeader))
-	var signature string = base64.RawStdEncoding.EncodeToString(h.Sum(nil))
+// 	h := hmac.New(sha256.New, []byte(secretKEY))
+// 	h.Write([]byte(signaturePayAndHeader))
+// 	var signature string = base64.RawStdEncoding.EncodeToString(h.Sum(nil))
 
-	var tokenJWT string = fmt.Sprintf("%s.%s.%s", headerBASE64, payloadBASE64, signature)
+// 	var tokenJWT string = fmt.Sprintf("%s.%s.%s", headerBASE64, payloadBASE64, signature)
 
-	return tokenJWT, nil
-}
+// 	return tokenJWT, nil
+// }
 
-func CreateAccessToken(email, user string) (string, error) {
-	const op = "sqlite.CreateAccessToken.User"
-	token, err := CreateToken(email, user)
-	if err != nil {
-		return "Error", fmt.Errorf("%s: %w", op, err)
-	}
-	token = strings.ReplaceAll(token, "+", "-")
-	token = strings.ReplaceAll(token, "/", "_")
-	return token, nil
-}
+// func CreateAccessToken(email, user string) (string, error) {
+// 	const op = "sqlite.CreateAccessToken.User"
+// 	token, err := CreateToken(email, user)
+// 	if err != nil {
+// 		return "Error", fmt.Errorf("%s: %w", op, err)
+// 	}
+// 	token = strings.ReplaceAll(token, "+", "-")
+// 	token = strings.ReplaceAll(token, "/", "_")
+// 	return token, nil
+// }

@@ -51,6 +51,26 @@ type RequestResume struct {
 	Description string `json:"description"`
 }
 
+type AllUserResponseOK struct {
+	Status  string
+	Otkliks string
+}
+
+type SimpleError struct {
+	Status string
+	Error  string
+}
+
+type InfoError struct {
+	SimpleError
+	Info string
+}
+
+type Authorization struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type RequestAdd struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
