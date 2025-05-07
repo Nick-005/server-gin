@@ -59,26 +59,33 @@ func main() {
 
 	apiV1 := router.Group("/api/v1")
 	{
-		apiV1.GET("/status", GetAllStatus(storage))
-		apiV1.POST("/status", AddNewStatus(storage))
+		// & Статус
+		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
+		apiV1.POST("/status", MakeTransaction(storage), AddNewStatus(storage))
 
-		apiV1.POST("/emp", PostNewEmployer(storage))
-		apiV1.GET("/emp", GetAllEmployee(storage))
-		apiV1.GET("/emp/auth", AuthorizationMethodEmp(storage))
+		// & Работодатель
+		apiV1.POST("/emp", MakeTransaction(storage), PostNewEmployer(storage))
+		apiV1.GET("/emp", MakeTransaction(storage), GetAllEmployee(storage))
+		apiV1.GET("/emp/auth", MakeTransaction(storage), AuthorizationMethodEmp(storage))
 
-		apiV1.POST("/exp", PostNewExperience(storage))
-		apiV1.GET("/exp", GetAllExperience(storage))
+		// & Опыт
+		apiV1.POST("/exp", MakeTransaction(storage), PostNewExperience(storage))
+		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
 
-		apiV1.POST("/user", PostNewCandidate(storage))
-		apiV1.GET("/user", AuthMiddleWare(), GetCandidateInfo(storage))
-		apiV1.GET("/user/all", GetAllCandidates(storage))
-		apiV1.GET("/user/auth", AuthorizationMethod(storage))
+		// & Соискатели
+		apiV1.POST("/user", MakeTransaction(storage), PostNewCandidate(storage))
+		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), GetCandidateInfo(storage))
+		apiV1.GET("/user/all", MakeTransaction(storage), GetAllCandidates(storage))
+		apiV1.GET("/user/auth", MakeTransaction(storage), AuthorizationMethod(storage))
+		apiV1.PUT("/user", AuthMiddleWare(), MakeTransaction(storage), PutCandidateInfo(storage))
 
-		apiV1.POST("/resume", AuthMiddleWare(), PostNewResume(storage))
-		apiV1.GET("/resume", AuthMiddleWare(), GetResumeOfCandidates(storage))
+		// & Резюме
+		apiV1.POST("/resume", AuthMiddleWare(), MakeTransaction(storage), PostNewResume(storage))
+		apiV1.GET("/resume", AuthMiddleWare(), MakeTransaction(storage), GetResumeOfCandidates(storage))
 
-		apiV1.POST("/vac", AuthMiddleWare(), PostNewVacancy(storage))
-		apiV1.GET("/vac", AuthMiddleWare(), GetAllVacanciesByEmployee(storage))
+		// & Вакансии
+		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), PostNewVacancy(storage))
+		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), GetAllVacanciesByEmployee(storage))
 
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
@@ -92,9 +99,9 @@ func main() {
 	router.Run("localhost:8089")
 }
 
-func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
+func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
+		tx, err := storage.Beginx()
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"status": "Err",
@@ -108,6 +115,25 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 				log.Printf("failed to rollback transaction: %v", err)
 			}
 		}()
+		ctx.Set("tx", tx)
+		ctx.Next()
+
+		if ctx.Writer.Status() < http.StatusBadRequest {
+			if err := tx.Commit(); err != nil {
+				log.Printf("произошла ошибка при попытке закоммитить изменения. error: %v", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"status": "Err",
+					"info":   "Ошибка при попытке закоммитить изменения в БД. Обратитесь к backend разрабу!",
+					"error":  err.Error(),
+				})
+			}
+		}
+	}
+}
+
+func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		var req s.Authorization
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
@@ -158,27 +184,12 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 			"condidate_Info": data,
 			"token":          token,
 		})
-		tx.Commit()
-
 	}
 }
 
 func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		var req s.Authorization
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
@@ -191,14 +202,7 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 		}
 
 		data, err := sqlp.GetEmployeeLogin(tx, req.Email, req.Password)
-		if err == sql.ErrNoRows {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Такого работодателя нету! Проверьте логин и пароль",
-				"error":  err.Error(),
-			})
-			return
-		} else if err != nil {
+		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
@@ -229,27 +233,84 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 			"Employee_Info": data,
 			"token":         token,
 		})
-		tx.Commit()
 
+	}
+}
+
+func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+		var req s.RequestCandidate
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		roleGet, fjd := ctx.Get("role")
+		if !fjd {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
+			})
+			return
+		}
+		role, ok := roleGet.(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверная роль пользователя. Ошибка на сервере!",
+			})
+			return
+		}
+		id, isThere := ctx.Get("id")
+		if !isThere {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "ID пользователя не был найден. Ошибка на сервере!",
+			})
+			return
+		}
+		if role != "candidate" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав изменять данные пользователя!",
+			})
+			return
+		}
+		uid, ok := id.(int)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверный ID пользователя. Ошибка на сервере!",
+			})
+			return
+		}
+		err := sqlp.UpdateCandidateInfo(tx, req, uid)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для обновления данных о соискателе",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"info":   "Данные успешно обновлены!",
+		})
 	}
 }
 
 func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
 		roleGet, fjd := ctx.Get("role")
 		if !fjd {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -306,26 +367,13 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 			"emp_id":       emp_id,
 		})
 
-		tx.Commit()
 	}
 }
 
 func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
 		roleGet, fjd := ctx.Get("role")
 		if !fjd {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -399,8 +447,6 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			"vacancy_info":  data,
 			"employee_info": employee,
 		})
-
-		tx.Commit()
 	}
 }
 
@@ -434,20 +480,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 
 func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		id, isThere := ctx.Get("id")
 		if !isThere {
@@ -481,26 +514,13 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			"Info":   data,
 			"status": "Ok!",
 		})
-		tx.Commit()
 	}
 }
 
 func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
 		id, isThere := ctx.Get("id")
 		if !isThere {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -533,26 +553,12 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			"status":         "Ok!",
 			"candidate_info": data,
 		})
-		tx.Commit()
 	}
 }
 
 func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		data, err := sqlp.GetAllCandidates(tx)
 		if err != nil {
@@ -568,26 +574,12 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			"status":          "Ok!",
 			"Candidates_Info": data,
 		})
-
 	}
 }
 
 func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
@@ -631,26 +623,12 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 			"condidate_Info": data,
 			"token":          token,
 		})
-		tx.Commit()
 	}
 }
 
 func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		var req s.RequestResume
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
@@ -679,7 +657,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		err = sqlp.PostNewResume(tx, req, uid)
+		err := sqlp.PostNewResume(tx, req, uid)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -688,31 +666,17 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		// panic("ASDASDSAD")
 		ctx.JSON(200, gin.H{
 			"status": "Ok!",
 		})
-		tx.Commit()
 
 	}
 }
 
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-			return
-		}
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("Ошибка в откате транзакции: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -728,41 +692,18 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 			"AllExperience": data,
 		})
 
-		tx.Commit()
-
 	}
 }
 
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		name := ctx.Query("name")
-		err = sqlp.PostNewExperience(storage, name)
+		err := sqlp.PostNewExperience(tx, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
-			})
-			return
-		}
-		// panic("hello")
-		if err := tx.Commit(); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в коммите транзакции",
 				"error":  err.Error(),
 			})
 			return
@@ -777,15 +718,8 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 
 func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-		defer tx.Rollback()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
 		var req s.RequestEmployee
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -827,28 +761,14 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 			"allStatus": data,
 			"token":     token,
 		})
-		tx.Commit()
 	}
 }
 
 func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storag.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-			return
-		}
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("Ошибка в откате транзакции: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		data, err := sqlp.GetAllEmployee(storag)
+		data, err := sqlp.GetAllEmployee(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -863,28 +783,14 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 			"Info_Employes": data,
 		})
 
-		tx.Commit()
-
 	}
 }
 
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-		defer func() {
-			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-				log.Printf("failed to rollback transaction: %v", err)
-			}
-		}()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		name := ctx.Query("name")
-		err = sqlp.PostNewStatus(tx, name)
+		err := sqlp.PostNewStatus(tx, name)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -893,16 +799,6 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		// panic("hello")
-		if err := tx.Commit(); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в коммите транзакции",
-				"error":  err.Error(),
-			})
-			return
-		}
-
 		ctx.JSON(200, gin.H{
 			"status": "Ok!",
 		})
@@ -912,15 +808,8 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tx, err := storage.Beginx()
-		if err != nil {
-			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
-			})
-		}
-		defer tx.Rollback()
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
 		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -935,14 +824,12 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 			"status":    "OK!",
 			"AllStatus": data,
 		})
-		tx.Commit()
 	}
 }
 
 func AuthMiddleWare() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		// проверяем, что запрос содержит заголовок "Authorization"
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -953,7 +840,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		// // Проверяем, что заголовок начинается с "Bearer "
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
@@ -963,7 +849,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		// // Извлекаем токен, удаляя "Bearer " из строки
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claim := &s.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
@@ -979,14 +864,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		// // fmt.Println(tokenString)
-		// token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		// 		return nil, fmt.Errorf("неожиданный метод подписи токена: %v", token.Header["alg"])
-		// 	}
-		// 	return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
-		// })
-		// // fmt.Println(token)
 		if !token.Valid {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",

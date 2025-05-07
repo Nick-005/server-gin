@@ -44,7 +44,7 @@ func GetEmployeeLogin(storage *sqlx.Tx, email, password string) (s.SuccessEmploy
 
 	err = storage.Get(&result, query, args...)
 	if err == sql.ErrNoRows {
-		return result, err
+		return result, fmt.Errorf("такого работодателя нету! Проверьте логин и пароль! error: %s", err.Error())
 	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
@@ -181,7 +181,26 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 	return result, nil
 }
 
-// TODO переделать. Тоже хуйня написана...
+func UpdateCandidateInfo(storage *sqlx.Tx, req s.RequestCandidate, id int) error {
+
+	query, args, err := psql.Update("candidate").
+		Set("name", req.Name).
+		Set("phone_number", req.PhoneNumber).
+		Set("email", req.Email).
+		Set("password", req.Password).
+		Set("status_id", req.Status_id).
+		Where(sq.Eq{"id": id}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	_, err = storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetCandidateById(storage *sqlx.Tx, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
@@ -423,7 +442,7 @@ func GetAllExperience(storage *sqlx.Tx) ([]s.GetStatus, error) {
 	return result, nil
 }
 
-func PostNewExperience(storage *sqlx.DB, name string) error {
+func PostNewExperience(storage *sqlx.Tx, name string) error {
 	query, args, err := psql.Insert("experience").Columns("name").Values(name).ToSql()
 	if err != nil {
 		return fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
@@ -435,7 +454,7 @@ func PostNewExperience(storage *sqlx.DB, name string) error {
 	return nil
 }
 
-func GetAllEmployee(storage *sqlx.DB) ([]s.SuccessEmployer, error) {
+func GetAllEmployee(storage *sqlx.Tx) ([]s.SuccessEmployer, error) {
 	var result []s.SuccessEmployer
 
 	query, args, err := psql.Select(
