@@ -99,6 +99,34 @@ func main() {
 	router.Run("localhost:8089")
 }
 
+func GetUserRoleFromContext(ctx *gin.Context) (string, bool) {
+	roleGet, fjd := ctx.Get("role")
+	if !fjd {
+		return "", false
+	}
+	role, ok := roleGet.(string)
+	if !ok {
+
+		return "", false
+	}
+	return role, true
+}
+
+func GetUserIDFromContext(ctx *gin.Context) (int, bool) {
+
+	id, isThere := ctx.Get("id")
+	if !isThere {
+
+		return -1, false
+	}
+
+	uid, ok := id.(int)
+	if !ok {
+		return -1, false
+	}
+	return uid, true
+}
+
 func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx, err := storage.Beginx()
@@ -250,43 +278,11 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
-		roleGet, fjd := ctx.Get("role")
-		if !fjd {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
-			})
-			return
-		}
-		role, ok := roleGet.(string)
+		uid, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Неверная роль пользователя. Ошибка на сервере!",
-			})
-			return
-		}
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "ID пользователя не был найден. Ошибка на сервере!",
-			})
-			return
-		}
-		if role != "candidate" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав изменять данные пользователя!",
-			})
-			return
-		}
-		uid, ok := id.(int)
-		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Неверный ID пользователя. Ошибка на сервере!",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -311,47 +307,14 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		roleGet, fjd := ctx.Get("role")
-		if !fjd {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
-			})
-			return
-		}
-
-		role, ok := roleGet.(string)
+		emp_id, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Неверная роль пользователя. Ошибка на сервере!",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "ID пользователя не был найден. Ошибка на сервере!",
-			})
-			return
-		}
-		if role != "employee" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав добавлять вакансии!",
-			})
-			return
-		}
-		emp_id, ok := id.(int)
-		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Неверный ID пользователя. Ошибка на сервере!",
-			})
-			return
-		}
-
 		data, err := sqlp.GetAllVacanciesByEmployee(tx, emp_id)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -374,28 +337,11 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		roleGet, fjd := ctx.Get("role")
-		if !fjd {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
-			})
-			return
-		}
-
-		role, ok := roleGet.(string)
+		role, ok := GetUserRoleFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Неверная роль пользователя. Ошибка на сервере!",
-			})
-			return
-		}
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "ID пользователя не был найден. Ошибка на сервере!",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -406,11 +352,11 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		emp_id, ok := id.(int)
+		emp_id, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Неверный ID пользователя. Ошибка на сервере!",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -482,20 +428,11 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "User ID not found in context",
-			})
-			return
-		}
-
-		uid, ok := id.(int)
+		uid, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Invalid user ID type in context",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -521,20 +458,11 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "User ID not found in context",
-			})
-			return
-		}
-
-		uid, ok := id.(int)
+		uid, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Invalid user ID type in context",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -639,20 +567,11 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		id, isThere := ctx.Get("id")
-		if !isThere {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "User ID not found in context",
-			})
-			return
-		}
-
-		uid, ok := id.(int)
+		uid, ok := GetUserIDFromContext(ctx)
 		if !ok {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "Invalid user ID type in context",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
