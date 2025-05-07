@@ -76,7 +76,7 @@ func main() {
 		apiV1.POST("/resume", AuthMiddleWare(), PostNewResume(storage))
 		apiV1.GET("/resume", AuthMiddleWare(), GetResumeOfCandidates(storage))
 
-		apiV1.POST("/vac", PostNewVacancy(storage))
+		apiV1.POST("/vac", AuthMiddleWare(), PostNewVacancy(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 
 		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
@@ -293,6 +293,47 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 				log.Printf("failed to rollback transaction: %v", err)
 			}
 		}()
+		roleGet, fjd := ctx.Get("role")
+		if !fjd {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
+			})
+			return
+		}
+
+		role, ok := roleGet.(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверная роль пользователя. Ошибка на сервере!",
+			})
+			return
+		}
+		id, isThere := ctx.Get("id")
+		if !isThere {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "ID пользователя не был найден. Ошибка на сервере!",
+			})
+			return
+		}
+		if role != "employee" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав добавлять вакансии!",
+			})
+			return
+		}
+		emp_id, ok := id.(int)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверный ID пользователя. Ошибка на сервере!",
+			})
+			return
+		}
+
 		var req s.ResponseVac
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -302,6 +343,25 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
+		employee, err := sqlp.GetEmployeeByID(tx, emp_id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для получения данных о работодателе",
+				"error":  err.Error(),
+			})
+			return
+		}
+		data, err := sqlp.PostNewVacancy(tx, req, emp_id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для получения данных о вакансиях работодателя",
+				"error":  err.Error(),
+			})
+			return
+		}
+
 		// vacancy, employer, experience, err := sqlp.PostNewVacancy(storag, req)
 		// if err != nil {
 		// 	ctx.JSON(200, gin.H{
@@ -312,12 +372,11 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		// 	return
 		// }
 
-		// ctx.JSON(200, gin.H{
-		// 	"status":          "Ok!",
-		// 	"vacancy_info":    vacancy,
-		// 	"employee_info":   employer,
-		// 	"experience_info": experience,
-		// })
+		ctx.JSON(200, gin.H{
+			"status":        "Ok!",
+			"vacancy_info":  data,
+			"employee_info": employee,
+		})
 
 		tx.Commit()
 	}
@@ -864,6 +923,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		}
 		ctx.Set("id", claim.ID)
 		ctx.Set("email", claim.Email)
+		ctx.Set("role", claim.Role)
 		fmt.Println(claim.ID)
 		ctx.Next()
 	}

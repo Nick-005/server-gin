@@ -121,16 +121,34 @@ type RequestResponse struct {
 	Status_name     string `json:"status"`
 }
 
+type SuccessVacancy struct {
+	Employee  SuccessEmployer `db:"employer"`
+	Vacancies []VacancyData   `db:"vacancies"`
+}
+
+type VacancyData struct {
+	ID          int       `db:"id"`
+	Name        string    `db:"name"`
+	Price       string    `db:"price"`
+	Email       string    `db:"email"`
+	PhoneNumber string    `db:"phone_number"`
+	Location    string    `db:"location"`
+	Experience  GetStatus `db:"experience"`
+	AboutWork   string    `db:"about_work"`
+	IsVisible   bool      `db:"is_visible"`
+	Created_at  time.Time `db:"created_at"`
+	Updated_at  time.Time `db:"updated_at"`
+}
+
 type ResponseVac struct {
-	Emp_Email   string `json:"emp_email"`
-	Vac_Name    string `json:"vac_name"`
-	Price       string `json:"price"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phoneNumber"`
-	Location    string `json:"location"`
-	Experience  string `json:"exp"`
-	About       string `json:"about"`
-	Is_visible  bool   `json:"is_visible"`
+	Vac_Name      string `json:"vac_name"`
+	Price         string `json:"price"`
+	Email         string `json:"email"`
+	PhoneNumber   string `json:"phoneNumber"`
+	Location      string `json:"location"`
+	Experience_Id int    `json:"exp_id"`
+	About         string `json:"about"`
+	Is_visible    bool   `json:"is_visible"`
 }
 
 type ResponseSearchVac struct {
