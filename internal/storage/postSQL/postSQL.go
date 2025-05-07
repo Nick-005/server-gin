@@ -120,12 +120,12 @@ func GetAllVacanciesByEmployee(storage *sqlx.Tx, emp_id int) ([]s.VacancyData, e
 	var result []s.VacancyData
 
 	query, args, err := psql.Select(
-		"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.experience_id", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
-		"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e. as \"experience.created_at\"",
+		"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
+		"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
 	).
 		From("vacancy v").
-		Join("experience_id e ON v.experience_id = e.id").Where(sq.Eq{
-		"emp_id": emp_id,
+		Join("experience e ON v.experience_id = e.id").Where(sq.Eq{
+		"v.emp_id": emp_id,
 	}).
 		ToSql()
 	if err != nil {
@@ -138,7 +138,6 @@ func GetAllVacanciesByEmployee(storage *sqlx.Tx, emp_id int) ([]s.VacancyData, e
 	return result, nil
 }
 
-// TODO переделать нахуй это. Что за хуйня тут...
 func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyData, error) {
 	var result s.VacancyData
 
@@ -180,47 +179,25 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 	}
 
 	return result, nil
-	// var vac s.Vacancies
-	// var emf s.SuccessEmployer
-
-	// exp, err := GetExperienceByName(storage, req.Experience)
-	// if err != nil {
-	// 	return vac, emf, exp, fmt.Errorf("ошибка в получении данных из таблицы experience! error: %s", err.Error())
-	// }
-
-	// employee, err := GetEmployeeByEmail(storage, req.Emp_Email)
-	// if err != nil {
-	// 	return vac, employee, exp, fmt.Errorf("ошибка в получении данных из таблицы employee! error: %s", err.Error())
-	// }
-
-	// // дописать
-	// query, args, err := psql.Insert("vacancy").
-	// 	Columns("emp_id", "name", "price", "email", "phone_number", "location", "experience_id", "about_work", "is_visible").
-	// 	Values(employee.ID, req.Vac_Name, req.Price, req.Email, req.PhoneNumber, req.Location, exp.ID, req.About, req.Is_visible).
-	// 	Suffix("RETURNING *").ToSql()
-	// if err != nil {
-	// 	return vac, employee, exp, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
-	// }
-
-	// err = storage.Get(&vac, query, args...)
-	// if err != nil {
-	// 	return vac, employee, exp, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
-	// }
-
-	// return vac, employee, exp, nil
 }
 
 // TODO переделать. Тоже хуйня написана...
 func GetCandidateById(storage *sqlx.Tx, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 
-	query, args, err := psql.Select("*").From("candidates").Where(sq.Eq{"id": id}).ToSql()
+	query, args, err := psql.Select(
+		"c.id", "c.name", "c.phone_number", "c.email", "c.password", "c.created_at", "c.updated_at",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).From("candidates c").Join("status s ON c.status_id = s.id").
+		Where(sq.Eq{"c.id": id}).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 
 	err = storage.Get(&result, query, args...)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return result, fmt.Errorf("такого пользователя не было найдено! error: %s", err.Error())
+	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 

@@ -70,41 +70,21 @@ func main() {
 		apiV1.GET("/exp", GetAllExperience(storage))
 
 		apiV1.POST("/user", PostNewCandidate(storage))
-		apiV1.GET("/user", GetAllCandidates(storage))
+		apiV1.GET("/user", AuthMiddleWare(), GetCandidateInfo(storage))
+		apiV1.GET("/user/all", GetAllCandidates(storage))
 		apiV1.GET("/user/auth", AuthorizationMethod(storage))
 
 		apiV1.POST("/resume", AuthMiddleWare(), PostNewResume(storage))
 		apiV1.GET("/resume", AuthMiddleWare(), GetResumeOfCandidates(storage))
 
 		apiV1.POST("/vac", AuthMiddleWare(), PostNewVacancy(storage))
+		apiV1.GET("/vac", AuthMiddleWare(), GetAllVacanciesByEmployee(storage))
+
 		// apiV1.GET("/token/check", GetTimeToken(storage))
-
-		// apiV1.GET("/all/vacs", GetAllVacancy(storage))
-
-		// apiV1.GET("/vac", GetVacancy(storage))
-
-		// apiV1.GET("/vacID", GetVacancyByID(storage))
-		// apiV1.GET("/empID", GetEmployerByID(storage))
-
 		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
-
-		// apiV1.POST("/vac", PostVacancy(storage))
-		// apiV1.POST("/emp", PostEmployer(storage))
-
-		// apiV1.POST("/user", PostUser(storage))
-
 		// apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
 
 		// apiV1.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
-
-		// apiV1.POST("/auth/user", GetTokenForUser(storage))
-
-		// apiV1.GET("/auth/test", AuthMiddleWare(), func(ctx *gin.Context) {
-		// 	ctx.JSON(200, gin.H{
-		// 		"status": "OK!",
-		// 		"auth":   "some text!",
-		// 	})
-		// })
 
 	}
 
@@ -270,10 +250,63 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 				log.Printf("failed to rollback transaction: %v", err)
 			}
 		}()
+		roleGet, fjd := ctx.Get("role")
+		if !fjd {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Роль пользователя не была найдена. Ошибка на сервере!",
+			})
+			return
+		}
 
-		// var id int
-		// id, err = strconv.Atoi(ctx.Query("user_id"))
+		role, ok := roleGet.(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверная роль пользователя. Ошибка на сервере!",
+			})
+			return
+		}
+		id, isThere := ctx.Get("id")
+		if !isThere {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "ID пользователя не был найден. Ошибка на сервере!",
+			})
+			return
+		}
+		if role != "employee" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав добавлять вакансии!",
+			})
+			return
+		}
+		emp_id, ok := id.(int)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Неверный ID пользователя. Ошибка на сервере!",
+			})
+			return
+		}
 
+		data, err := sqlp.GetAllVacanciesByEmployee(tx, emp_id)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для получения данных о вакансиях работодателя",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status":       "Ok!",
+			"vacancy_info": data,
+			"emp_id":       emp_id,
+		})
+
+		tx.Commit()
 	}
 }
 
@@ -361,17 +394,6 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
-		// vacancy, employer, experience, err := sqlp.PostNewVacancy(storag, req)
-		// if err != nil {
-		// 	ctx.JSON(200, gin.H{
-		// 		"status": "Err",
-		// 		"info":   "Ошибка в SQL файле",
-		// 		"error":  err.Error(),
-		// 	})
-		// 	return
-		// }
-
 		ctx.JSON(200, gin.H{
 			"status":        "Ok!",
 			"vacancy_info":  data,
@@ -458,6 +480,58 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 			"Info":   data,
 			"status": "Ok!",
+		})
+		tx.Commit()
+	}
+}
+
+func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx, err := storag.Beginx()
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в создании транзакции для БД",
+				"error":  err.Error(),
+			})
+		}
+
+		defer func() {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+				log.Printf("failed to rollback transaction: %v", err)
+			}
+		}()
+		id, isThere := ctx.Get("id")
+		if !isThere {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "User ID not found in context",
+			})
+			return
+		}
+
+		uid, ok := id.(int)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Invalid user ID type in context",
+			})
+			return
+		}
+
+		data, err := sqlp.GetCandidateById(tx, uid)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":         "Ok!",
+			"candidate_info": data,
 		})
 		tx.Commit()
 	}
