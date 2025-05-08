@@ -2,6 +2,7 @@ package vacancy
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -9,6 +10,59 @@ import (
 	s "main.go/internal/api/Struct"
 	sqlp "main.go/internal/storage/postSQL"
 )
+
+func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "employee" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав добавлять вакансии!",
+			})
+			return
+		}
+		emp_id, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+		vac_id, err := strconv.Atoi(ctx.Query("vacancy"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+			})
+			return
+		}
+
+		err = sqlp.DeleteVacancy(tx, emp_id, vac_id)
+		if err != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "произошла ошибка при попытке удалить резюме",
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"info":   "успешно удалили данные!",
+		})
+	}
+}
 
 func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

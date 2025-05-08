@@ -128,6 +128,8 @@ func main() {
 		// * Все отклики на вакансию
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), GetAllResponseByVacancy(storage))
 
+		// ! Удаление вакансии
+		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
 		// apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
