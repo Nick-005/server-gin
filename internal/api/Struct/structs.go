@@ -115,10 +115,24 @@ type DBResponse struct {
 	Status_id     int       `db:"status_id"`
 }
 
+type SuccessResponse struct {
+	Vacancy   VacancyData `db:"vacancy"`
+	Responses []struct {
+		ID        int           `db:"id"`
+		Candidate InfoCandidate `db:"candidate"`
+		Status    GetStatus     `db:"status"`
+	} `db:"responses"`
+}
+
+type ResponseByVac struct {
+	ID      int         `db:"id"`
+	Vacancy VacancyData `db:"vacancy"`
+	Status  GetStatus   `db:"status"`
+}
+
 type RequestResponse struct {
-	Candidate_email string `json:"can_email"`
-	Vacancy_id      int    `json:"vac_id"`
-	Status_name     string `json:"status"`
+	Vacancy_id int `json:"vac_id"`
+	Status_id  int `json:"status_id"`
 }
 
 type SuccessVacancy struct {
