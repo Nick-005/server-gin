@@ -112,6 +112,9 @@ func main() {
 		// ~ Отлик на вакансии
 		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PostNewRespone(storage))
 
+		// ~ Удаление отклика на вакансию
+		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), DeleteResponse(storage))
+
 		// & Вакансии
 		// ~ Добавить новую вакансию
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
@@ -219,6 +222,58 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		})
 
 	}
+}
+
+func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "candidate" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		uid, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+		vac_id, err := strconv.Atoi(ctx.Query("id"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "ошибка при попытке получить ID резюме! проверьте его и попробуйте снова",
+			})
+			return
+		}
+		err = sqlp.DeleteResponse(tx, vac_id, uid)
+		if err != nil {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "произошла ошибка при попытке удалить резюме",
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"info":   "успешно удалили данные!",
+		})
+	}
+
 }
 
 func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
