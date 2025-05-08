@@ -16,6 +16,49 @@ import (
 
 var expirationTime = time.Now().Add(24 * time.Hour)
 
+func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "candidate" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		uid, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+		data, err := sqlp.GetResponseByCandidate(tx, uid)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"data":   data,
+		})
+
+	}
+}
+
 func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)

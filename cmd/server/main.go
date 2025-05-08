@@ -62,7 +62,6 @@ func main() {
 	apiV1 := router.Group("/api/v1")
 	{
 		// & Статус
-
 		// * Все записи
 		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
 
@@ -70,7 +69,6 @@ func main() {
 		apiV1.POST("/status", MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
-
 		// ^ Добавить/зарегестрировать работодателя
 		apiV1.POST("/emp", MakeTransaction(storage), employee.PostNewEmployer(storage))
 
@@ -81,14 +79,12 @@ func main() {
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
 
 		// & Опыт
-
 		// ^ Добавить
 		apiV1.POST("/exp", MakeTransaction(storage), PostNewExperience(storage))
 		// * Все записи
 		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
 
 		// & Соискатели
-
 		// ^ Добавить/зарегестрировать нового пользователя
 		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
 
@@ -116,11 +112,13 @@ func main() {
 		// ^ Добавить отклик на вакансии
 		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PostNewRespone(storage))
 
+		// * Все отклики пользователя
+		apiV1.GET("/user/response", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllUserResponse(storage))
+
 		// ! Удаление отклика на вакансию
 		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), DeleteResponse(storage))
 
 		// & Вакансии
-
 		// ^ Добавить новую вакансию
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
 
@@ -133,8 +131,6 @@ func main() {
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
 		// apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
-
-		// apiV1.GET("/user/otkliks/:id", AuthMiddleWare(), GetAllUserResponse(storage))
 
 	}
 

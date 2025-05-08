@@ -115,6 +115,21 @@ type DBResponse struct {
 	Status_id     int       `db:"status_id"`
 }
 
+type VacanciesToResponse struct {
+	ID            int       `db:"id"`
+	Employee_name string    `db:"employee_name"`
+	Name          string    `db:"name"`
+	Price         string    `db:"price"`
+	Email         string    `db:"email"`
+	PhoneNumber   string    `db:"phone_number"`
+	Location      string    `db:"location"`
+	Experience    GetStatus `db:"experience"`
+	AboutWork     string    `db:"about_work"`
+	IsVisible     bool      `db:"is_visible"`
+	Created_at    time.Time `db:"created_at"`
+	Updated_at    time.Time `db:"updated_at"`
+}
+
 type SuccessResponse struct {
 	Vacancy   VacancyData `db:"vacancy"`
 	Responses []struct {
@@ -125,9 +140,9 @@ type SuccessResponse struct {
 }
 
 type ResponseByVac struct {
-	ID      int         `db:"id"`
-	Vacancy VacancyData `db:"vacancy"`
-	Status  GetStatus   `db:"status"`
+	ID      int                 `db:"id"`
+	Vacancy VacanciesToResponse `db:"vacancy"`
+	Status  GetStatus           `db:"status"`
 }
 
 type RequestResponse struct {

@@ -216,7 +216,44 @@ func UpdateCandidateInfo(storage *sqlx.Tx, req s.RequestCandidate, id int) error
 	return nil
 }
 
-// TODO Доделать эту поеботу!!
+func GetResponseByCandidate(storage *sqlx.Tx, uid int) ([]s.ResponseByVac, error) {
+	var result []s.ResponseByVac
+
+	query, args, err := psql.Select(
+		"r.id",
+		"v.id as \"vacancy.id\"",
+		"v.name as \"vacancy.name\"",
+		"v.price as \"vacancy.price\"",
+		"v.email as \"vacancy.email\"",
+		"v.phone_number as \"vacancy.phone_number\"",
+		"v.location as \"vacancy.location\"",
+		"v.about_work as \"vacancy.about_work\"",
+		"v.is_visible as \"vacancy.is_visible\"",
+		"v.created_at as \"vacancy.created_at\"",
+		"v.updated_at as \"vacancy.updated_at\"",
+		"em.name_organization as \"vacancy.employee_name\"",
+		"ex.id as \"vacancy.experience.id\"",
+		"ex.name as \"vacancy.experience.name\"",
+		"ex.created_at as \"vacancy.experience.created_at\"",
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+	).
+		From("response r").
+		Join("vacancy v ON r.vacancy_id = v.id").
+		Join("experience ex ON v.experience_id = ex.id").
+		Join("status s ON r.status_id = s.id").
+		Join("employer em ON v.emp_id = em.id").
+		Where(sq.Eq{"r.candidates_id": uid}).
+		ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка при выполнении скрипта на получение данных. error: %s", err.Error())
+	}
+	return result, nil
+}
+
 func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, error) {
 	var result s.SuccessResponse
 
@@ -243,6 +280,7 @@ func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, erro
 	return result, nil
 }
 
+// TODO Добавить проверку на то, откликнулся ли уже пользователь на эту вакансию, чтобы 2 раза нельзя было бы откликнуться
 func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	var res_id int
 
