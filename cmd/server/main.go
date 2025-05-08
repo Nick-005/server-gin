@@ -62,34 +62,66 @@ func main() {
 	apiV1 := router.Group("/api/v1")
 	{
 		// & Статус
+		// ~ Все записи
 		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
+
+		// ~ Добавить запись
 		apiV1.POST("/status", MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
+		// ~ Добавить/зарегестрировать работодателя
 		apiV1.POST("/emp", MakeTransaction(storage), employee.PostNewEmployer(storage))
+
+		// ~ Получить список всех работодателей
 		apiV1.GET("/emp", MakeTransaction(storage), employee.GetAllEmployee(storage))
+
+		// ~ Авторизовать работодателя (выдать новый токен)
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
 
 		// & Опыт
+		// ~ Добавить
 		apiV1.POST("/exp", MakeTransaction(storage), PostNewExperience(storage))
+		// ~ Все записи
 		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
 
 		// & Соискатели
+		// ~ Добавить/зарегестрировать нового пользователя
 		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
+
+		// ~ Получить все данные пользователя
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
+
+		// ~ Зачем то получение всех пользователей
 		apiV1.GET("/user/all", MakeTransaction(storage), candid.GetAllCandidates(storage))
+
+		// ~ Авторизация пользователя (обновить/получить токен пользователя)
 		apiV1.GET("/user/auth", MakeTransaction(storage), candid.AuthorizationMethod(storage))
+
+		// ~ Обновить данные пользователя
 		apiV1.PUT("/user", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateInfo(storage))
-		// ~ Резюме
+
+		// ~ Добавить резюме
 		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
+
+		// ~ Удалить резюме
+		apiV1.DELETE("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteResume(storage))
+
+		// ~ Все резюме пользователя
 		apiV1.GET("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.GetResumeOfCandidates(storage))
 
-		// & Вакансии
-		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
-		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
 		// ~ Отлик на вакансии
 		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PostNewRespone(storage))
+
+		// & Вакансии
+		// ~ Добавить новую вакансию
+		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
+
+		// ~ Все вакансии работодателя
+		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
+
+		// ~ Все отклики на вакансию
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), GetAllResponseByVacancy(storage))
+
 		// apiV1.GET("/token/check", GetTimeToken(storage))
 		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
 		// apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
@@ -192,6 +224,21 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "candidate" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{

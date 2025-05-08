@@ -322,6 +322,23 @@ func GetCandidateByEmail(storage *sqlx.Tx, email string) (s.InfoCandidate, error
 	return result, nil
 }
 
+func DeleteResume(storage *sqlx.Tx, id, uid int) error {
+
+	query, args, err := psql.Delete("resume").Where(sq.Eq{"id": id, "candidate_id": uid}).ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("такого резюме не было найдено у данного пользователя! Перепроверьте данные и попробуйте снова")
+	}
+	return nil
+}
+
 func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 	var result s.ResumeResult
 	// ~ candidates
