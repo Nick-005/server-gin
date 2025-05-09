@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
-	get "main.go/internal/api/Get"
 	s "main.go/internal/api/Struct"
+	"main.go/internal/api/get"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -27,7 +27,7 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -70,7 +70,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -170,7 +170,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -214,7 +214,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -258,7 +258,21 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		data, err := sqlp.GetAllCandidates(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -287,7 +301,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -339,7 +353,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",

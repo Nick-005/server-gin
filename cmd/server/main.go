@@ -37,9 +37,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"main.go/docs"
-	get "main.go/internal/api/Get"
 	s "main.go/internal/api/Struct"
 	"main.go/internal/api/employee"
+	"main.go/internal/api/get"
 	candid "main.go/internal/api/user"
 	"main.go/internal/api/vacancy"
 	"main.go/internal/config"
@@ -183,7 +183,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "employee" {
+		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -238,7 +238,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -290,7 +290,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" {
+		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",
@@ -355,7 +355,21 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -377,6 +391,21 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		name := ctx.Query("name")
 		err := sqlp.PostNewExperience(tx, name)
 		if err != nil {
@@ -397,7 +426,23 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		name := ctx.Query("name")
 		err := sqlp.PostNewStatus(tx, name)
 		if err != nil {
@@ -418,7 +463,21 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
 		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
 			ctx.JSON(200, gin.H{

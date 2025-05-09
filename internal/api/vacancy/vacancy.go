@@ -23,7 +23,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "employee" {
+		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав добавлять вакансии!",
@@ -76,7 +76,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "employee" {
+		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав добавлять вакансии!",
@@ -138,7 +138,7 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "employee" {
+		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
 				"info":   "У вас нету прав к этому функционалу!",

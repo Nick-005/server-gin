@@ -261,7 +261,8 @@ func GetAllStatus(storage *sqlx.DB) ([]GetStatus, error) {
 // func (s *Storage) VacancyByLimit(limit, last_id int) ([]VacancyTake, error) {
 // 	const op = "storage.sqlite.Get.VacancyByIDs"
 // 	var result []VacancyTake
-// 	rows, err := s.db.Query(`SELECT vacancy.id, emp_id, vacancy.name , employer.nameOrganization, price, employer.email, employer.phoneNumber,  location, experience.name, is_visible, aboutWork FROM vacancy
+// 	rows, err := s.db.Query(`SELECT vacancy.id, emp_id, vacancy.name , employer.nameOrganization, price, employer.email, employer.phoneNumber,  location, experience.name,
+// 							is_visible, aboutWork FROM vacancy
 // 							INNER JOIN employer on vacancy.emp_id = employer.id
 // 							INNER JOIN experience on vacancy.experience_id = experience.id
 // 							where vacancy.id > ? order by vacancy.id limit ?
