@@ -297,17 +297,18 @@ func DeleteVacancy(storage *sqlx.Tx, uid, id int) error {
 	return nil
 }
 
-// TODO Добавить проверку на то, откликнулся ли уже пользователь на эту вакансию, чтобы 2 раза нельзя было бы откликнуться
 func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	var res_id int
 
 	query, args, err := psql.Insert("response").Columns("candidates_id", "vacancy_id", "status_id").
-		Values(id, vac_id, 7).Suffix("RETURNING id").ToSql()
+		Values(id, vac_id, 7).Suffix("ON CONFLICT (candidates_id, vacancy_id) DO NOTHING RETURNING id").ToSql()
 	if err != nil {
 		return -1, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
 	}
 	err = storage.Get(&res_id, query, args...)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return -1, fmt.Errorf("вы уже откликались на эту вакансию! error: %v", err)
+	} else if err != nil {
 		return -1, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
 	}
 	return res_id, nil
