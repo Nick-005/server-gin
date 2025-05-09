@@ -1,26 +1,5 @@
 package main
 
-/*
-
-	id, isThere := ctx.Get("id")
-	if !isThere {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"status": "Err",
-			"info":   "User ID not found in context",
-		})
-		return
-	}
-
-	uid, ok := id.(int)
-	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status": "Err",
-			"info":   "Invalid user ID type in context",
-		})
-		return
-	}
-
-*/
 import (
 	"database/sql"
 	"fmt"
@@ -123,7 +102,9 @@ func main() {
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
 
 		// * Все вакансии работодателя
-		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
+		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
+
+		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
 		// * Все отклики на вакансию
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), GetAllResponseByVacancy(storage))

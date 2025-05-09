@@ -155,6 +155,21 @@ type SuccessVacancy struct {
 	Vacancies []VacancyData   `db:"vacancies"`
 }
 
+type VacancyData_Limit struct {
+	ID          int             `db:"id"`
+	Employee    SuccessEmployer `db:"employer"`
+	Name        string          `db:"name"`
+	Price       string          `db:"price"`
+	Email       string          `db:"email"`
+	PhoneNumber string          `db:"phone_number"`
+	Location    string          `db:"location"`
+	Experience  GetStatus       `db:"experience"`
+	AboutWork   string          `db:"about_work"`
+	IsVisible   bool            `db:"is_visible"`
+	Created_at  time.Time       `db:"created_at"`
+	Updated_at  time.Time       `db:"updated_at"`
+}
+
 type VacancyData struct {
 	ID          int       `db:"id"`
 	Name        string    `db:"name"`
