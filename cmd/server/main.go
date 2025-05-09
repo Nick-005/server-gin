@@ -42,10 +42,10 @@ func main() {
 	{
 		// & Статус
 		// * Все записи
-		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
+		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
 
 		// ^ Добавить запись
-		apiV1.POST("/status", MakeTransaction(storage), AddNewStatus(storage))
+		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
 		// ^ Добавить/зарегестрировать работодателя
@@ -59,9 +59,9 @@ func main() {
 
 		// & Опыт
 		// ^ Добавить
-		apiV1.POST("/exp", MakeTransaction(storage), PostNewExperience(storage))
+		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
 		// * Все записи
-		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
+		apiV1.GET("/exp", AuthMiddleWare(), MakeTransaction(storage), GetAllExperience(storage))
 
 		// & Соискатели
 		// ^ Добавить/зарегестрировать нового пользователя
