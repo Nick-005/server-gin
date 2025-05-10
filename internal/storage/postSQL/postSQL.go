@@ -370,6 +370,27 @@ func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	return res_id, nil
 }
 
+func PatchResponse(storage *sqlx.Tx, req s.ResponsePatch) error {
+
+	query, args, err := psql.Update("response").
+		Set("status_id", req.Status_id).
+		Where(sq.Eq{"id": req.Response_id}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как обновляемого отклика не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
+}
+
 func GetCandidateById(storage *sqlx.Tx, id int) (s.InfoCandidate, error) {
 	var result s.InfoCandidate
 

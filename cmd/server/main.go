@@ -103,6 +103,9 @@ func main() {
 		// ! ----------------------- Удаление отклика на вакансию -----------------------
 		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), DeleteResponse(storage))
 
+		// ? ----------------------- Обновить статус отклика на вакансию -----------------------
+		apiV1.PATCH("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PatchResponseStatus(storage))
+
 		// & Вакансии
 		// ^ ----------------------- Добавить новую вакансию -----------------------
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
@@ -265,6 +268,50 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 		})
 	}
 
+}
+
+func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "employee" && role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		var req s.ResponsePatch
+		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "Error in parse body in request! Please check your body in request!",
+				"error":  err.Error(),
+			})
+			return
+		}
+		err := sqlp.PatchResponse(tx, req)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для обновления данных отклика на вакансию",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"info":   "Данные успешно обновлены!",
+		})
+	}
 }
 
 func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {

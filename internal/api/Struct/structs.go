@@ -90,6 +90,11 @@ type Status struct {
 	Name string `db:"name"`
 }
 
+type ResponsePatch struct {
+	Response_id int `json:"response_id"`
+	Status_id   int `json:"status_id"`
+}
+
 type Vacancies struct {
 	ID           int       `db:"id"`
 	Emp_id       int       `db:"emp_id"`
