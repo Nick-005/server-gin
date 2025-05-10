@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +18,16 @@ import (
 	s "main.go/internal/api/Struct"
 	"main.go/internal/api/employee"
 	"main.go/internal/api/get"
+	"main.go/internal/api/response"
 	candid "main.go/internal/api/user"
 	"main.go/internal/api/vacancy"
 	"main.go/internal/config"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.MustLoad()
 	storage, err := sqlx.Connect("pgx", cfg.StoragePath)
@@ -46,10 +49,14 @@ func main() {
 
 		// & Опыт - 	получение и добавление
 
-		// & Удаление работодателей и соискателей
+		// ! Удаление соискателей
 		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
+
+		// ! Удаление работодателей
 		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.DeleteUser(storage))
+
 		// & Статус
+
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
 
@@ -57,11 +64,6 @@ func main() {
 		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
-		// ^ ----------------------- Добавить/зарегестрировать работодателя -----------------------
-		apiV1.POST("/emp", MakeTransaction(storage), employee.PostNewEmployer(storage))
-
-		// ? ----------------------- Обновить данные работодателя -----------------------
-		apiV1.PUT("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.PutEmployeeInfo(storage))
 
 		// * ----------------------- Получить список всех работодателей -----------------------
 		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
@@ -69,15 +71,24 @@ func main() {
 		// * ----------------------- Авторизовать работодателя (выдать новый токен) -----------------------
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
 
+		// ^ ----------------------- Добавить/зарегестрировать работодателя -----------------------
+		apiV1.POST("/emp", MakeTransaction(storage), employee.PostNewEmployer(storage))
+
+		// ? ----------------------- Обновить данные работодателя -----------------------
+		apiV1.PUT("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.PutEmployeeInfo(storage))
+
+		// ? ----------------------- Обновить статус отклика на вакансию -----------------------
+		apiV1.PATCH("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.PatchResponseStatus(storage))
+
 		// & Опыт
-		// ^ ----------------------- Добавить -----------------------
-		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
+
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/exp", AuthMiddleWare(), MakeTransaction(storage), GetAllExperience(storage))
 
+		// ^ ----------------------- Добавить -----------------------
+		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
+
 		// & Соискатели
-		// ^ ----------------------- Добавить/зарегестрировать нового пользователя -----------------------
-		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
 
 		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
@@ -88,39 +99,34 @@ func main() {
 		// * ----------------------- Авторизация пользователя (обновить/получить токен пользователя) -----------------------
 		apiV1.GET("/user/auth", MakeTransaction(storage), candid.AuthorizationMethod(storage))
 
-		// ? ----------------------- Обновить данные пользователя -----------------------
-		apiV1.PUT("/user", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateInfo(storage))
-
-		// ^ ----------------------- Добавить резюме -----------------------
-		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
-
-		// ! ----------------------- Удалить резюме -----------------------
-		apiV1.DELETE("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteResume(storage))
-
 		// * -----------------------  Все резюме пользователя -----------------------
 		apiV1.GET("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.GetResumeOfCandidates(storage))
-
-		// ? ----------------------- Обновить данные резюме пользователя -----------------------
-		apiV1.PUT("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateResume(storage))
-
-		// ^ ----------------------- Добавить отклик на вакансии -----------------------
-		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PostNewRespone(storage))
 
 		// * ----------------------- Все отклики пользователя -----------------------
 		apiV1.GET("/user/response", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllUserResponse(storage))
 
-		// ! ----------------------- Удаление отклика на вакансию -----------------------
-		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), DeleteResponse(storage))
+		// ^ ----------------------- Добавить/зарегестрировать нового пользователя -----------------------
+		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
 
-		// ? ----------------------- Обновить статус отклика на вакансию -----------------------
-		apiV1.PATCH("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PatchResponseStatus(storage))
+		// ^ ----------------------- Добавить резюме -----------------------
+		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
+
+		// ^ ----------------------- Добавить отклик на вакансии -----------------------
+		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.PostNewRespone(storage))
+
+		// ? ----------------------- Обновить данные пользователя -----------------------
+		apiV1.PUT("/user", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateInfo(storage))
+
+		// ? ----------------------- Обновить данные резюме пользователя -----------------------
+		apiV1.PUT("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateResume(storage))
+
+		// ! ----------------------- Удалить резюме -----------------------
+		apiV1.DELETE("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteResume(storage))
+
+		// ! ----------------------- Удаление отклика на вакансию -----------------------
+		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.DeleteResponse(storage))
 
 		// & Вакансии
-		// ^ ----------------------- Добавить новую вакансию -----------------------
-		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
-
-		// ? ----------------------- Обновить вакансии -----------------------
-		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PutVacancy(storage))
 
 		// * ----------------------- Все вакансии работодателя -----------------------
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
@@ -129,7 +135,13 @@ func main() {
 		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
 		// * ----------------------- Все отклики на вакансию -----------------------
-		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), GetAllResponseByVacancy(storage))
+		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.GetAllResponseByVacancy(storage))
+
+		// ^ ----------------------- Добавить новую вакансию -----------------------
+		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
+
+		// ? ----------------------- Обновить вакансии -----------------------
+		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PutVacancy(storage))
 
 		// ! ----------------------- Удаление вакансии -----------------------
 		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
@@ -172,230 +184,14 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "employee" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancy"))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
-			})
-			return
-		}
-		data, err := sqlp.GetResponseByVacancy(tx, vac_id)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле откликов",
-				"error":  err.Error(),
-			})
-			return
-		}
-
-		data.Vacancy, err = sqlp.GetVacancyByID(tx, vac_id)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле вакансии",
-				"error":  err.Error(),
-			})
-			return
-		}
-		ctx.JSON(200, gin.H{
-			"vacancy":   data.Vacancy,
-			"responses": data.Responses,
-			"status":    "Ok!",
-		})
-
-	}
-}
-
-func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "candidate" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
-		uid, ok := get.GetUserIDFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
-			})
-			return
-		}
-		vac_id, err := strconv.Atoi(ctx.Query("id"))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID резюме! проверьте его и попробуйте снова",
-			})
-			return
-		}
-		err = sqlp.DeleteResponse(tx, vac_id, uid)
-		if err != nil {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "произошла ошибка при попытке удалить резюме",
-			})
-			return
-		}
-		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "успешно удалили данные!",
-		})
-	}
-
-}
-
-func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "employee" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
-		var req s.ResponsePatch
-		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
-			})
-			return
-		}
-		err := sqlp.PatchResponse(tx, req)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для обновления данных отклика на вакансию",
-				"error":  err.Error(),
-			})
-			return
-		}
-
-		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "Данные успешно обновлены!",
-		})
-	}
-}
-
-func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "candidate" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
-		uid, ok := get.GetUserIDFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
-			})
-			return
-		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancy"))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
-			})
-			return
-		}
-		resp_id, err := sqlp.PostResponse(tx, uid, vac_id)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле добавления данных",
-				"error":  err.Error(),
-			})
-			return
-		}
-		vac_data, err := sqlp.GetVacancyByID(tx, vac_id)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле вакансий",
-				"error":  err.Error(),
-			})
-			return
-		}
-		status_info, err := sqlp.GetStatusByID(tx, 7)
-		if err != nil {
-			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле статуса",
-				"error":  err.Error(),
-			})
-			return
-		}
-
-		ctx.JSON(200, gin.H{
-			"responseID":     resp_id,
-			"vacancy":        vac_data,
-			"responseStatus": status_info,
-			"status":         "Ok!",
-		})
-
-	}
-}
-
+// @Summary Получение списка опыта
+// @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Produce  json
+// @Success 200 s.[]s.GetStatus AllExperience "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 400 {JSON} SimpleError "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
+// @Router /user/otkliks/{id} [get]
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
