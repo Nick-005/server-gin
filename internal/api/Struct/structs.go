@@ -52,6 +52,12 @@ type RequestResume struct {
 	Description string `json:"description"`
 }
 
+type RequestResumeUpdate struct {
+	Experience  int    `json:"experience_id"`
+	Description string `json:"description"`
+	Resume_id   int    `json:"resume_id"`
+}
+
 type AllUserResponseOK struct {
 	Status  string
 	Otkliks string

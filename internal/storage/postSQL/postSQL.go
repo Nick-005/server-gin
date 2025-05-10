@@ -439,6 +439,28 @@ func DeleteResume(storage *sqlx.Tx, id, uid int) error {
 	return nil
 }
 
+func UpdateCandidateResume(storage *sqlx.Tx, req s.RequestResumeUpdate, uid int) error {
+
+	query, args, err := psql.Update("resume").
+		Set("experience_id", req.Experience).
+		Set("description", req.Description).
+		Where(sq.Eq{"id": req.Resume_id, "candidate_id": uid}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как обновляемого резюме не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
+}
+
 func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 	var result s.ResumeResult
 	// ~ candidates
@@ -657,6 +679,32 @@ func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmploye
 		return result, fmt.Errorf("ошибка в получении добавленных данных. error: %s", err.Error())
 	}
 	return result, nil
+}
+
+func UpdateEmployeeInfo(storage *sqlx.Tx, req s.RequestEmployee, uid int) error {
+
+	query, args, err := psql.Update("employer").
+		Set("name_organization", req.NameOrganization).
+		Set("phone_number", req.PhoneNumber).
+		Set("email", req.Email).
+		Set("inn", req.INN).
+		Set("password", req.Password).
+		Set("status_id", req.Status_id).
+		Where(sq.Eq{"id": uid}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как работодатель не был найден! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
 }
 
 func CreateAccessToken(claim *s.Claims) (string, error) {

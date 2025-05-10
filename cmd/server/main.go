@@ -41,79 +41,86 @@ func main() {
 	apiV1 := router.Group("/api/v1")
 	{
 		// & Статус
-		// * Все записи
+		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
 
-		// ^ Добавить запись
+		// ^ ----------------------- Добавить запись -----------------------
 		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
-		// ^ Добавить/зарегестрировать работодателя
+		// ^ ----------------------- Добавить/зарегестрировать работодателя -----------------------
 		apiV1.POST("/emp", MakeTransaction(storage), employee.PostNewEmployer(storage))
 
-		// * Получить список всех работодателей
-		apiV1.GET("/emp", MakeTransaction(storage), employee.GetAllEmployee(storage))
+		// ? ----------------------- Обновить данные работодателя -----------------------
+		apiV1.PUT("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.PutEmployeeInfo(storage))
 
-		// * Авторизовать работодателя (выдать новый токен)
+		// * ----------------------- Получить список всех работодателей -----------------------
+		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
+
+		// * ----------------------- Авторизовать работодателя (выдать новый токен) -----------------------
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
 
 		// & Опыт
-		// ^ Добавить
+		// ^ ----------------------- Добавить -----------------------
 		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
-		// * Все записи
+		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/exp", AuthMiddleWare(), MakeTransaction(storage), GetAllExperience(storage))
 
 		// & Соискатели
-		// ^ Добавить/зарегестрировать нового пользователя
+		// ^ ----------------------- Добавить/зарегестрировать нового пользователя -----------------------
 		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
 
-		// * Получить все данные пользователя
+		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
 
-		// * Зачем то получение всех пользователей
+		// * ----------------------- Зачем то получение всех пользователей -----------------------
 		apiV1.GET("/user/all", MakeTransaction(storage), candid.GetAllCandidates(storage))
 
-		// * Авторизация пользователя (обновить/получить токен пользователя)
+		// * ----------------------- Авторизация пользователя (обновить/получить токен пользователя) -----------------------
 		apiV1.GET("/user/auth", MakeTransaction(storage), candid.AuthorizationMethod(storage))
 
-		// ? Обновить данные пользователя
+		// ? ----------------------- Обновить данные пользователя -----------------------
 		apiV1.PUT("/user", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateInfo(storage))
 
-		// ^ Добавить резюме
+		// ^ ----------------------- Добавить резюме -----------------------
 		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
 
-		// ! Удалить резюме
+		// ! ----------------------- Удалить резюме -----------------------
 		apiV1.DELETE("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteResume(storage))
 
-		// * Все резюме пользователя
+		// * -----------------------  Все резюме пользователя -----------------------
 		apiV1.GET("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.GetResumeOfCandidates(storage))
 
-		// ^ Добавить отклик на вакансии
+		// ? ----------------------- Обновить данные резюме пользователя -----------------------
+		apiV1.PUT("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PutCandidateResume(storage))
+
+		// ^ ----------------------- Добавить отклик на вакансии -----------------------
 		apiV1.POST("/vac/response", AuthMiddleWare(), MakeTransaction(storage), PostNewRespone(storage))
 
-		// * Все отклики пользователя
+		// * ----------------------- Все отклики пользователя -----------------------
 		apiV1.GET("/user/response", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllUserResponse(storage))
 
-		// ! Удаление отклика на вакансию
+		// ! ----------------------- Удаление отклика на вакансию -----------------------
 		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), DeleteResponse(storage))
 
 		// & Вакансии
-		// ^ Добавить новую вакансию
+		// ^ ----------------------- Добавить новую вакансию -----------------------
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
 
-		// * Все вакансии работодателя
+		// ? ----------------------- Обновить вакансии
+		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage))
+
+		// * ----------------------- Все вакансии работодателя -----------------------
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
 
+		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
-		// * Все отклики на вакансию
+		// * ----------------------- Все отклики на вакансию -----------------------
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), GetAllResponseByVacancy(storage))
 
-		// ! Удаление вакансии
+		// ! ----------------------- Удаление вакансии -----------------------
 		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
-		// apiV1.GET("/token/check", GetTimeToken(storage))
-		// apiV1.GET("/emp/vacs", GetVacancyByEmployer(storage))
-		// apiV1.POST("/user/otklik", AuthMiddleWare(), PostResponseOnVacancy(storage))
 
 	}
 
