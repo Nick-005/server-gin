@@ -727,6 +727,22 @@ func GetAllEmployee(storage *sqlx.Tx) ([]s.SuccessEmployer, error) {
 	return result, nil
 }
 
+func DeleteEmployee(storage *sqlx.Tx, uid int) error {
+	query, args, err := psql.Delete("employer").Where(sq.Eq{"id": uid}).ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("таких записей не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+	return nil
+}
+
 func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmployer, error) {
 	var result s.SuccessEmployer
 

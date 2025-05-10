@@ -48,7 +48,7 @@ func main() {
 
 		// & Удаление работодателей и соискателей
 		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
-		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage))
+		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.DeleteUser(storage))
 		// & Статус
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))

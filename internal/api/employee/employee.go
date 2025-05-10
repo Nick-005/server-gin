@@ -2,6 +2,7 @@ package employee
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,49 @@ import (
 )
 
 var expirationTime = time.Now().Add(24 * time.Hour)
+
+func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		user, err := strconv.Atoi(ctx.Query("empID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "ошибка при попытке получить ID работодателя! проверьте его и попробуйте снова",
+			})
+			return
+		}
+		err = sqlp.DeleteEmployee(tx, user)
+		if err != nil {
+			ctx.JSON(200, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "Ok!",
+			"info":   "Данные успешно удалены!",
+		})
+	}
+}
 
 func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
