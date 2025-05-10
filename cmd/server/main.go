@@ -40,6 +40,15 @@ func main() {
 
 	apiV1 := router.Group("/api/v1")
 	{
+		// ~ АДМИН ФУНКЦИОНАЛ
+
+		// & Статус - 	получение и добавление
+
+		// & Опыт - 	получение и добавление
+
+		// & Удаление работодателей и соискателей
+		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
+		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage))
 		// & Статус
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
