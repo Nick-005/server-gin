@@ -107,8 +107,8 @@ func main() {
 		// ^ ----------------------- Добавить новую вакансию -----------------------
 		apiV1.POST("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PostNewVacancy(storage))
 
-		// ? ----------------------- Обновить вакансии
-		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage))
+		// ? ----------------------- Обновить вакансии -----------------------
+		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PutVacancy(storage))
 
 		// * ----------------------- Все вакансии работодателя -----------------------
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))

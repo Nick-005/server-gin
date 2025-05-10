@@ -139,9 +139,10 @@ type VacanciesToResponse struct {
 type SuccessResponse struct {
 	Vacancy   VacancyData `db:"vacancy"`
 	Responses []struct {
-		ID        int           `db:"id"`
-		Candidate InfoCandidate `db:"candidate"`
-		Status    GetStatus     `db:"status"`
+		ID         int           `db:"id"`
+		Candidate  InfoCandidate `db:"candidate"`
+		Created_at time.Time     `db:"created_at"`
+		Status     GetStatus     `db:"status"`
 	} `db:"responses"`
 }
 
@@ -188,6 +189,18 @@ type VacancyData struct {
 	IsVisible   bool      `db:"is_visible"`
 	Created_at  time.Time `db:"created_at"`
 	Updated_at  time.Time `db:"updated_at"`
+}
+
+type VacancyPut struct {
+	ID            int    `json:"id"`
+	Vac_Name      string `json:"vac_name"`
+	Price         string `json:"price"`
+	Email         string `json:"email"`
+	PhoneNumber   string `json:"phoneNumber"`
+	Location      string `json:"location"`
+	Experience_Id int    `json:"exp_id"`
+	About         string `json:"about"`
+	Is_visible    bool   `json:"is_visible"`
 }
 
 type ResponseVac struct {

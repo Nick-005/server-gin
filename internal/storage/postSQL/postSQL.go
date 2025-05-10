@@ -141,7 +141,7 @@ func GetAllVacanciesByEmployee(storage *sqlx.Tx, emp_id int) ([]s.VacancyData, e
 		From("vacancy v").
 		Join("experience e ON v.experience_id = e.id").Where(sq.Eq{
 		"v.emp_id": emp_id,
-	}).
+	}).OrderBy("id ASC").
 		ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
@@ -224,6 +224,34 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 	return result, nil
 }
 
+func UpdateVacancyInfo(storage *sqlx.Tx, req s.VacancyPut, uid int) error {
+
+	query, args, err := psql.Update("vacancy").
+		Set("name", req.Vac_Name).
+		Set("price", req.Price).
+		Set("email", req.Email).
+		Set("phone_number", req.PhoneNumber).
+		Set("location", req.Location).
+		Set("experience_id", req.Experience_Id).
+		Set("about_work", req.About).
+		Set("is_visible", req.Is_visible).
+		Where(sq.Eq{"id": req.ID, "emp_id": uid}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как обновляемой вакансии не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
+}
+
 func UpdateCandidateInfo(storage *sqlx.Tx, req s.RequestCandidate, id int) error {
 
 	query, args, err := psql.Update("candidate").
@@ -270,7 +298,7 @@ func GetResponseByCandidate(storage *sqlx.Tx, uid int) ([]s.ResponseByVac, error
 		Join("experience ex ON v.experience_id = ex.id").
 		Join("status s ON r.status_id = s.id").
 		Join("employer em ON v.emp_id = em.id").
-		Where(sq.Eq{"r.candidates_id": uid}).
+		Where(sq.Eq{"r.candidates_id": uid}).OrderBy("r.id ASC").
 		ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
@@ -286,7 +314,7 @@ func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, erro
 	var result s.SuccessResponse
 
 	query, args, err := psql.Select(
-		"r.id",
+		"r.id", "r.created_at",
 		"c.id as \"candidate.id\"", "c.name as \"candidate.name\"", "c.phone_number as \"candidate.phone_number\"", "c.email as \"candidate.email\"",
 		"c.password as \"candidate.password\"", "c.created_at as \"candidate.created_at\"", "c.updated_at as \"candidate.updated_at\"",
 		"s2.id as \"candidate.status.id\"", "s2.name as \"candidate.status.name\"", "s2.created_at as \"candidate.status.created_at\"",
@@ -296,7 +324,7 @@ func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, erro
 		Join("candidates c ON r.candidates_id = c.id").
 		Join("status s2 ON c.status_id = s2.id").
 		Join("status s ON r.status_id = s.id  ").
-		Where(sq.Eq{"r.vacancy_id": vac_id}).
+		Where(sq.Eq{"r.vacancy_id": vac_id}).OrderBy("r.created_at ASC").
 		ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
@@ -478,7 +506,7 @@ func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 		"s.created_at as \"status.created_at\"",
 	).From("candidates c").
 		Join("status s ON c.status_id = s.id").
-		Where(sq.Eq{"c.id": id}).
+		Where(sq.Eq{"c.id": id}).OrderBy("c.id ASC").
 		ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
@@ -501,7 +529,7 @@ func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 	).
 		From("resume r").
 		Join("experience ex ON r.experience_id = ex.id").
-		Where(sq.Eq{"r.candidate_id": id}).
+		Where(sq.Eq{"r.candidate_id": id}).OrderBy("r.id ASC").
 		ToSql()
 
 	if err != nil {
@@ -522,7 +550,7 @@ func GetAllCandidates(storage *sqlx.Tx) ([]s.InfoCandidate, error) {
 	query, args, err := psql.Select(
 		"c.id", "c.name", "c.phone_number", "c.email", "c.password", "c.created_at", "c.updated_at",
 		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
-	).From("candidates c").Join("status s ON c.status_id = s.id").ToSql()
+	).From("candidates c").Join("status s ON c.status_id = s.id").OrderBy("c.id ASC").ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
@@ -648,7 +676,7 @@ func GetAllEmployee(storage *sqlx.Tx) ([]s.SuccessEmployer, error) {
 	query, args, err := psql.Select(
 		"em.id", "em.name_organization", "em.phone_number", "em.email", "em.inn", "em.created_at", "em.updated_at",
 		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
-	).From("employer em").Join("status s ON em.status_id = s.id").ToSql()
+	).From("employer em").Join("status s ON em.status_id = s.id").OrderBy("em.id ASC").ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в формировании скрипта запроса. error: %s", err.Error())
 	}
