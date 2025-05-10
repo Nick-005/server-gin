@@ -1,6 +1,96 @@
+definitions:
+  main_go_internal_api_Struct.GetStatus:
+    properties:
+      crated_At:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  main_go_internal_api_Struct.InfoError:
+    properties:
+      error:
+        type: string
+      info:
+        type: string
+      status:
+        type: string
+    type: object
+  main_go_internal_api_Struct.Ok:
+    properties:
+      status:
+        type: string
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /exp:
+    get:
+      description: Возвращает список всех опыта, который будет использоваться в дальнейшем.
+        Имееют доступ только пользователи роли ADMIN.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает массив всех значений опыта. Если произошла ошибка
+            - статус будет 'Err' и будет возвращен текст ошибки!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить из токена ID.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка опыта
+      tags:
+      - ADMIN
+  /expd:
+    get:
+      consumes:
+      - application/json
+      description: Добавляет новую запись в таблицу, которая отвечает за хранение
+        "констант опыта"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает массив всех значений опыта. Если произошла ошибка
+            - статус будет 'Err' и будет возвращен текст ошибки!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить из токена ID.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Добавление новой записи
+      tags:
+      - ADMIN
 securityDefinitions:
   ApiKeyAuth:
     in: header

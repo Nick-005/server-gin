@@ -188,10 +188,11 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 // @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.
 // @Security ApiKeyAuth
 // @Tags ADMIN
-// @Produce  json
-// @Success 200 s.[]s.GetStatus AllExperience "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
-// @Failure 400 {JSON} SimpleError "Возвращает ошибку, если не удалось преобразовать передаваемый параметр (ID) через URL."
-// @Router /user/otkliks/{id} [get]
+// @Produce json
+// @Success 200 {array} s.GetStatus "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID."
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Router /exp [get]
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -221,13 +222,23 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 		}
 
 		ctx.JSON(200, gin.H{
-			"status":        "Ok!",
-			"AllExperience": data,
+			"status": "Ok!",
+			"data":   data,
 		})
 
 	}
 }
 
+// @Summary Добавление новой записи
+// @Description Добавляет новую запись в таблицу, которая отвечает за хранение "констант опыта"
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.Ok "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID."
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Router /expd [get]
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)

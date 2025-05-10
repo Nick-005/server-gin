@@ -63,6 +63,10 @@ type AllUserResponseOK struct {
 	Otkliks string
 }
 
+type Ok struct {
+	Status string
+}
+
 type SimpleError struct {
 	Status string
 	Error  string
