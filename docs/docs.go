@@ -522,6 +522,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/auth": {
+            "get": {
+                "description": "Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "candidate"
+                ],
+                "summary": "Авторизовать соискателя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email соискателя",
+                        "name": "Email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Password соискателя",
+                        "name": "Password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!', данные соискателя и новый токен",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/response": {
             "get": {
                 "security": [
@@ -581,6 +641,71 @@ const docTemplate = `{
             }
         },
         "/user/resume": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет получить всю основную информацию про все резюме пользователя, которые у него есть в системе. Доступно для всех пользователей, но токен обязательный!",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "candidate"
+                ],
+                "summary": "Информация про все резюме",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID соискателя для получения его всех резюмешек",
+                        "name": "candidate_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и массив всех данных резюме соискателя",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResumeResult"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -616,6 +741,73 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет добавить к соискателю новое резюме.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "candidate"
+                ],
+                "summary": "Добавить новое резюме для соискателя",
+                "parameters": [
+                    {
+                        "description": "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!",
+                        "name": "InfoResume",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestResume"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
                             }
                         }
                     },
@@ -812,6 +1004,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main_go_internal_api_Struct.RequestResume": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "experience_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "main_go_internal_api_Struct.RequestResumeUpdate": {
             "type": "object",
             "properties": {
@@ -850,6 +1053,40 @@ const docTemplate = `{
                     "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResumeResult": {
+            "type": "object",
+            "properties": {
+                "candidate": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
+                },
+                "resumes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main_go_internal_api_Struct.ResumeResult_slice"
+                    }
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResumeResult_slice": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "experience": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

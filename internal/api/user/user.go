@@ -475,6 +475,18 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Добавить новое резюме для соискателя
+// @Description Позволяет добавить к соискателю новое резюме.
+// @Tags candidate
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param InfoResume body s.RequestResume true "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!"
+// @Success 200 {array} s.Ok "Возвращает статус 'Ok!"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/resume [post]
 func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -513,7 +525,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 
 		err := sqlp.PostNewResume(tx, req, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -527,10 +539,22 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Информация про все резюме
+// @Description Позволяет получить всю основную информацию про все резюме пользователя, которые у него есть в системе. Доступно для всех пользователей, но токен обязательный!
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param candidate_id query int true "ID соискателя для получения его всех резюмешек"
+// @Success 200 {array} s.ResumeResult "Возвращает статус 'Ok!' и массив всех данных резюме соискателя"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/resume [get]
 func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
+		_, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -538,22 +562,15 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
-		uid, ok := get.GetUserIDFromContext(ctx)
-		if !ok {
+		uid, err := strconv.Atoi(ctx.Query("candidate_id"))
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"error":  err.Error(),
+				"info":   "ошибка при попытке получить ID пользователя! проверьте его и попробуйте снова",
 			})
 			return
 		}
-
 		data, err := sqlp.GetAllResumeByCandidate(tx, uid)
 		if err != nil {
 			ctx.JSON(200, gin.H{
@@ -571,30 +588,34 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Авторизовать соискателя
+// @Description Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Param Email query string true "Email соискателя"
+// @Param Password query string true "Password соискателя"
+// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные соискателя и новый токен"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/auth [get]
 func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		var req s.Authorization
-		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
-			})
-			return
-		}
+		uEmail := ctx.Query("Email")
+		uPassword := ctx.Query("Password")
 
-		data, err := sqlp.GetCandidateByLogin(tx, req.Email, req.Password)
+		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
 				"info":   "Такого пользователя нету! Проверьте логин и пароль",
 				"error":  err.Error(),
 			})
 			return
 		} else if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -612,7 +633,7 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка при создании токена аутентификации",
 				"error":  err.Error(),

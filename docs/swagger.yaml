@@ -61,6 +61,13 @@ definitions:
       status_id:
         type: integer
     type: object
+  main_go_internal_api_Struct.RequestResume:
+    properties:
+      description:
+        type: string
+      experience_id:
+        type: integer
+    type: object
   main_go_internal_api_Struct.RequestResumeUpdate:
     properties:
       description:
@@ -86,6 +93,28 @@ definitions:
       status:
         $ref: '#/definitions/main_go_internal_api_Struct.Ok'
       token:
+        type: string
+    type: object
+  main_go_internal_api_Struct.ResumeResult:
+    properties:
+      candidate:
+        $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+      resumes:
+        items:
+          $ref: '#/definitions/main_go_internal_api_Struct.ResumeResult_slice'
+        type: array
+    type: object
+  main_go_internal_api_Struct.ResumeResult_slice:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      experience:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      id:
+        type: integer
+      updated_at:
         type: string
     type: object
   main_go_internal_api_Struct.StatusInfo:
@@ -486,6 +515,49 @@ paths:
       summary: Получить информцию про всех соискателях
       tags:
       - ADMIN
+  /user/auth:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить новый токен для соискателя, чтобы у него сохранился
+        доступ к функционалу
+      parameters:
+      - description: Email соискателя
+        in: query
+        name: Email
+        required: true
+        type: string
+      - description: Password соискателя
+        in: query
+        name: Password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные соискателя и новый токен
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Авторизовать соискателя
+      tags:
+      - candidate
   /user/response:
     get:
       consumes:
@@ -574,6 +646,99 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Удалить резюме соискателя
+      tags:
+      - candidate
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про все резюме пользователя,
+        которые у него есть в системе. Доступно для всех пользователей, но токен обязательный!
+      parameters:
+      - description: ID соискателя для получения его всех резюмешек
+        in: query
+        name: candidate_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных резюме соискателя
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResumeResult'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Информация про все резюме
+      tags:
+      - candidate
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить к соискателю новое резюме.
+      parameters:
+      - description: Основные данные для резюме. В поле experience_id указывайте ID,
+          который уже есть в системе!
+        in: body
+        name: InfoResume
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestResume'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить новое резюме для соискателя
       tags:
       - candidate
     put:
