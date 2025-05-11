@@ -316,6 +316,46 @@ paths:
       tags:
       - ADMIN
   /user:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию о соискателе при помощи
+        его персонального токена
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и данные пользователя
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получить информцию о соискателе
+      tags:
+      - candidate
     post:
       consumes:
       - application/json
@@ -357,6 +397,95 @@ paths:
       summary: Добавить нового соискателя
       tags:
       - candidate
+    put:
+      consumes:
+      - application/json
+      description: Позволяет обновить всю основную информацию о соискателе при помощи
+        его персонального токена и тела запроса. Доступно только пользователям группы
+        Candidate и ADMIN
+      parameters:
+      - description: Данные о соискателе, на которые нужно обновить в системе
+        in: body
+        name: CandidateInfo
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestCandidate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить информцию о соискателе
+      tags:
+      - candidate
+  /user/all:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про всех соискателях.
+        Доступно только пользователям с ролью ADMIN
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных о соискателях
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получить информцию про всех соискателях
+      tags:
+      - ADMIN
   /user/response:
     get:
       consumes:

@@ -94,7 +94,7 @@ func main() {
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
 
 		// * ----------------------- Зачем то получение всех пользователей -----------------------
-		apiV1.GET("/user/all", MakeTransaction(storage), candid.GetAllCandidates(storage))
+		apiV1.GET("/user/all", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllCandidates(storage))
 
 		// * ----------------------- Авторизация пользователя (обновить/получить токен пользователя) -----------------------
 		apiV1.GET("/user/auth", MakeTransaction(storage), candid.AuthorizationMethod(storage))

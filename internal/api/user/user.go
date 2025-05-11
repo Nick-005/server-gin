@@ -310,6 +310,17 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Получить информцию о соискателе
+// @Description Позволяет получить всю основную информацию о соискателе при помощи его персонального токена
+// @Tags candidate
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и данные пользователя"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user [get]
 func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -354,6 +365,18 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Обновить информцию о соискателе
+// @Description Позволяет обновить всю основную информацию о соискателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы Candidate и ADMIN
+// @Tags candidate
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param CandidateInfo body s.RequestCandidate true "Данные о соискателе, на которые нужно обновить в системе"
+// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user [put]
 func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -391,7 +414,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		err := sqlp.UpdateCandidateInfo(tx, req, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле для обновления данных о соискателе",
 				"error":  err.Error(),
@@ -406,6 +429,17 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Получить информцию про всех соискателях
+// @Description Позволяет получить всю основную информацию про всех соискателях. Доступно только пользователям с ролью ADMIN
+// @Tags ADMIN
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и массив всех данных о соискателях"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/all [get]
 func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -426,7 +460,7 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetAllCandidates(tx)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
