@@ -17,7 +17,7 @@ import (
 var expirationTime = time.Now().Add(24 * time.Hour)
 
 // @Summary Удаление аккаунта соискателя
-// @Description Позволяет удалить соискателя из БД. Доступ имеют только пользователи роли ADMIN
+// @Description Позволяет удалить соискателя из системы. Доступ имеют только пользователи роли ADMIN
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Produce json

@@ -4,6 +4,70 @@
         "contact": {}
     },
     "paths": {
+        "/adm/emp": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет удалить работодателя из системы. Доступ имеют только пользователи роли ADMIN",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Удаление аккаунта работодателя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID работодателя, которого нужно удалить",
+                        "name": "empID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус и краткую информацию ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/adm/user": {
             "delete": {
                 "security": [
@@ -11,7 +75,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Позволяет удалить соискателя из БД. Доступ имеют только пользователи роли ADMIN",
+                "description": "Позволяет удалить соискателя из системы. Доступ имеют только пользователи роли ADMIN",
                 "produces": [
                     "application/json"
                 ],
@@ -53,6 +117,115 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/emp": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Получить информцию про всех работодателей",
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и массив всех данных о работодателях",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/emp/auth": {
+            "get": {
+                "description": "Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employee"
+                ],
+                "summary": "Авторизовать соискателя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email соискателя",
+                        "name": "Email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Password соискателя",
+                        "name": "Password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!', данные работодателя и новый токен",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee"
                             }
                         }
                     },
@@ -1046,6 +1219,20 @@
                 }
             }
         },
+        "main_go_internal_api_Struct.ResponseCreateEmployee": {
+            "type": "object",
+            "properties": {
+                "candidate_Info": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
+                },
+                "status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "main_go_internal_api_Struct.ResumeResult": {
             "type": "object",
             "properties": {
@@ -1087,6 +1274,49 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.SuccessEmployer": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "nameOrganization": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "object",
+                    "properties": {
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

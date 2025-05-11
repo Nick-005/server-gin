@@ -206,6 +206,12 @@ type ResponseCreateCandiate struct {
 	Token          string
 }
 
+type ResponseCreateEmployee struct {
+	Status         Ok
+	Candidate_Info SuccessEmployer
+	Token          string
+}
+
 type VacancyPut struct {
 	ID            int    `json:"id"`
 	Vac_Name      string `json:"vac_name"`

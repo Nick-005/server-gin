@@ -712,7 +712,7 @@ func GetAllEmployee(storage *sqlx.Tx) ([]s.SuccessEmployer, error) {
 	var result []s.SuccessEmployer
 
 	query, args, err := psql.Select(
-		"em.id", "em.name_organization", "em.phone_number", "em.email", "em.inn", "em.created_at", "em.updated_at",
+		"em.id", "em.name_organization", "em.phone_number", "em.password", "em.email", "em.inn", "em.created_at", "em.updated_at",
 		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
 	).From("employer em").Join("status s ON em.status_id = s.id").OrderBy("em.id ASC").ToSql()
 	if err != nil {

@@ -95,6 +95,15 @@ definitions:
       token:
         type: string
     type: object
+  main_go_internal_api_Struct.ResponseCreateEmployee:
+    properties:
+      candidate_Info:
+        $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      token:
+        type: string
+    type: object
   main_go_internal_api_Struct.ResumeResult:
     properties:
       candidate:
@@ -122,6 +131,34 @@ definitions:
       info:
         type: string
       status:
+        type: string
+    type: object
+  main_go_internal_api_Struct.SuccessEmployer:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      inn:
+        type: string
+      nameOrganization:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+      status:
+        properties:
+          createdAt:
+            type: string
+          id:
+            type: integer
+          name:
+            type: string
+        type: object
+      updatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.VacanciesToResponse:
@@ -154,9 +191,53 @@ definitions:
 info:
   contact: {}
 paths:
+  /adm/emp:
+    delete:
+      description: Позволяет удалить работодателя из системы. Доступ имеют только
+        пользователи роли ADMIN
+      parameters:
+      - description: ID работодателя, которого нужно удалить
+        in: query
+        name: empID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление аккаунта работодателя
+      tags:
+      - ADMIN
   /adm/user:
     delete:
-      description: Позволяет удалить соискателя из БД. Доступ имеют только пользователи
+      description: Позволяет удалить соискателя из системы. Доступ имеют только пользователи
         роли ADMIN
       parameters:
       - description: ID пользователя, которого нужно удалить
@@ -198,6 +279,83 @@ paths:
       summary: Удаление аккаунта соискателя
       tags:
       - ADMIN
+  /emp:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про всех работодатлей.
+        Доступно только пользователям с ролью ADMIN
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных о работодателях
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получить информцию про всех работодателей
+      tags:
+      - ADMIN
+  /emp/auth:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить новый токен для соискателя, чтобы у него сохранился
+        доступ к функционалу
+      parameters:
+      - description: Email соискателя
+        in: query
+        name: Email
+        required: true
+        type: string
+      - description: Password соискателя
+        in: query
+        name: Password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные работодателя и новый токен
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Авторизовать соискателя
+      tags:
+      - employee
   /exp:
     get:
       description: Возвращает список всех опыта, который будет использоваться в дальнейшем.

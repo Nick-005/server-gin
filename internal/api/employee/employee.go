@@ -15,6 +15,17 @@ import (
 
 var expirationTime = time.Now().Add(24 * time.Hour)
 
+// @Summary Удаление аккаунта работодателя
+// @Description Позволяет удалить работодателя из системы. Доступ имеют только пользователи роли ADMIN
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Produce json
+// @Param empID query int true "ID работодателя, которого нужно удалить"
+// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/emp [delete]
 func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -44,7 +55,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		err = sqlp.DeleteEmployee(tx, user)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -158,6 +169,17 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Получить информцию про всех работодателей
+// @Description Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN
+// @Tags ADMIN
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.SuccessEmployer "Возвращает статус 'Ok!' и массив всех данных о работодателях"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /emp [get]
 func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -178,7 +200,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetAllEmployee(tx)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -194,23 +216,26 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Авторизовать соискателя
+// @Description Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу
+// @Tags employee
+// @Accept json
+// @Produce json
+// @Param Email query string true "Email соискателя"
+// @Param Password query string true "Password соискателя"
+// @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /emp/auth [get]
 func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		var req s.Authorization
-		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
-			})
-			return
-		}
+		uEmail := ctx.Query("Email")
+		uPassword := ctx.Query("Password")
 
-		data, err := sqlp.GetEmployeeLogin(tx, req.Email, req.Password)
+		data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -228,7 +253,7 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка при создании токена аутентификации",
 				"error":  err.Error(),
