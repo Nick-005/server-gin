@@ -16,6 +16,17 @@ import (
 
 var expirationTime = time.Now().Add(24 * time.Hour)
 
+// @Summary Удаление аккаунта соискателя
+// @Description Позволяет удалить соискателя из БД. Доступ имеют только пользователи роли ADMIN
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Produce json
+// @Param userID query int true "ID пользователя, которого нужно удалить"
+// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/user [delete]
 func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -45,7 +56,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		err = sqlp.DeleteCandidate(tx, user)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -59,6 +70,17 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Все отклики соискателя
+// @Description Позволяет получить массив всех откликов соискателя. В результате клиент получит ID отклика, данные о всех вакансиях, на которые он откликнулся, а также статус этого отклика
+// @Security ApiKeyAuth
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.ResponseByVac "Возвращает ID отклика, данные об этой вакансии, на которую откликнулся пользователь и статус отклика "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/response [get]
 func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -87,7 +109,7 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetResponseByCandidate(tx, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),

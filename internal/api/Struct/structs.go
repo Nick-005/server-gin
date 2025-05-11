@@ -232,6 +232,11 @@ type ResponseSearchVac struct {
 	Experience string `json:"exp"`
 }
 
+type StatusInfo struct {
+	Status string
+	Info   string
+}
+
 type GetStatus struct {
 	ID        int       `db:"id"`
 	Name      string    `db:"name"`

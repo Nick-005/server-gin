@@ -22,9 +22,96 @@ definitions:
       status:
         type: string
     type: object
+  main_go_internal_api_Struct.ResponseByVac:
+    properties:
+      id:
+        type: integer
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      vacancy:
+        $ref: '#/definitions/main_go_internal_api_Struct.VacanciesToResponse'
+    type: object
+  main_go_internal_api_Struct.StatusInfo:
+    properties:
+      info:
+        type: string
+      status:
+        type: string
+    type: object
+  main_go_internal_api_Struct.VacanciesToResponse:
+    properties:
+      aboutWork:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      employee_name:
+        type: string
+      experience:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      id:
+        type: integer
+      isVisible:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /adm/user:
+    delete:
+      description: Позволяет удалить соискателя из БД. Доступ имеют только пользователи
+        роли ADMIN
+      parameters:
+      - description: ID пользователя, которого нужно удалить
+        in: query
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление аккаунта соискателя
+      tags:
+      - ADMIN
   /exp:
     get:
       description: Возвращает список всех опыта, который будет использоваться в дальнейшем.
@@ -171,6 +258,49 @@ paths:
       summary: Добавление новой записи в таблицу с статусом
       tags:
       - ADMIN
+  /user/response:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить массив всех откликов соискателя. В результате
+        клиент получит ID отклика, данные о всех вакансиях, на которые он откликнулся,
+        а также статус этого отклика
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает ID отклика, данные об этой вакансии, на которую
+            откликнулся пользователь и статус отклика '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseByVac'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Все отклики соискателя
+      tags:
+      - candidate
 securityDefinitions:
   ApiKeyAuth:
     in: header
