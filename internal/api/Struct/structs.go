@@ -218,6 +218,12 @@ type ResponseCreateNewResponse struct {
 	Status          Ok
 }
 
+type ResponseAllVacancyByEmployee struct {
+	Status      Ok
+	Vacancies   []VacancyData
+	Employee_id int
+}
+
 type ResponseCreateCandiate struct {
 	Status         Ok
 	Candidate_Info InfoCandidate
@@ -228,6 +234,12 @@ type ResponseCreateEmployee struct {
 	Status         Ok
 	Candidate_Info SuccessEmployer
 	Token          string
+}
+
+type ResponseCreateNewVacancy struct {
+	Status   Ok
+	Vacancy  VacancyData
+	Employee SuccessEmployer
 }
 
 type VacancyPut struct {

@@ -112,6 +112,17 @@ definitions:
       vacancy:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
+  main_go_internal_api_Struct.ResponseAllVacancyByEmployee:
+    properties:
+      employee_id:
+        type: integer
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      vacancies:
+        items:
+          $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
+        type: array
+    type: object
   main_go_internal_api_Struct.ResponseByVac:
     properties:
       id:
@@ -150,12 +161,40 @@ definitions:
       vacancy:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
+  main_go_internal_api_Struct.ResponseCreateNewVacancy:
+    properties:
+      employee:
+        $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      vacancy:
+        $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
+    type: object
   main_go_internal_api_Struct.ResponsePatch:
     properties:
       response_id:
         type: integer
       status_id:
         type: integer
+    type: object
+  main_go_internal_api_Struct.ResponseVac:
+    properties:
+      about:
+        type: string
+      email:
+        type: string
+      exp_id:
+        type: integer
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: string
+      vac_name:
+        type: string
     type: object
   main_go_internal_api_Struct.ResumeResult:
     properties:
@@ -264,6 +303,54 @@ definitions:
       price:
         type: string
       updated_at:
+        type: string
+    type: object
+  main_go_internal_api_Struct.VacancyData_Limit:
+    properties:
+      aboutWork:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      employee:
+        $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+      experience:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      id:
+        type: integer
+      isVisible:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  main_go_internal_api_Struct.VacancyPut:
+    properties:
+      about:
+        type: string
+      email:
+        type: string
+      exp_id:
+        type: integer
+      id:
+        type: integer
+      is_visible:
+        type: boolean
+      location:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: string
+      vac_name:
         type: string
     type: object
 info:
@@ -397,7 +484,7 @@ paths:
       - ApiKeyAuth: []
       summary: Получить информцию про всех работодателей
       tags:
-      - ADMIN
+      - employee
     post:
       consumes:
       - application/json
@@ -489,15 +576,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: Позволяет получить новый токен для соискателя, чтобы у него сохранился
+      description: Позволяет получить новый токен для работодателя, чтобы у него сохранился
         доступ к функционалу
       parameters:
-      - description: Email соискателя
+      - description: Email работодателя
         in: query
         name: Email
         required: true
         type: string
-      - description: Password соискателя
+      - description: Password работодателя
         in: query
         name: Password
         required: true
@@ -518,7 +605,7 @@ paths:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
-      summary: Авторизовать соискателя
+      summary: Авторизовать работодателя
       tags:
       - employee
   /exp:
@@ -837,7 +924,7 @@ paths:
       - ApiKeyAuth: []
       summary: Получить информцию про всех соискателях
       tags:
-      - ADMIN
+      - candidate
   /user/auth:
     get:
       consumes:
@@ -1112,6 +1199,228 @@ paths:
       summary: Обновить данные об резюме соискателя
       tags:
       - candidate
+  /vac:
+    delete:
+      description: Позволяет удалить вакансию из системы. Доступ имеют только пользователи
+        роли employee и ADMIN
+      parameters:
+      - description: ID вакансии, которую нужно удалить
+        in: query
+        name: vacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление вакансии
+      tags:
+      - vacancy
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про все вакансии, которые
+        у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно
+        вернуть. LastID - после какого ID будет идти отсчёт limit.
+      parameters:
+      - description: Кол-во вакансий, в соответствии с которым нужно вернуть их
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: После какого ID будет идти отсчёт limit
+        in: query
+        name: last_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных вакансий
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.VacancyData_Limit'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Получение списка вакансий по 'странично'
+      tags:
+      - vacancy
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавлять новую вакансию в систему. В ответе клиент получит
+        данные вакансии и работодателя. Доступ имеют роли Employee и ADMIN
+      parameters:
+      - description: Основные данные для добавления вакансии. В поле exp_id указывайте
+          ID, который уже есть в системе!
+        in: body
+        name: Vacancy_Info
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.ResponseVac'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные новой вакансии и работодателя
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateNewVacancy'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Добавить новую вакансию
+      tags:
+      - vacancy
+    put:
+      consumes:
+      - application/json
+      description: Позволяет обновить всю основную информацию о вакансии. Доступно
+        только пользователям группы employee и ADMIN
+      parameters:
+      - description: Данные о вакансии, на которые нужно обновить в системе
+        in: body
+        name: VacancyInfo
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.VacancyPut'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить информцию о вакансии
+      tags:
+      - vacancy
+  /vac/emp:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить массив всех вакансий работодателя. В результате
+        клиент получит ID работодателя и массив всех его вакансий.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает ID отклика, данные об этой вакансии, на которую
+            откликнулся пользователь и статус отклика '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseAllVacancyByEmployee'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Все вакансии одного работодателя
+      tags:
+      - vacancy
   /vac/response:
     delete:
       consumes:
@@ -1252,7 +1561,7 @@ paths:
       - ApiKeyAuth: []
       summary: Изменить статус отклика
       tags:
-      - employee
+      - vacancy
     post:
       consumes:
       - application/json

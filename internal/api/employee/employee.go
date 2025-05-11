@@ -193,7 +193,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех работодателей
 // @Description Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN
-// @Tags ADMIN
+// @Tags employee
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -238,13 +238,13 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary Авторизовать соискателя
-// @Description Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу
+// @Summary Авторизовать работодателя
+// @Description Позволяет получить новый токен для работодателя, чтобы у него сохранился доступ к функционалу
 // @Tags employee
 // @Accept json
 // @Produce json
-// @Param Email query string true "Email соискателя"
-// @Param Password query string true "Password соискателя"
+// @Param Email query string true "Email работодателя"
+// @Param Password query string true "Password работодателя"
 // @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/auth [get]

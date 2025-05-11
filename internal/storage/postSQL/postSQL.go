@@ -336,19 +336,34 @@ func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, erro
 	return result, nil
 }
 
-func DeleteVacancy(storage *sqlx.Tx, uid, id int) error {
+func DeleteVacancy(storage *sqlx.Tx, uid, id int, role string) error {
 
-	query, args, err := psql.Delete("vacancy").Where(sq.Eq{"id": id, "emp_id": uid}).ToSql()
-	if err != nil {
-		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
-	}
-	result, err := storage.Exec(query, args...)
-	if err != nil {
-		return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
-	}
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("таких записей не было найдено у данного пользователя! Перепроверьте данные и попробуйте снова")
+	if role == "ADMIN" {
+		query, args, err := psql.Delete("vacancy").Where(sq.Eq{"id": id}).ToSql()
+		if err != nil {
+			return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+		}
+		result, err := storage.Exec(query, args...)
+		if err != nil {
+			return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return fmt.Errorf("таких записей не было найдено у данного пользователя! Перепроверьте данные и попробуйте снова")
+		}
+	} else {
+		query, args, err := psql.Delete("vacancy").Where(sq.Eq{"id": id, "emp_id": uid}).ToSql()
+		if err != nil {
+			return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+		}
+		result, err := storage.Exec(query, args...)
+		if err != nil {
+			return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return fmt.Errorf("таких записей не было найдено у данного пользователя! Перепроверьте данные и попробуйте снова")
+		}
 	}
 	return nil
 }

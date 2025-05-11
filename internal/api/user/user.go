@@ -431,7 +431,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех соискателях
 // @Description Позволяет получить всю основную информацию про всех соискателях. Доступно только пользователям с ролью ADMIN
-// @Tags ADMIN
+// @Tags candidate
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json

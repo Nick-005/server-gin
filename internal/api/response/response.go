@@ -144,7 +144,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Изменить статус отклика
 // @Description Позволяет изменить статус отклика на вакансию. Доступно только пользователям группы employee и ADMIN
-// @Tags employee
+// @Tags vacancy
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
