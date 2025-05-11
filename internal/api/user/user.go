@@ -124,6 +124,18 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Обновить данные об резюме соискателя
+// @Description Позволяет обновить данные, которые касаются только резюме соискателя. Доступ имеют роли Candidate и ADMIN
+// @Security ApiKeyAuth
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Param ResumaData body s.RequestResumeUpdate true "Данные, которые можно изменить. Это только опыт (стаж) и описание. НО также указываете ID резюме, которое необходимо изменить!"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/resume [put]
 func PutCandidateResume(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -176,6 +188,18 @@ func PutCandidateResume(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Удалить резюме соискателя
+// @Description Позволяет удалить данные об резюме пользователя. Доступ имеют роли Candidate и ADMIN
+// @Security ApiKeyAuth
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Param resume_id query int true "ID резюме пользователя, чтобы найти и удалить его"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/resume [delete]
 func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -202,7 +226,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("id"))
+		vac_id, err := strconv.Atoi(ctx.Query("resume_id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -213,7 +237,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		err = sqlp.DeleteResume(tx, vac_id, uid)
 		if err != nil {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"error":  err.Error(),
 				"info":   "произошла ошибка при попытке удалить резюме",
@@ -227,6 +251,16 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Добавить нового соискателя
+// @Description Позволяет добавлять нового соискателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу. Доступ имеют роли Candidate и ADMIN
+// @Tags candidate
+// @Accept json
+// @Produce json
+// @Param Candidate_info body s.RequestCandidate true "Основные данные для добавления соискателя. В поле статус указывайте ID, который уже есть в системе!"
+// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные нового пользователя и его персональный токен, который можно использовать в течении 24 часов!"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user [post]
 func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -243,7 +277,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 
 		data, err := sqlp.PostNewCandidate(tx, req)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -261,7 +295,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка при создании токена аутентификации",
 				"error":  err.Error(),

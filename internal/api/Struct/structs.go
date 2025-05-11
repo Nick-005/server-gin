@@ -200,6 +200,12 @@ type VacancyData struct {
 	Updated_at  time.Time `db:"updated_at"`
 }
 
+type ResponseCreateCandiate struct {
+	Status         Ok
+	Candidate_Info InfoCandidate
+	Token          string
+}
+
 type VacancyPut struct {
 	ID            int    `json:"id"`
 	Vac_Name      string `json:"vac_name"`

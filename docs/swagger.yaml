@@ -8,6 +8,32 @@ definitions:
       name:
         type: string
     type: object
+  main_go_internal_api_Struct.InfoCandidate:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+      status:
+        properties:
+          crated_At:
+            type: string
+          id:
+            type: integer
+          name:
+            type: string
+        type: object
+      updated_at:
+        type: string
+    type: object
   main_go_internal_api_Struct.InfoError:
     properties:
       error:
@@ -22,6 +48,28 @@ definitions:
       status:
         type: string
     type: object
+  main_go_internal_api_Struct.RequestCandidate:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      status_id:
+        type: integer
+    type: object
+  main_go_internal_api_Struct.RequestResumeUpdate:
+    properties:
+      description:
+        type: string
+      experience_id:
+        type: integer
+      resume_id:
+        type: integer
+    type: object
   main_go_internal_api_Struct.ResponseByVac:
     properties:
       id:
@@ -30,6 +78,15 @@ definitions:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
       vacancy:
         $ref: '#/definitions/main_go_internal_api_Struct.VacanciesToResponse'
+    type: object
+  main_go_internal_api_Struct.ResponseCreateCandiate:
+    properties:
+      candidate_Info:
+        $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      token:
+        type: string
     type: object
   main_go_internal_api_Struct.StatusInfo:
     properties:
@@ -258,6 +315,48 @@ paths:
       summary: Добавление новой записи в таблицу с статусом
       tags:
       - ADMIN
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавлять нового соискателя в систему. В ответе клиент
+        получит токен, с помощью которого сможет получить доступ к некоторому функционалу.
+        Доступ имеют роли Candidate и ADMIN
+      parameters:
+      - description: Основные данные для добавления соискателя. В поле статус указывайте
+          ID, который уже есть в системе!
+        in: body
+        name: Candidate_info
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestCandidate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные нового пользователя и его персональный
+            токен, который можно использовать в течении 24 часов!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Добавить нового соискателя
+      tags:
+      - candidate
   /user/response:
     get:
       consumes:
@@ -299,6 +398,101 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Все отклики соискателя
+      tags:
+      - candidate
+  /user/resume:
+    delete:
+      consumes:
+      - application/json
+      description: Позволяет удалить данные об резюме пользователя. Доступ имеют роли
+        Candidate и ADMIN
+      parameters:
+      - description: ID резюме пользователя, чтобы найти и удалить его
+        in: query
+        name: resume_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить резюме соискателя
+      tags:
+      - candidate
+    put:
+      consumes:
+      - application/json
+      description: Позволяет обновить данные, которые касаются только резюме соискателя.
+        Доступ имеют роли Candidate и ADMIN
+      parameters:
+      - description: Данные, которые можно изменить. Это только опыт (стаж) и описание.
+          НО также указываете ID резюме, которое необходимо изменить!
+        in: body
+        name: ResumaData
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestResumeUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить данные об резюме соискателя
       tags:
       - candidate
 securityDefinitions:
