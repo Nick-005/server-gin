@@ -55,6 +55,12 @@ func main() {
 		// ! Удаление работодателей
 		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.DeleteUser(storage))
 
+		// ! Удаление статуса
+		apiV1.DELETE("/adm/status", AuthMiddleWare(), MakeTransaction(storage), DeleteStatus(storage))
+
+		// ! Удаление опыта
+		apiV1.DELETE("/adm/exp", AuthMiddleWare(), MakeTransaction(storage), DeleteExperience(storage))
+
 		// & Статус
 
 		// * ----------------------- Все записи -----------------------
@@ -65,8 +71,11 @@ func main() {
 
 		// & Работодатель
 
+		// * ----------------------- Получить данные работодателя -----------------------
+		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetEmployeeInfo(storage))
+
 		// * ----------------------- Получить список всех работодателей -----------------------
-		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
+		apiV1.GET("/emp/all", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
 
 		// * ----------------------- Авторизовать работодателя (выдать новый токен) -----------------------
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
@@ -214,7 +223,7 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -240,6 +249,7 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Success 200 {array} s.Ok "Добавляет новое значение в таблицу"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /exp [post]
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -262,7 +272,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 		name := ctx.Query("name")
 		err := sqlp.PostNewExperience(tx, name)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -287,6 +297,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Success 200 {array} s.Ok "Добавляет новое значение в таблицу и просто возвращает статус 'Ok!'"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /status [post]
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -310,7 +321,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		name := ctx.Query("name")
 		err := sqlp.PostNewStatus(tx, name)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -333,6 +344,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Success 200 {array} s.GetStatus "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /status [get]
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -354,7 +366,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -366,6 +378,99 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 			"status":    "OK!",
 			"AllStatus": data,
 		})
+	}
+}
+
+// @Summary Удаление статуса
+// @Description Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Produce json
+// @Param name query string true "наименование записи, которую нужно удалить"
+// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/status [delete]
+func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		name := ctx.Query("name")
+		err := sqlp.DeleteStatusByName(tx, name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "OK!",
+			"info":   "данные успешно удалены!",
+		})
+	}
+}
+
+// @Summary Удаление опыта
+// @Description Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Produce json
+// @Param name query string true "наименование записи, которую нужно удалить"
+// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/exp [delete]
+func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		name := ctx.Query("name")
+		err := sqlp.DeleteExperienceByName(tx, name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"status": "OK!",
+			"info":   "данные успешно удалены!",
+		})
+
 	}
 }
 

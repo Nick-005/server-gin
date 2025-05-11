@@ -170,6 +170,13 @@ definitions:
       vacancy:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
+  main_go_internal_api_Struct.ResponseEmployeeInfo:
+    properties:
+      employee:
+        $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+    type: object
   main_go_internal_api_Struct.ResponsePatch:
     properties:
       response_id:
@@ -400,6 +407,94 @@ paths:
       summary: Удаление аккаунта работодателя
       tags:
       - ADMIN
+  /adm/exp:
+    delete:
+      description: Позволяет удалить запись из системы. Доступ имеют только пользователи
+        роли ADMIN
+      parameters:
+      - description: наименование записи, которую нужно удалить
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление опыта
+      tags:
+      - ADMIN
+  /adm/status:
+    delete:
+      description: Позволяет удалить запись из системы. Доступ имеют только пользователи
+        роли ADMIN
+      parameters:
+      - description: наименование записи, которую нужно удалить
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление статуса
+      tags:
+      - ADMIN
   /adm/user:
     delete:
       description: Позволяет удалить соискателя из системы. Доступ имеют только пользователи
@@ -448,16 +543,22 @@ paths:
     get:
       consumes:
       - application/json
-      description: Позволяет получить всю основную информацию про всех работодатлей.
-        Доступно только пользователям с ролью ADMIN
+      description: Позволяет получить всю основную информацию про работодатля. Доступно
+        всем авторизованным пользователям, но токен обязателен!
+      parameters:
+      - description: ID работодателя
+        in: query
+        name: employeeID
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Возвращает статус 'Ok!' и массив всех данных о работодателях
+          description: Возвращает статус 'Ok!' и данные о работодателе
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseEmployeeInfo'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -482,7 +583,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: Получить информцию про всех работодателей
+      summary: Получить информцию про работодателя
       tags:
       - employee
     post:
@@ -570,6 +671,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Обновить информцию о работодателе
+      tags:
+      - employee
+  /emp/all:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про всех работодатлей.
+        Доступно только пользователям с ролью ADMIN
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных о работодателях
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получить информцию про всех работодателей
       tags:
       - employee
   /emp/auth:
@@ -674,6 +816,13 @@ paths:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
       security:
       - ApiKeyAuth: []
       summary: Добавление новой записи в таблицу с опытом
@@ -705,6 +854,13 @@ paths:
         "401":
           description: Возвращает ошибку, если у пользователя нету доступа к этому
             функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
           schema:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
@@ -745,6 +901,13 @@ paths:
         "401":
           description: Возвращает ошибку, если у пользователя нету доступа к этому
             функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
           schema:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'

@@ -201,7 +201,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
-// @Router /emp [get]
+// @Router /emp/all [get]
 func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -233,6 +233,56 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"status":        "Ok!",
 			"Info_Employes": data,
+		})
+
+	}
+}
+
+// @Summary Получить информцию про работодателя
+// @Description Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, но токен обязателен!
+// @Tags employee
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param employeeID query int true "ID работодателя"
+// @Success 200 {array} s.ResponseEmployeeInfo "Возвращает статус 'Ok!' и данные о работодателе"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /emp [get]
+func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		_, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		emp_id, err := strconv.Atoi(ctx.Query("employeeID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"error":  err.Error(),
+				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+			})
+			return
+		}
+		data, err := sqlp.GetEmployeeByID(tx, emp_id)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"status":   "Ok!",
+			"Employee": data,
 		})
 
 	}

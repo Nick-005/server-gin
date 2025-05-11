@@ -211,6 +211,11 @@ type ResponseAllResponsesOnVacancy struct {
 	} `db:"responses"`
 }
 
+type ResponseEmployeeInfo struct {
+	Status   Ok
+	Employee SuccessEmployer
+}
+
 type ResponseCreateNewResponse struct {
 	Response_id     int
 	Vacancy         VacancyData

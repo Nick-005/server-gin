@@ -79,6 +79,134 @@ const docTemplate = `{
                 }
             }
         },
+        "/adm/exp": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Удаление опыта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "наименование записи, которую нужно удалить",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус и краткую информацию ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/status": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Удаление статуса",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "наименование записи, которую нужно удалить",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус и краткую информацию ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/adm/user": {
             "delete": {
                 "security": [
@@ -150,7 +278,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN",
+                "description": "Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, но токен обязателен!",
                 "consumes": [
                     "application/json"
                 ],
@@ -160,14 +288,23 @@ const docTemplate = `{
                 "tags": [
                     "employee"
                 ],
-                "summary": "Получить информцию про всех работодателей",
+                "summary": "Получить информцию про работодателя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID работодателя",
+                        "name": "employeeID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Возвращает статус 'Ok!' и массив всех данных о работодателях",
+                        "description": "Возвращает статус 'Ok!' и данные о работодателе",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseEmployeeInfo"
                             }
                         }
                     },
@@ -302,6 +439,64 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/emp/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employee"
+                ],
+                "summary": "Получить информцию про всех работодателей",
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и массив всех данных о работодателях",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -470,6 +665,15 @@ const docTemplate = `{
                                 "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
                     }
                 }
             }
@@ -513,6 +717,15 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -569,6 +782,15 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -2036,6 +2258,17 @@ const docTemplate = `{
                 },
                 "vacancy": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponseEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "employee": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
+                },
+                "status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
                 }
             }
         },

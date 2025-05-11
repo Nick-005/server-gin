@@ -29,6 +29,23 @@ func GetStatusByName(storage *sqlx.Tx, name string) (s.GetStatus, error) {
 	return result, nil
 }
 
+func DeleteStatusByName(storage *sqlx.Tx, name string) error {
+
+	query, args, err := psql.Delete("status").Where(sq.Eq{"name": name}).ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("таких записей не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+	return nil
+}
+
 func GetStatusByID(storage *sqlx.Tx, id int) (s.GetStatus, error) {
 
 	var result s.GetStatus
@@ -42,6 +59,26 @@ func GetStatusByID(storage *sqlx.Tx, id int) (s.GetStatus, error) {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
 	return result, nil
+}
+
+func DeleteExperienceByName(storage *sqlx.Tx, name string) error {
+
+	query, args, err := psql.Delete("experience").Where(sq.Eq{"name": name}).ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
+	}
+
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("ошибка в исполнении SQL скрипта на удаление! error: %s", err.Error())
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("таких записей не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
 }
 
 func GetEmployeeLogin(storage *sqlx.Tx, email, password string) (s.SuccessEmployer, error) {
