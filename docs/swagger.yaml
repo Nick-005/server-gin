@@ -92,6 +92,26 @@ definitions:
       resume_id:
         type: integer
     type: object
+  main_go_internal_api_Struct.ResponseAllResponsesOnVacancy:
+    properties:
+      responses:
+        items:
+          properties:
+            candidate:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+            created_at:
+              type: string
+            id:
+              type: integer
+            status:
+              $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+          type: object
+        type: array
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      vacancy:
+        $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
+    type: object
   main_go_internal_api_Struct.ResponseByVac:
     properties:
       id:
@@ -118,6 +138,17 @@ definitions:
         $ref: '#/definitions/main_go_internal_api_Struct.Ok'
       token:
         type: string
+    type: object
+  main_go_internal_api_Struct.ResponseCreateNewResponse:
+    properties:
+      response_id:
+        type: integer
+      response_status:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      vacancy:
+        $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
   main_go_internal_api_Struct.ResponsePatch:
     properties:
@@ -192,6 +223,31 @@ definitions:
       email:
         type: string
       employee_name:
+        type: string
+      experience:
+        $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+      id:
+        type: integer
+      isVisible:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+      phoneNumber:
+        type: string
+      price:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  main_go_internal_api_Struct.VacancyData:
+    properties:
+      aboutWork:
+        type: string
+      created_at:
+        type: string
+      email:
         type: string
       experience:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
@@ -1057,6 +1113,98 @@ paths:
       tags:
       - candidate
   /vac/response:
+    delete:
+      consumes:
+      - application/json
+      description: Позволяет удалить данные об отклике пользователя на вакансию. Доступ
+        имеют роли Candidate и ADMIN
+      parameters:
+      - description: ID вакансии
+        in: query
+        name: vacancy_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить отклик соискателя
+      tags:
+      - vacancy
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить массив всех откликов соискателей на одну определенную
+        вакансию.
+      parameters:
+      - description: ID вакансии, на которую надо посмотреть все отклики
+        in: query
+        name: vacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает данные вакансии и все её отклики
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseAllResponsesOnVacancy'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Все отклики соискателей на вакансию
+      tags:
+      - vacancy
     patch:
       consumes:
       - application/json
@@ -1108,23 +1256,22 @@ paths:
     post:
       consumes:
       - application/json
-      description: Позволяет добавить к соискателю новое резюме.
+      description: Позволяет создать в системе новый отклик соискателя на вакансию.
       parameters:
-      - description: Основные данные для резюме. В поле experience_id указывайте ID,
-          который уже есть в системе!
-        in: body
-        name: InfoResume
+      - description: ID вакансии, на которую нужно сделать отклик!
+        in: query
+        name: vacancyID
         required: true
-        schema:
-          $ref: '#/definitions/main_go_internal_api_Struct.RequestResume'
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Возвращает статус 'Ok!
+          description: Возвращает статус 'Ok!, ID отклика, данные вакансии, на которую
+            откликнулись и статус отклика
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateNewResponse'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -1149,9 +1296,9 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: Добавить новое резюме для соискателя
+      summary: Добавить новый отклик на вакансию
       tags:
-      - candidate
+      - vacancy
 securityDefinitions:
   ApiKeyAuth:
     in: header

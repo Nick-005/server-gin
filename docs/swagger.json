@@ -1189,13 +1189,13 @@
             }
         },
         "/vac/response": {
-            "post": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Позволяет добавить к соискателю новое резюме.",
+                "description": "Позволяет получить массив всех откликов соискателей на одну определенную вакансию.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1203,27 +1203,155 @@
                     "application/json"
                 ],
                 "tags": [
-                    "candidate"
+                    "vacancy"
                 ],
-                "summary": "Добавить новое резюме для соискателя",
+                "summary": "Все отклики соискателей на вакансию",
                 "parameters": [
                     {
-                        "description": "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!",
-                        "name": "InfoResume",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestResume"
-                        }
+                        "type": "integer",
+                        "description": "ID вакансии, на которую надо посмотреть все отклики",
+                        "name": "vacancyID",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Возвращает статус 'Ok!",
+                        "description": "Возвращает данные вакансии и все её отклики",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseAllResponsesOnVacancy"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет создать в системе новый отклик соискателя на вакансию.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Добавить новый отклик на вакансию",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии, на которую нужно сделать отклик!",
+                        "name": "vacancyID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!, ID отклика, данные вакансии, на которую откликнулись и статус отклика",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateNewResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет удалить данные об отклике пользователя на вакансию. Доступ имеют роли Candidate и ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Удалить отклик соискателя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии",
+                        "name": "vacancy_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и небольшую информацию",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
                             }
                         }
                     },
@@ -1470,6 +1598,37 @@
                 }
             }
         },
+        "main_go_internal_api_Struct.ResponseAllResponsesOnVacancy": {
+            "type": "object",
+            "properties": {
+                "responses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "candidate": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
+                            },
+                            "created_at": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "integer"
+                            },
+                            "status": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
+                            }
+                        }
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                },
+                "vacancy": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
+                }
+            }
+        },
         "main_go_internal_api_Struct.ResponseByVac": {
             "type": "object",
             "properties": {
@@ -1509,6 +1668,23 @@
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponseCreateNewResponse": {
+            "type": "object",
+            "properties": {
+                "response_id": {
+                    "type": "integer"
+                },
+                "response_status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
+                },
+                "status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                },
+                "vacancy": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
                 }
             }
         },
@@ -1624,6 +1800,44 @@
                     "type": "string"
                 },
                 "employee_name": {
+                    "type": "string"
+                },
+                "experience": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.VacancyData": {
+            "type": "object",
+            "properties": {
+                "aboutWork": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
                     "type": "string"
                 },
                 "experience": {

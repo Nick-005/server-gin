@@ -11,6 +11,18 @@ import (
 	sqlp "main.go/internal/storage/postSQL"
 )
 
+// @Summary Все отклики соискателей на вакансию
+// @Description Позволяет получить массив всех откликов соискателей на одну определенную вакансию.
+// @Security ApiKeyAuth
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param vacancyID query int true "ID вакансии, на которую надо посмотреть все отклики"
+// @Success 200 {array} s.ResponseAllResponsesOnVacancy "Возвращает данные вакансии и все её отклики"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/response [get]
 func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -29,7 +41,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancy"))
+		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -40,7 +52,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetResponseByVacancy(tx, vac_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле откликов",
 				"error":  err.Error(),
@@ -50,7 +62,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 
 		data.Vacancy, err = sqlp.GetVacancyByID(tx, vac_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле вакансии",
 				"error":  err.Error(),
