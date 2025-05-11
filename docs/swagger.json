@@ -48,10 +48,8 @@
                         }
                     }
                 }
-            }
-        },
-        "/expd": {
-            "get": {
+            },
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -67,10 +65,19 @@
                 "tags": [
                     "ADMIN"
                 ],
-                "summary": "Добавление новой записи",
+                "summary": "Добавление новой записи в таблицу с опытом",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Наименование нового опыта",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!",
+                        "description": "Добавляет новое значение в таблицу",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -79,7 +86,112 @@
                         }
                     },
                     "400": {
-                        "description": "Возвращает ошибку, если не удалось получить из токена ID.",
+                        "description": "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Получение списка статусов",
+                "responses": {
+                    "200": {
+                        "description": "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Добавляет новую запись в таблицу, которая отвечает за хранение \"констант статуса\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Добавление новой записи в таблицу с статусом",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Наименование нового статуса",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Добавляет новое значение в таблицу и просто возвращает статус 'Ok!'",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)",
                         "schema": {
                             "type": "array",
                             "items": {

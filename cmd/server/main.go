@@ -173,12 +173,13 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 
 		if ctx.Writer.Status() < http.StatusBadRequest {
 			if err := tx.Commit(); err != nil {
-				log.Printf("произошла ошибка при попытке закоммитить изменения. error: %v", err)
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"status": "Err",
-					"info":   "Ошибка при попытке закоммитить изменения в БД. Обратитесь к backend разрабу!",
-					"error":  err.Error(),
-				})
+				// log.Printf("произошла ошибка при попытке закоммитить изменения. error: %v", err)
+				// ctx.JSON(http.StatusInternalServerError, gin.H{
+				// 	"status": "Err",
+				// 	"info":   "Ошибка при попытке закоммитить изменения в БД. Обратитесь к backend разрабу!",
+				// 	"error":  err.Error(),
+				// })
+				return
 			}
 		}
 	}
@@ -229,16 +230,17 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary Добавление новой записи
+// @Summary Добавление новой записи в таблицу с опытом
 // @Description Добавляет новую запись в таблицу, которая отвечает за хранение "констант опыта"
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Success 200 {array} s.Ok "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID."
+// @Param name query string true "Наименование нового опыта"
+// @Success 200 {array} s.Ok "Добавляет новое значение в таблицу"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Router /expd [get]
+// @Router /exp [post]
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -275,6 +277,17 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Добавление новой записи в таблицу с статусом
+// @Description Добавляет новую запись в таблицу, которая отвечает за хранение "констант статуса"
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Accept json
+// @Produce json
+// @Param name query string true "Наименование нового статуса"
+// @Success 200 {array} s.Ok "Добавляет новое значение в таблицу и просто возвращает статус 'Ok!'"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Router /status [post]
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
@@ -311,6 +324,16 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Получение списка статусов
+// @Description Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.
+// @Security ApiKeyAuth
+// @Tags ADMIN
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.GetStatus "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Router /status [get]
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)

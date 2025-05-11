@@ -57,24 +57,29 @@ paths:
       summary: Получение списка опыта
       tags:
       - ADMIN
-  /expd:
-    get:
+    post:
       consumes:
       - application/json
       description: Добавляет новую запись в таблицу, которая отвечает за хранение
         "констант опыта"
+      parameters:
+      - description: Наименование нового опыта
+        in: query
+        name: name
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Возвращает массив всех значений опыта. Если произошла ошибка
-            - статус будет 'Err' и будет возвращен текст ошибки!
+          description: Добавляет новое значение в таблицу
           schema:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.Ok'
             type: array
         "400":
-          description: Возвращает ошибку, если не удалось получить из токена ID.
+          description: Возвращает ошибку, если не удалось получить из токена ID (авторизовать
+            пользователя)
           schema:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
@@ -88,7 +93,82 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
-      summary: Добавление новой записи
+      summary: Добавление новой записи в таблицу с опытом
+      tags:
+      - ADMIN
+  /status:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех значений статусов, который будет использоваться
+        в дальнейшем. Имееют доступ только пользователи роли ADMIN.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает массив всех значений статусов. Если произошла ошибка
+            - статус будет 'Err' и будет возвращен текст ошибки!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить из токена ID (авторизовать
+            пользователя)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка статусов
+      tags:
+      - ADMIN
+    post:
+      consumes:
+      - application/json
+      description: Добавляет новую запись в таблицу, которая отвечает за хранение
+        "констант статуса"
+      parameters:
+      - description: Наименование нового статуса
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Добавляет новое значение в таблицу и просто возвращает статус
+            'Ok!'
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить из токена ID (авторизовать
+            пользователя)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Добавление новой записи в таблицу с статусом
       tags:
       - ADMIN
 securityDefinitions:
