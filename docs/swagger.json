@@ -188,6 +188,126 @@
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет обновить всю основную информацию о работодателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы employee и ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employee"
+                ],
+                "summary": "Обновить информцию о работодателе",
+                "parameters": [
+                    {
+                        "description": "Данные о работодателе, на которые нужно обновить в системе",
+                        "name": "Employee_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestEmployee"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и небольшую информацию",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Позволяет добавлять нового работодателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employee"
+                ],
+                "summary": "Добавить нового работодателя",
+                "parameters": [
+                    {
+                        "description": "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!",
+                        "name": "Employee_info",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestEmployee"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!', данные работодателя и новый токен",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/emp/auth": {
@@ -1067,6 +1187,142 @@
                     }
                 }
             }
+        },
+        "/vac/response": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет добавить к соискателю новое резюме.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "candidate"
+                ],
+                "summary": "Добавить новое резюме для соискателя",
+                "parameters": [
+                    {
+                        "description": "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!",
+                        "name": "InfoResume",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestResume"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет изменить статус отклика на вакансию. Доступно только пользователям группы employee и ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employee"
+                ],
+                "summary": "Изменить статус отклика",
+                "parameters": [
+                    {
+                        "description": "ID отклика, статус которого нужно обновить, а также ID статуса, на который нужно поменять",
+                        "name": "Help_data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.ResponsePatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и небольшую информацию",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1166,6 +1422,29 @@
                 }
             }
         },
+        "main_go_internal_api_Struct.RequestEmployee": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "name_organization": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "status_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "main_go_internal_api_Struct.RequestResume": {
             "type": "object",
             "properties": {
@@ -1230,6 +1509,17 @@
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponsePatch": {
+            "type": "object",
+            "properties": {
+                "response_id": {
+                    "type": "integer"
+                },
+                "status_id": {
+                    "type": "integer"
                 }
             }
         },

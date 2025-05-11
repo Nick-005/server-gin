@@ -66,6 +66,18 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Удалить отклик соискателя
+// @Description Позволяет удалить данные об отклике пользователя на вакансию. Доступ имеют роли Candidate и ADMIN
+// @Security ApiKeyAuth
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param vacancy_id query int true "ID вакансии"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/response [delete]
 func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -92,7 +104,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("id"))
+		vac_id, err := strconv.Atoi(ctx.Query("vacancy_id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -118,6 +130,18 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 
 }
 
+// @Summary Изменить статус отклика
+// @Description Позволяет изменить статус отклика на вакансию. Доступно только пользователям группы employee и ADMIN
+// @Tags employee
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param Help_data body s.ResponsePatch true "ID отклика, статус которого нужно обновить, а также ID статуса, на который нужно поменять"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/response [patch]
 func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -147,7 +171,7 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		err := sqlp.PatchResponse(tx, req)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле для обновления данных отклика на вакансию",
 				"error":  err.Error(),
@@ -162,6 +186,18 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Добавить новый отклик на вакансию
+// @Description Позволяет создать в системе новый отклик соискателя на вакансию.
+// @Tags vacancy
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param vacancyID query int true "ID вакансии, на которую нужно сделать отклик!"
+// @Success 200 {array} s.ResponseCreateNewResponse "Возвращает статус 'Ok!, ID отклика, данные вакансии, на которую откликнулись и статус отклика"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/response [post]
 func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -188,7 +224,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancy"))
+		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -199,7 +235,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		resp_id, err := sqlp.PostResponse(tx, uid, vac_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле добавления данных",
 				"error":  err.Error(),
@@ -208,7 +244,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		vac_data, err := sqlp.GetVacancyByID(tx, vac_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле вакансий",
 				"error":  err.Error(),
@@ -217,7 +253,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		status_info, err := sqlp.GetStatusByID(tx, 7)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле статуса",
 				"error":  err.Error(),

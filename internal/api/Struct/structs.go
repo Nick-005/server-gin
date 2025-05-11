@@ -200,6 +200,13 @@ type VacancyData struct {
 	Updated_at  time.Time `db:"updated_at"`
 }
 
+type ResponseCreateNewResponse struct {
+	Response_id     int
+	Vacancy         VacancyData
+	Response_status GetStatus
+	Status          Ok
+}
+
 type ResponseCreateCandiate struct {
 	Status         Ok
 	Candidate_Info InfoCandidate

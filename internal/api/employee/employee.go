@@ -69,6 +69,18 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Обновить информцию о работодателе
+// @Description Позволяет обновить всю основную информацию о работодателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы employee и ADMIN
+// @Tags employee
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param Employee_info body s.RequestEmployee true "Данные о работодателе, на которые нужно обновить в системе"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /emp [put]
 func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -106,7 +118,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		err := sqlp.UpdateEmployeeInfo(tx, req, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле для обновления данных резюме пользователя",
 				"error":  err.Error(),
@@ -121,6 +133,16 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Добавить нового работодателя
+// @Description Позволяет добавлять нового работодателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу.
+// @Tags employee
+// @Accept json
+// @Produce json
+// @Param Employee_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
+// @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /emp [post]
 func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -136,7 +158,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.PostNewEmployer(tx, req)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка в SQL файле",
 				"error":  err.Error(),
@@ -154,7 +176,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		}
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
 				"info":   "Ошибка при создании токена аутентификации",
 				"error":  err.Error(),

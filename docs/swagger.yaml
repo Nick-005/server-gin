@@ -61,6 +61,21 @@ definitions:
       status_id:
         type: integer
     type: object
+  main_go_internal_api_Struct.RequestEmployee:
+    properties:
+      email:
+        type: string
+      inn:
+        type: string
+      name_organization:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+      status_id:
+        type: integer
+    type: object
   main_go_internal_api_Struct.RequestResume:
     properties:
       description:
@@ -103,6 +118,13 @@ definitions:
         $ref: '#/definitions/main_go_internal_api_Struct.Ok'
       token:
         type: string
+    type: object
+  main_go_internal_api_Struct.ResponsePatch:
+    properties:
+      response_id:
+        type: integer
+      status_id:
+        type: integer
     type: object
   main_go_internal_api_Struct.ResumeResult:
     properties:
@@ -320,6 +342,93 @@ paths:
       summary: Получить информцию про всех работодателей
       tags:
       - ADMIN
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавлять нового работодателя в систему. В ответе клиент
+        получит токен, с помощью которого сможет получить доступ к некоторому функционалу.
+      parameters:
+      - description: Основные данные для добавления работодателя. В поле статус указывайте
+          ID, который уже есть в системе!
+        in: body
+        name: Employee_info
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные работодателя и новый токен
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Добавить нового работодателя
+      tags:
+      - employee
+    put:
+      consumes:
+      - application/json
+      description: Позволяет обновить всю основную информацию о работодателе при помощи
+        его персонального токена и тела запроса. Доступно только пользователям группы
+        employee и ADMIN
+      parameters:
+      - description: Данные о работодателе, на которые нужно обновить в системе
+        in: body
+        name: Employee_info
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить информцию о работодателе
+      tags:
+      - employee
   /emp/auth:
     get:
       consumes:
@@ -945,6 +1054,102 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Обновить данные об резюме соискателя
+      tags:
+      - candidate
+  /vac/response:
+    patch:
+      consumes:
+      - application/json
+      description: Позволяет изменить статус отклика на вакансию. Доступно только
+        пользователям группы employee и ADMIN
+      parameters:
+      - description: ID отклика, статус которого нужно обновить, а также ID статуса,
+          на который нужно поменять
+        in: body
+        name: Help_data
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.ResponsePatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и небольшую информацию
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить статус отклика
+      tags:
+      - employee
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить к соискателю новое резюме.
+      parameters:
+      - description: Основные данные для резюме. В поле experience_id указывайте ID,
+          который уже есть в системе!
+        in: body
+        name: InfoResume
+        required: true
+        schema:
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestResume'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить новое резюме для соискателя
       tags:
       - candidate
 securityDefinitions:
