@@ -166,7 +166,7 @@ func main() {
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Run("localhost:8089")
+	router.Run("0.0.0.0:8089")
 }
 
 func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
