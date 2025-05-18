@@ -1,5 +1,5 @@
 env: "local" # но может быть local, dev, prod. Этот параметр показывает на какой машине работает наша программа. В нашем случае на local
-storage_path: "postgres://postgres:palmadav@localhost:5432/postgres" # Показывает, где хранится файл базы данных
+storage_path: "postgres://palmadav:R%#NSJQ_Pgxb)&4$\\k1@beshenerom.beget.app:5432/WA_postgres" # Показывает, где хранится файл базы данных
 http_server:
     address: "localhost:5432"
     timeout: 10s

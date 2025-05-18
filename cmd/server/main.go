@@ -21,7 +21,6 @@ import (
 	"main.go/internal/api/response"
 	candid "main.go/internal/api/user"
 	"main.go/internal/api/vacancy"
-	"main.go/internal/config"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -29,8 +28,17 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	cfg := config.MustLoad()
-	storage, err := sqlx.Connect("pgx", cfg.StoragePath)
+	host := os.Getenv("DB_DOMEN")
+	port := 5432
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_U_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	connstring := fmt.Sprintf(
+		"host=%s port=%d dbname=%s user=%s password=%s target_session_attrs=read-write",
+		host, port, dbname, user, password)
+	fmt.Println(connstring)
+	// cfg := config.MustLoad()
+	storage, err := sqlx.Connect("pgx", connstring)
 	if err != nil {
 		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
