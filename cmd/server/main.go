@@ -149,7 +149,7 @@ func main() {
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
 
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
-		apiV1.GET("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
+		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
 		// * ----------------------- Все отклики на вакансию -----------------------
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.GetAllResponseByVacancy(storage))
