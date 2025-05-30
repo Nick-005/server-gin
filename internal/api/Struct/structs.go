@@ -236,9 +236,9 @@ type ResponseCreateCandiate struct {
 }
 
 type ResponseCreateEmployee struct {
-	Status         Ok
-	Candidate_Info SuccessEmployer
-	Token          string
+	Status        Ok
+	Employer_Info SuccessEmployer
+	Token         string
 }
 
 type ResponseCreateNewVacancy struct {
