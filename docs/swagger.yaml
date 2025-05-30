@@ -1492,6 +1492,8 @@ paths:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
+      security:
+      - ApiKeyAuth: []
       summary: Добавить новую вакансию
       tags:
       - vacancy

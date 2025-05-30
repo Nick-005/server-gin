@@ -190,6 +190,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить новую вакансию
 // @Description Позволяет добавлять новую вакансию в систему. В ответе клиент получит данные вакансии и работодателя. Доступ имеют роли Employee и ADMIN
+// @Security ApiKeyAuth
 // @Tags vacancy
 // @Accept json
 // @Produce json
