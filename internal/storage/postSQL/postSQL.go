@@ -241,7 +241,7 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 		req.Location,
 		req.Experience_Id,
 		req.About,
-		req.Is_visible,
+		req.IsVisible,
 	).Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
@@ -271,7 +271,7 @@ func UpdateVacancyInfo(storage *sqlx.Tx, req s.VacancyPut, uid int) error {
 		Set("location", req.Location).
 		Set("experience_id", req.Experience_Id).
 		Set("about_work", req.About).
-		Set("is_visible", req.Is_visible).
+		Set("is_visible", req.IsVisible).
 		Where(sq.Eq{"id": req.ID, "emp_id": uid}).
 		ToSql()
 	if err != nil {

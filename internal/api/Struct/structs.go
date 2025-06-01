@@ -31,7 +31,7 @@ type Vacancy_Body struct {
 	Location    string `json:"location"`
 	Experience  int    `json:"exp"`
 	About       string `json:"about"`
-	Is_visible  bool   `json:"is_visible"`
+	IsVisible   bool   `json:"is_visible"`
 }
 
 type RequestCandidate struct {
@@ -256,7 +256,7 @@ type VacancyPut struct {
 	Location      string `json:"location"`
 	Experience_Id int    `json:"exp_id"`
 	About         string `json:"about"`
-	Is_visible    bool   `json:"is_visible"`
+	IsVisible     bool   `json:"is_visible"`
 }
 
 type ResponseVac struct {
@@ -267,7 +267,7 @@ type ResponseVac struct {
 	Location      string `json:"location"`
 	Experience_Id int    `json:"exp_id"`
 	About         string `json:"about"`
-	Is_visible    bool   `json:"is_visible"`
+	IsVisible     bool   `json:"is_visible"`
 }
 
 type ResponseSearchVac struct {
@@ -287,7 +287,7 @@ type StatusInfo struct {
 type GetStatus struct {
 	ID        int       `db:"id"`
 	Name      string    `db:"name"`
-	Crated_At time.Time `db:"created_at"`
+	CreatedAt time.Time `db:"created_at"`
 }
 type ResumeResult_slice struct {
 	Id          int       `db:"id"`
@@ -309,7 +309,7 @@ type InfoCandidate struct {
 	Status      struct {
 		ID        int       `db:"id"`
 		Name      string    `db:"name"`
-		Crated_At time.Time `db:"created_at"`
+		CreatedAt time.Time `db:"created_at"`
 	} `db:"status"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
