@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -47,6 +48,7 @@ func main() {
 	// Только для деплоя
 	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Use(cors.Default())
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
 	apiV1 := router.Group("/api/v1")
