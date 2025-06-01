@@ -593,8 +593,8 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags candidate
 // @Accept json
 // @Produce json
-// @Param Email query string true "Email соискателя"
-// @Param Password query string true "Password соискателя"
+// @Param email query string true "email соискателя"
+// @Param password query string true "password соискателя"
 // @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -603,8 +603,8 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("Email")
-		uPassword := ctx.Query("Password")
+		uEmail := ctx.Query("email")
+		uPassword := ctx.Query("password")
 
 		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {
