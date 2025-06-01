@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -48,7 +49,15 @@ func main() {
 	// Только для деплоя
 	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	router.Use(cors.Default())
+	router.RedirectTrailingSlash = false
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"}, // Укажи точный origin фронтенда
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
 	apiV1 := router.Group("/api/v1")
