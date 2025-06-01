@@ -110,8 +110,8 @@ type Vacancies struct {
 	ExperienceId int       `db:"experience_id"`
 	AboutWork    string    `db:"about_work"`
 	IsVisible    bool      `db:"is_visible"`
-	Created_at   time.Time `db:"created_at"`
-	Updated_at   time.Time `db:"updated_at"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 type RequestEmployee struct {
 	NameOrganization string `json:"name_organization"`
@@ -126,7 +126,7 @@ type DBResponse struct {
 	ID            int       `db:"id"`
 	Candidates_id int       `db:"candidates_id"`
 	Vacancy_id    int       `db:"vacancy_id"`
-	Created_at    time.Time `db:"created_at"`
+	CreatedAt     time.Time `db:"created_at"`
 	Status_id     int       `db:"status_id"`
 }
 
@@ -141,17 +141,17 @@ type VacanciesToResponse struct {
 	Experience    GetStatus `db:"experience"`
 	AboutWork     string    `db:"about_work"`
 	IsVisible     bool      `db:"is_visible"`
-	Created_at    time.Time `db:"created_at"`
-	Updated_at    time.Time `db:"updated_at"`
+	CreatedAt     time.Time `db:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at"`
 }
 
 type SuccessResponse struct {
 	Vacancy   VacancyData `db:"vacancy"`
 	Responses []struct {
-		ID         int           `db:"id"`
-		Candidate  InfoCandidate `db:"candidate"`
-		Created_at time.Time     `db:"created_at"`
-		Status     GetStatus     `db:"status"`
+		ID        int           `db:"id"`
+		Candidate InfoCandidate `db:"candidate"`
+		CreatedAt time.Time     `db:"created_at"`
+		Status    GetStatus     `db:"status"`
 	} `db:"responses"`
 }
 
@@ -182,8 +182,8 @@ type VacancyData_Limit struct {
 	Experience  GetStatus       `db:"experience"`
 	AboutWork   string          `db:"about_work"`
 	IsVisible   bool            `db:"is_visible"`
-	Created_at  time.Time       `db:"created_at"`
-	Updated_at  time.Time       `db:"updated_at"`
+	CreatedAt   time.Time       `db:"created_at"`
+	UpdatedAt   time.Time       `db:"updated_at"`
 }
 
 type VacancyData struct {
@@ -196,18 +196,18 @@ type VacancyData struct {
 	Experience  GetStatus `db:"experience"`
 	AboutWork   string    `db:"about_work"`
 	IsVisible   bool      `db:"is_visible"`
-	Created_at  time.Time `db:"created_at"`
-	Updated_at  time.Time `db:"updated_at"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 type ResponseAllResponsesOnVacancy struct {
 	Status    Ok
 	Vacancy   VacancyData
 	Responses []struct {
-		ID         int           `db:"id"`
-		Candidate  InfoCandidate `db:"candidate"`
-		Created_at time.Time     `db:"created_at"`
-		Status     GetStatus     `db:"status"`
+		ID        int           `db:"id"`
+		Candidate InfoCandidate `db:"candidate"`
+		CreatedAt time.Time     `db:"created_at"`
+		Status    GetStatus     `db:"status"`
 	} `db:"responses"`
 }
 
@@ -293,8 +293,8 @@ type ResumeResult_slice struct {
 	Id          int       `db:"id"`
 	Experience  GetStatus `db:"experience"`
 	Description string    `db:"description"`
-	Created_at  time.Time `db:"created_at"`
-	Updated_at  time.Time `db:"updated_at"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 type ResumeResult struct {
 	Resumes   []ResumeResult_slice `db:"resume"`
@@ -311,8 +311,8 @@ type InfoCandidate struct {
 		Name      string    `db:"name"`
 		Crated_At time.Time `db:"created_at"`
 	} `db:"status"`
-	Created_at time.Time `db:"created_at"`
-	Updated_at time.Time `db:"updated_at"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 type SuccessResume struct {
@@ -320,8 +320,8 @@ type SuccessResume struct {
 	Candidate_id  int       `db:"candidate_id"`
 	Experience_id int       `db:"experience_id"`
 	Description   string    `db:"description"`
-	Created_at    time.Time `db:"created_at"`
-	Updated_at    time.Time `db:"updated_at"`
+	CreatedAt     time.Time `db:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at"`
 }
 
 type RequestNewToken struct {
