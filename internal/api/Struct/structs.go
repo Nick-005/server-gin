@@ -101,7 +101,7 @@ type ResponsePatch struct {
 
 type Vacancies struct {
 	ID           int       `db:"id"`
-	Emp_id       int       `db:"emp_id"`
+	Emp_ID       int       `db:"emp_id"`
 	Name         string    `db:"name"`
 	Price        string    `db:"price"`
 	Email        string    `db:"email"`
@@ -132,7 +132,7 @@ type DBResponse struct {
 
 type VacanciesToResponse struct {
 	ID            int       `db:"id"`
-	Employee_name string    `db:"employee_name"`
+	Employer_name string    `db:"employee_name"`
 	Name          string    `db:"name"`
 	Price         string    `db:"price"`
 	Email         string    `db:"email"`
@@ -162,18 +162,18 @@ type ResponseByVac struct {
 }
 
 type RequestResponse struct {
-	Vacancy_id int `json:"vac_id"`
+	Vacancy_id int `json:"vacancy_id"`
 	Status_id  int `json:"status_id"`
 }
 
 type SuccessVacancy struct {
-	Employee  SuccessEmployer `db:"employer"`
+	Employer  SuccessEmployer `db:"employer"`
 	Vacancies []VacancyData   `db:"vacancies"`
 }
 
 type VacancyData_Limit struct {
 	ID          int             `db:"id"`
-	Employee    SuccessEmployer `db:"employer"`
+	Employer    SuccessEmployer `db:"employer"`
 	Name        string          `db:"name"`
 	Price       string          `db:"price"`
 	Email       string          `db:"email"`
@@ -213,7 +213,7 @@ type ResponseAllResponsesOnVacancy struct {
 
 type ResponseEmployeeInfo struct {
 	Status   Ok
-	Employee SuccessEmployer
+	Employer SuccessEmployer
 }
 
 type ResponseCreateNewResponse struct {
@@ -226,7 +226,7 @@ type ResponseCreateNewResponse struct {
 type ResponseAllVacancyByEmployee struct {
 	Status      Ok
 	Vacancies   []VacancyData
-	Employee_id int
+	Employer_id int
 }
 
 type ResponseCreateCandiate struct {
@@ -244,7 +244,7 @@ type ResponseCreateEmployee struct {
 type ResponseCreateNewVacancy struct {
 	Status   Ok
 	Vacancy  VacancyData
-	Employee SuccessEmployer
+	Employer SuccessEmployer
 }
 
 type VacancyPut struct {
