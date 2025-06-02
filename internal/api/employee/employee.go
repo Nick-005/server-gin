@@ -71,7 +71,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Обновить информцию о работодателе
 // @Description Позволяет обновить всю основную информацию о работодателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы employee и ADMIN
-// @Tags employee
+// @Tags employer
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -135,7 +135,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить нового работодателя
 // @Description Позволяет добавлять нового работодателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу.
-// @Tags employee
+// @Tags employer
 // @Accept json
 // @Produce json
 // @Param Employee_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
@@ -193,7 +193,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех работодателей
 // @Description Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN
-// @Tags employee
+// @Tags employer
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -240,11 +240,11 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про работодателя
 // @Description Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, но токен обязателен!
-// @Tags employee
+// @Tags employer
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param employeeID query int true "ID работодателя"
+// @Param employerID query int true "ID работодателя"
 // @Success 200 {array} s.ResponseEmployeeInfo "Возвращает статус 'Ok!' и данные о работодателе"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -290,11 +290,11 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Авторизовать работодателя
 // @Description Позволяет получить новый токен для работодателя, чтобы у него сохранился доступ к функционалу
-// @Tags employee
+// @Tags employer
 // @Accept json
 // @Produce json
-// @Param Email query string true "Email работодателя"
-// @Param Password query string true "Password работодателя"
+// @Param email query string true "email работодателя"
+// @Param password query string true "password работодателя"
 // @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/auth [get]
@@ -302,8 +302,8 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("Email")
-		uPassword := ctx.Query("Password")
+		uEmail := ctx.Query("email")
+		uPassword := ctx.Query("password")
 
 		data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
 		if err != nil {
