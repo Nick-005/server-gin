@@ -83,6 +83,9 @@ func main() {
 		// ! Удаление опыта
 		apiV1.DELETE("/adm/exp", AuthMiddleWare(), MakeTransaction(storage), DeleteExperience(storage))
 
+		// * Проверка токена на валидность
+		apiV1.GET("/adm/token", CheckToken())
+
 		// & Статус
 
 		// * ----------------------- Все записи -----------------------
@@ -493,6 +496,68 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 			"info":   "данные успешно удалены!",
 		})
 
+	}
+}
+
+// @Summary Проверка токена
+// @Description Позволяет проверить токен пользователя на актуальность
+// @Tags ADMIN
+// @Produce json
+// @Param Token query string true "токен, который нужно проверить"
+// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/token [get]
+func CheckToken() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "Authorization заголовок обязательый, а его нету! Переделывай"},
+			)
+			// ctx.Abort()
+			return
+		}
+
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
+			)
+			// ctx.Abort()
+			return
+		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		claim := &s.Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
+		})
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
+			},
+			)
+			// ctx.Abort()
+			return
+		}
+
+		if !token.Valid {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"error":  "невалидный токен! Пожалуйста перепроверьте его",
+			})
+			// ctx.Abort()
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": "Ok!",
+			"info":   "токен валидный, всё ок",
+		})
 	}
 }
 
