@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 	"time"
@@ -296,6 +297,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Param email query string true "email работодателя"
 // @Param password query string true "password работодателя"
 // @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если такого пользователя в системе нету."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/auth [get]
 func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
@@ -306,10 +308,17 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 		uPassword := ctx.Query("password")
 
 		data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
-		if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "Такого работодателя не было найдено в системе! Перепроверьте данные и попробуйте снова!",
+				"error":  err.Error(),
+			})
+			return
+		} else if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
-				"info":   "Ошибка в SQL файле",
+				"info":   "Произошла ошибка на стороне сервера. Пишите этому горе разрабу. Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return

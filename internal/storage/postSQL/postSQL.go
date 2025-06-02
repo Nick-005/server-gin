@@ -96,7 +96,7 @@ func GetEmployeeLogin(storage *sqlx.Tx, email, password string) (s.SuccessEmploy
 
 	err = storage.Get(&result, query, args...)
 	if err == sql.ErrNoRows {
-		return result, fmt.Errorf("такого работодателя нету! Проверьте логин и пароль! error: %s", err.Error())
+		return result, err
 	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}

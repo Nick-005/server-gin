@@ -573,9 +573,9 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.GetAllResumeByCandidate(tx, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
-				"info":   "Ошибка в SQL файле",
+				"info":   "Произошла ошибка на стороне сервера. Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return
@@ -608,16 +608,16 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 
 		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusBadRequest, gin.H{
+			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status": "Err",
-				"info":   "Такого пользователя нету! Проверьте логин и пароль",
+				"info":   "Такого пользователя не было найдено в системе! Перепроверьте данные и попробуйте снова!",
 				"error":  err.Error(),
 			})
 			return
 		} else if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
-				"info":   "Ошибка в SQL файле",
+				"info":   "Произошла ошибка на стороне сервера. Ошибка в SQL файле",
 				"error":  err.Error(),
 			})
 			return
@@ -635,7 +635,7 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status": "Err",
-				"info":   "Ошибка при создании токена аутентификации",
+				"info":   "Произошла ошибка на стороне сервера. Ошибка при создании токена аутентификации",
 				"error":  err.Error(),
 			})
 			return
