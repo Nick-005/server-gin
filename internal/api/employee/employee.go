@@ -185,9 +185,9 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":    "OK!",
-			"allStatus": data,
-			"token":     token,
+			"status":        "OK!",
+			"Employer_Info": data,
+			"token":         token,
 		})
 	}
 }
@@ -262,7 +262,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		emp_id, err := strconv.Atoi(ctx.Query("employeeID"))
+		emp_id, err := strconv.Atoi(ctx.Query("employerID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
