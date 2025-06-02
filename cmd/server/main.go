@@ -502,8 +502,8 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Проверка токена
 // @Description Позволяет проверить токен пользователя на актуальность
 // @Tags ADMIN
+// @Security ApiKeyAuth
 // @Produce json
-// @Param Token query string true "токен, который нужно проверить"
 // @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
