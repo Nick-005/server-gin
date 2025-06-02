@@ -50,7 +50,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
-	router.Use(gin.Logger())
+	// router.Use(gin.Logger())
 	router.RedirectTrailingSlash = false
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Укажи точный origin фронтенда
