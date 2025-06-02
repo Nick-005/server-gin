@@ -52,7 +52,7 @@ func main() {
 	router.RedirectTrailingSlash = false
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Укажи точный origin фронтенда
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -177,7 +177,7 @@ func main() {
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Run("0.0.0.0:8089")
+	router.Run(":80")
 }
 
 func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {

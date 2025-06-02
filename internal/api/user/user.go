@@ -304,7 +304,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		ctx.JSON(200, gin.H{
 			"status":         "Ok!",
-			"condidate_Info": data,
+			"candidate_Info": data,
 			"token":          token,
 		})
 	}
@@ -360,7 +360,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 		ctx.JSON(200, gin.H{
 			"status":         "Ok!",
-			"candidate_info": data,
+			"candidate_Info": data,
 		})
 	}
 }
@@ -470,7 +470,7 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 		ctx.JSON(200, gin.H{
 			"status":          "Ok!",
-			"Candidates_Info": data,
+			"candidates_Info": data,
 		})
 	}
 }
@@ -642,7 +642,7 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		ctx.JSON(200, gin.H{
 			"status":         "Ok!",
-			"condidate_Info": data,
+			"candidate_Info": data,
 			"token":          token,
 		})
 	}
