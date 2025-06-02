@@ -502,8 +502,8 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Проверка токена
 // @Description Позволяет проверить токен пользователя на актуальность
 // @Tags ADMIN
-// @Security ApiKeyAuth
 // @Produce json
+// @Param token query string true "токен, который надо проверить"
 // @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -512,26 +512,17 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 func CheckToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		authHeader := ctx.GetHeader("Authorization")
-		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "Authorization заголовок обязательый, а его нету! Переделывай"},
-			)
-			// ctx.Abort()
-			return
-		}
+		// authHeader :=
+		// if !strings.HasPrefix(authHeader, "Bearer ") {
+		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
+		// 		"status": "Err",
+		// 		"error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
+		// 	)
+		// 	// ctx.Abort()
+		// 	return
+		// }
 
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
-			)
-			// ctx.Abort()
-			return
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenString := ctx.Query("token")
 		claim := &s.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
