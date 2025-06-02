@@ -179,7 +179,7 @@ func main() {
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Run(":80")
+	router.Run(":8080")
 }
 
 func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
