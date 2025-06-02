@@ -248,7 +248,7 @@ type ResponseCreateNewVacancy struct {
 }
 
 type VacancyPut struct {
-	ID            int    `json:"id"`
+	ID            int    `json:"ID"`
 	Vac_Name      string `json:"vac_name"`
 	Price         string `json:"price"`
 	Email         string `json:"email"`
