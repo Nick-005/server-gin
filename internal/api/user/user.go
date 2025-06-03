@@ -269,9 +269,9 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -279,9 +279,9 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 		data, err := sqlp.PostNewCandidate(tx, req)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -297,16 +297,16 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка при создании токена аутентификации",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка при создании токена аутентификации",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":         "Ok!",
-			"candidate_Info": data,
-			"token":          token,
+			"Status":        "Ok!",
+			"CandidateInfo": data,
+			"Token":         token,
 		})
 	}
 }
@@ -392,48 +392,48 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "candidate" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
 		err := sqlp.UpdateCandidateInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для обновления данных о соискателе",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для обновления данных о соискателе",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "Данные успешно обновлены!",
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
 		})
 	}
 }
