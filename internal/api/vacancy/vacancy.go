@@ -76,9 +76,8 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 }
 
 // @Summary Получить кол-во вакансий в системе
-// @Description Позволяет получить количество вакансий в системе, доступных для получения. Доступно только пользователям группы ADMIN
+// @Description Позволяет получить количество вакансий в системе, доступных для получения. Доступно всем пользователям
 // @Tags vacancy
-// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Success 200 {array} s.NumberOfVacancies "Возвращает статус 'Ok!' и количество вакансий"
@@ -89,21 +88,6 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
 
 		number, err := sqlp.GetNumberOfVacancies(tx)
 		if err != nil {
