@@ -194,9 +194,9 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 		tx, err := storage.Beginx()
 		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в создании транзакции для БД",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в создании транзакции для БД",
+				"Error":  err.Error(),
 			})
 		}
 
@@ -237,31 +237,31 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"data":   data,
+			"Status": "Ok!",
+			"Data":   data,
 		})
 
 	}
@@ -285,15 +285,15 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
@@ -301,15 +301,15 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 		err := sqlp.PostNewExperience(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
+			"Status": "Ok!",
 		})
 
 	}
@@ -334,15 +334,15 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
@@ -350,14 +350,14 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		err := sqlp.PostNewStatus(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
+			"Status": "Ok!",
 		})
 
 	}
@@ -380,31 +380,31 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status":    "OK!",
-			"AllStatus": data,
+			"Status": "OK!",
+			"Data":   data,
 		})
 	}
 }
@@ -426,15 +426,15 @@ func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
@@ -442,15 +442,15 @@ func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 		err := sqlp.DeleteStatusByName(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "OK!",
-			"info":   "данные успешно удалены!",
+			"Status": "OK!",
+			"Info":   "данные успешно удалены!",
 		})
 	}
 }
@@ -472,15 +472,15 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
@@ -488,15 +488,15 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 		err := sqlp.DeleteExperienceByName(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "OK!",
-			"info":   "данные успешно удалены!",
+			"Status": "OK!",
+			"Info":   "данные успешно удалены!",
 		})
 
 	}
@@ -532,8 +532,8 @@ func CheckToken() gin.HandlerFunc {
 		})
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
+				"Status": "Err",
+				"Error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
 			},
 			)
 			// ctx.Abort()
@@ -542,15 +542,15 @@ func CheckToken() gin.HandlerFunc {
 
 		if !token.Valid {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "невалидный токен! Пожалуйста перепроверьте его",
+				"Status": "Err",
+				"Error":  "невалидный токен! Пожалуйста перепроверьте его",
 			})
 			// ctx.Abort()
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{
-			"status": "Ok!",
-			"info":   "токен валидный, всё ок",
+			"Status": "Ok!",
+			"Info":   "токен валидный, всё ок",
 		})
 	}
 }
@@ -561,8 +561,8 @@ func AuthMiddleWare() gin.HandlerFunc {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "Authorization заголовок обязательый, а его нету! Переделывай"},
+				"Status": "Err",
+				"Error":  "Authorization заголовок обязательый, а его нету! Переделывай"},
 			)
 			ctx.Abort()
 			return
@@ -570,8 +570,8 @@ func AuthMiddleWare() gin.HandlerFunc {
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
+				"Status": "Err",
+				"Error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
 			)
 			ctx.Abort()
 			return
@@ -584,8 +584,8 @@ func AuthMiddleWare() gin.HandlerFunc {
 		})
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
+				"Status": "Err",
+				"Error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
 			},
 			)
 			ctx.Abort()
@@ -594,8 +594,8 @@ func AuthMiddleWare() gin.HandlerFunc {
 
 		if !token.Valid {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"error":  "невалидный токен! Пожалуйста перепроверьте его",
+				"Status": "Err",
+				"Error":  "невалидный токен! Пожалуйста перепроверьте его",
 			})
 			ctx.Abort()
 			return

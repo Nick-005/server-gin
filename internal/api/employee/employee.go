@@ -34,39 +34,39 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		user, err := strconv.Atoi(ctx.Query("empID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID работодателя! проверьте его и попробуйте снова",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить ID работодателя! проверьте его и попробуйте снова",
 			})
 			return
 		}
 		err = sqlp.DeleteEmployee(tx, user)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "Данные успешно удалены!",
+			"Status": "Ok!",
+			"Info":   "Данные успешно удалены!",
 		})
 	}
 }
@@ -89,48 +89,48 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		var req s.RequestEmployee
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
 		err := sqlp.UpdateEmployeeInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для обновления данных резюме пользователя",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для обновления данных резюме пользователя",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "Данные успешно обновлены!",
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
 		})
 	}
 }
@@ -152,18 +152,18 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		var req s.RequestEmployee
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		data, err := sqlp.PostNewEmployer(tx, req)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -179,16 +179,16 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка при создании токена аутентификации",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка при создании токена аутентификации",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":        "OK!",
-			"Employer_Info": data,
-			"token":         token,
+			"Status":       "OK!",
+			"EmployerInfo": data,
+			"Token":        token,
 		})
 	}
 }
@@ -210,31 +210,31 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		data, err := sqlp.GetAllEmployee(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status":        "Ok!",
-			"Info_Employes": data,
+			"Status":       "Ok!",
+			"EmployerInfo": data,
 		})
 
 	}
@@ -258,17 +258,17 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		emp_id, err := strconv.Atoi(ctx.Query("employerID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -276,8 +276,8 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -285,9 +285,9 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		data, err := sqlp.GetEmployeeByID(tx, emp_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -297,8 +297,8 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			fmt.Println("Получены данные не админом и не собственником данных")
 		}
 		ctx.JSON(200, gin.H{
-			"status":   "Ok!",
-			"Employee": data,
+			"Status":       "Ok!",
+			"EmployerInfo": data,
 		})
 
 	}
@@ -325,16 +325,16 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 		data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "Такого работодателя не было найдено в системе! Перепроверьте данные и попробуйте снова!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Такого работодателя не было найдено в системе! Перепроверьте данные и попробуйте снова!",
+				"Error":  err.Error(),
 			})
 			return
 		} else if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Произошла ошибка на стороне сервера. Пишите этому горе разрабу. Ошибка в SQL файле",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Произошла ошибка на стороне сервера. Пишите этому горе разрабу. Ошибка в SQL файле",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -350,16 +350,16 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка при создании токена аутентификации",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка при создании токена аутентификации",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":        "Ok!",
-			"Employee_Info": data,
-			"token":         token,
+			"Status":       "Ok!",
+			"EmployerInfo": data,
+			"Token":        token,
 		})
 
 	}
