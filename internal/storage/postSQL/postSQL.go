@@ -307,7 +307,7 @@ func UpdateVacancyInfo(storage *sqlx.Tx, req s.VacancyPut, uid int) error {
 
 func UpdateCandidateInfo(storage *sqlx.Tx, req s.RequestCandidate, id int) error {
 
-	query, args, err := psql.Update("candidate").
+	query, args, err := psql.Update("candidates").
 		Set("name", req.Name).
 		Set("phone_number", req.PhoneNumber).
 		Set("email", req.Email).
