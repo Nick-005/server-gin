@@ -29,48 +29,48 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
 			})
 			return
 		}
 		var req s.VacancyPut
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
 		err := sqlp.UpdateVacancyInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для обновления данных вакансии",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для обновления данных вакансии",
+				"Error":  err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "Данные успешно обновлены!",
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
 		})
 	}
 }
@@ -92,9 +92,9 @@ func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 		number, err := sqlp.GetNumberOfVacancies(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для получения данных о вакансиях",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
+				"Error":  err.Error(),
 			})
 			return
 		}
@@ -123,33 +123,33 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 		limit, err := strconv.Atoi(ctx.Query("limit"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить кол-во limit! проверьте его и попробуйте снова",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить кол-во limit! проверьте его и попробуйте снова",
 			})
 			return
 		}
 		last_id, err := strconv.Atoi(ctx.Query("last_id"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить кол-во last_id! проверьте его и попробуйте снова",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить кол-во last_id! проверьте его и попробуйте снова",
 			})
 			return
 		}
 		data, err := sqlp.GetVacancyLimit(tx, limit, last_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для получения данных о вакансиях",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":       "Ok!",
-			"vacancy_info": data,
+			"Status":      "Ok!",
+			"VacancyInfo": data,
 		})
 	}
 }
@@ -172,15 +172,15 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав добавлять вакансии!",
+				"Status": "Err",
+				"Info":   "У вас нету прав добавлять вакансии!",
 			})
 			return
 		}
@@ -188,17 +188,17 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		emp_id, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
 		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -206,15 +206,15 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		err = sqlp.DeleteVacancy(tx, emp_id, vac_id, role)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status": "Err",
-				"error":  err.Error(),
-				"info":   "произошла ошибка при попытке удалить резюме",
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "произошла ошибка при попытке удалить резюме",
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status": "Ok!",
-			"info":   "успешно удалили данные!",
+			"Status": "Ok!",
+			"Info":   "успешно удалили данные!",
 		})
 	}
 }
@@ -238,23 +238,23 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
 		if role != "employee" && role != "ADMIN" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"status": "Err",
-				"info":   "У вас нету прав добавлять вакансии!",
+				"Status": "Err",
+				"Info":   "У вас нету прав добавлять вакансии!",
 			})
 			return
 		}
 		emp_id, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -262,27 +262,27 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		var req s.ResponseVac
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status": "Err",
-				"info":   "Error in parse body in request! Please check your body in request!",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		employee, err := sqlp.GetEmployeeByID(tx, emp_id)
 		if err != nil {
 			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для получения данных о работодателе",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о работодателе",
+				"Error":  err.Error(),
 			})
 			return
 		}
 		data, err := sqlp.PostNewVacancy(tx, req, emp_id)
 		if err != nil {
 			ctx.JSON(200, gin.H{
-				"status": "Err",
-				"info":   "Ошибка в SQL файле для получения данных о вакансиях работодателя",
-				"error":  err.Error(),
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о вакансиях работодателя",
+				"Error":  err.Error(),
 			})
 			return
 		}
