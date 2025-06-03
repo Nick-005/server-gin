@@ -287,9 +287,9 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"status":        "Ok!",
-			"vacancy_info":  data,
-			"employee_info": employee,
+			"Status":       "Ok!",
+			"VacancyInfo":  data,
+			"EmployerInfo": employee,
 		})
 	}
 }

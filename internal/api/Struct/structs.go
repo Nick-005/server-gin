@@ -7,19 +7,19 @@ import (
 )
 
 type SuccessEmployer struct {
-	ID               int    `db:"id"`
-	NameOrganization string `db:"name_organization"`
-	PhoneNumber      string `db:"phone_number"`
-	Email            string `db:"email"`
-	INN              string `db:"inn"`
-	Password         string `db:"password"`
+	ID               int    `db:"id" json:"ID"`
+	NameOrganization string `db:"name_organization" json:"NameOrganization"`
+	PhoneNumber      string `db:"phone_number"  json:"PhoneNumber"`
+	Email            string `db:"email" json:"Email"`
+	INN              string `db:"inn" json:"INN"`
+	Password         string `db:"password" json:"Password"`
 	Status           struct {
-		ID        int       `db:"id"`
-		Name      string    `db:"name"`
-		CreatedAt time.Time `db:"created_at"`
-	} `db:"status"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+		ID        int       `db:"id" json:"ID"`
+		Name      string    `db:"name" json:"Name"`
+		CreatedAt time.Time `db:"created_at" json:"CreatedAt"`
+	} `db:"status" json:"Status"`
+	CreatedAt time.Time `db:"created_at" json:"CreatedAt"`
+	UpdatedAt time.Time `db:"updated_at" json:"UpdatedAt"`
 }
 
 type Vacancy_Body struct {
@@ -156,8 +156,8 @@ type SuccessResponse struct {
 }
 
 type NumberOfVacancies struct {
-	Status   Ok  `json:"Status"`
-	Quantity int `json:"Quantity"`
+	Status   string `json:"Status"`
+	Quantity int    `json:"Quantity"`
 }
 
 type ResponseByVac struct {
@@ -192,17 +192,17 @@ type VacancyData_Limit struct {
 }
 
 type VacancyData struct {
-	ID          int       `db:"id"`
-	Name        string    `db:"name"`
-	Price       string    `db:"price"`
-	Email       string    `db:"email"`
-	PhoneNumber string    `db:"phone_number"`
-	Location    string    `db:"location"`
-	Experience  GetStatus `db:"experience"`
-	AboutWork   string    `db:"about_work"`
-	IsVisible   bool      `db:"is_visible"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
+	ID          int       `db:"id" json:"ID"`
+	Name        string    `db:"name" json:"Name"`
+	Price       string    `db:"price" json:"Price"`
+	Email       string    `db:"email" json:"Email"`
+	PhoneNumber string    `db:"phone_number" json:"PhoneNumber"`
+	Location    string    `db:"location" json:"Location"`
+	Experience  GetStatus `db:"experience" json:"Experience"`
+	AboutWork   string    `db:"about_work" json:"AboutWork"`
+	IsVisible   bool      `db:"is_visible" json:"IsVisible"`
+	CreatedAt   time.Time `db:"created_at" json:"CreatedAt"`
+	UpdatedAt   time.Time `db:"updated_at" json:"UpdatedAt"`
 }
 
 type ResponseAllResponsesOnVacancy struct {
@@ -241,59 +241,60 @@ type ResponseCreateCandiate struct {
 }
 
 type ResponseCreateEmployee struct {
-	Status        Ok
-	Employer_Info SuccessEmployer
-	Token         string
+	Status       Ok
+	EmployerInfo SuccessEmployer
+	Token        string
 }
 
 type ResponseCreateNewVacancy struct {
-	Status   Ok
-	Vacancy  VacancyData
-	Employer SuccessEmployer
+	Status   string          `json:"Status"`
+	Vacancy  VacancyData     `json:"VacancyInfo"`
+	Employer SuccessEmployer `json:"EmployerInfo"`
 }
 
 type VacancyPut struct {
-	ID            int    `json:"ID"`
-	Vac_Name      string `json:"vac_name"`
-	Price         string `json:"price"`
-	Email         string `json:"email"`
-	PhoneNumber   string `json:"phoneNumber"`
-	Location      string `json:"location"`
-	Experience_Id int    `json:"exp_id"`
-	About         string `json:"about"`
-	IsVisible     bool   `json:"is_visible"`
+	ID           int    `json:"ID"`
+	VacancyName  string `json:"VacancyName"`
+	Price        string `json:"Price"`
+	Email        string `json:"Email"`
+	PhoneNumber  string `json:"PhoneNumber"`
+	Location     string `json:"Location"`
+	ExperienceId int    `json:"ExperienceId"`
+	About        string `json:"About"`
+	IsVisible    bool   `json:"IsVisible"`
 }
 
 type ResponseVac struct {
-	Vac_Name      string `json:"vac_name"`
-	Price         string `json:"price"`
-	Email         string `json:"email"`
-	PhoneNumber   string `json:"phoneNumber"`
-	Location      string `json:"location"`
-	Experience_Id int    `json:"exp_id"`
-	About         string `json:"about"`
-	IsVisible     bool   `json:"is_visible"`
+	VacancyName  string `json:"VacancyName"`
+	Price        string `json:"Price"`
+	Email        string `json:"Email"`
+	PhoneNumber  string `json:"PhoneNumber"`
+	Location     string `json:"Location"`
+	ExperienceId int    `json:"ExperienceId"`
+	About        string `json:"About"`
+	IsVisible    bool   `json:"IsVisible"`
 }
 
 type ResponseSearchVac struct {
-	ID         int    `json:"ID"`
-	Emp_ID     int    `json:"emp_id"`
-	Vac_Name   string `json:"vac_name"`
-	Price      int    `json:"price"`
-	Location   string `json:"location"`
-	Experience string `json:"exp"`
+	ID          int    `json:"ID"`
+	EmployerID  int    `json:"EmployerID"`
+	VacancyName string `json:"VacancyName"`
+	Price       int    `json:"Price"`
+	Location    string `json:"Location"`
+	Experience  string `json:"Experience"`
 }
 
 type StatusInfo struct {
-	Status string
-	Info   string
+	Status string `json:"Status"`
+	Info   string `json:"Info"`
 }
 
 type GetStatus struct {
-	ID        int       `db:"id"`
-	Name      string    `db:"name"`
-	CreatedAt time.Time `db:"created_at"`
+	ID        int       `db:"id" json:"ID"`
+	Name      string    `db:"name" json:"Name"`
+	CreatedAt time.Time `db:"created_at"  json:"CreatedAt"`
 }
+
 type ResumeResult_slice struct {
 	Id          int       `db:"id"`
 	Experience  GetStatus `db:"experience"`

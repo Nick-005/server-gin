@@ -250,12 +250,12 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 			"is_visible",
 		).Values(
 		emp_id,
-		req.Vac_Name,
+		req.VacancyName,
 		req.Price,
 		req.Email,
 		req.PhoneNumber,
 		req.Location,
-		req.Experience_Id,
+		req.ExperienceId,
 		req.About,
 		req.IsVisible,
 	).Suffix("RETURNING id").
@@ -280,12 +280,12 @@ func PostNewVacancy(storage *sqlx.Tx, req s.ResponseVac, emp_id int) (s.VacancyD
 func UpdateVacancyInfo(storage *sqlx.Tx, req s.VacancyPut, uid int) error {
 
 	query, args, err := psql.Update("vacancy").
-		Set("name", req.Vac_Name).
+		Set("name", req.VacancyName).
 		Set("price", req.Price).
 		Set("email", req.Email).
 		Set("phone_number", req.PhoneNumber).
 		Set("location", req.Location).
-		Set("experience_id", req.Experience_Id).
+		Set("experience_id", req.ExperienceId).
 		Set("about_work", req.About).
 		Set("is_visible", req.IsVisible).
 		Where(sq.Eq{"id": req.ID, "emp_id": uid}).
