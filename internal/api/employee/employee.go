@@ -267,7 +267,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
 				"error":  err.Error(),
-				"info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"info":   "ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
 			})
 			return
 		}
