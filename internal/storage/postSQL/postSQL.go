@@ -146,6 +146,22 @@ func GetEmployeeByEmail(storage *sqlx.Tx, email string) (s.SuccessEmployer, erro
 	return result, nil
 }
 
+func GetNumberOfVacancies(storage *sqlx.Tx) (int, error) {
+	var number int = -1
+
+	query, args, err := psql.Select("count(id)").From("vacancy").ToSql()
+
+	if err != nil {
+		return number, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+	err = storage.Get(&number, query, args...)
+	if err != nil {
+		return number, fmt.Errorf("ошибка в маппинге данных вакансии ! error: %s", err.Error())
+	}
+
+	return number, nil
+}
+
 func GetVacancyByID(storage *sqlx.Tx, id int) (s.VacancyData, error) {
 	var result s.VacancyData
 
@@ -206,7 +222,7 @@ func GetVacancyLimit(storage *sqlx.Tx, limit, last_id int) ([]s.VacancyData_Limi
 	).From("vacancy v").
 		Join("experience e ON v.experience_id = e.id").
 		Join("employer em ON v.emp_id = em.id").
-		Join("status s ON em.status_id = s.id").
+		Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
 		Where(sq.Gt{"v.id": last_id}).Limit(uint64(limit)).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())

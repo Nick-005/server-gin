@@ -75,6 +75,53 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Получить кол-во вакансий в системе
+// @Description Позволяет получить количество вакансий в системе, доступных для получения. Доступно только пользователям группы ADMIN
+// @Tags vacancy
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {array} s.NumberOfVacancies "Возвращает статус 'Ok!' и количество вакансий"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/num [get]
+func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"status": "Err",
+				"info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+
+		number, err := sqlp.GetNumberOfVacancies(tx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Err",
+				"info":   "Ошибка в SQL файле для получения данных о вакансиях",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"Status":   "Ok!",
+			"Quantity": number,
+		})
+	}
+}
+
 // @Summary Получение списка вакансий по 'странично'
 // @Description Позволяет получить всю основную информацию про все вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. LastID - после какого ID будет идти отсчёт limit.
 // @Tags vacancy

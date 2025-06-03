@@ -155,6 +155,11 @@ type SuccessResponse struct {
 	} `db:"responses"`
 }
 
+type NumberOfVacancies struct {
+	Status   Ok  `json:"Status"`
+	Quantity int `json:"Quantity"`
+}
+
 type ResponseByVac struct {
 	ID      int                 `db:"id"`
 	Vacancy VacanciesToResponse `db:"vacancy"`

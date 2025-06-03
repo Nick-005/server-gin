@@ -168,6 +168,9 @@ func main() {
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
+		// * ----------------------- Количество вакансий в системе -----------------------
+		apiV1.GET("/vac/num", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetVacanciesNumbers(storage))
+
 		// * ----------------------- Все отклики на вакансию -----------------------
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.GetAllResponseByVacancy(storage))
 
