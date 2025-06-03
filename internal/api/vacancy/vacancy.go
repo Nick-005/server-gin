@@ -341,9 +341,9 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"Status":      "Ok!",
-			"VacancyInfo": data,
-			"EmployerID":  emp_id,
+			"Status":        "Ok!",
+			"VacanciesInfo": data,
+			"EmployerID":    emp_id,
 		})
 
 	}

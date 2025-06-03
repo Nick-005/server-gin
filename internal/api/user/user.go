@@ -421,6 +421,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
+
 		err := sqlp.UpdateCandidateInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
