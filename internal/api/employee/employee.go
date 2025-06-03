@@ -2,6 +2,7 @@ package employee
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -254,7 +255,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		_, ok := get.GetUserRoleFromContext(ctx)
+		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
@@ -271,6 +272,16 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
+
+		uid, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status": "Err",
+				"info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+
 		data, err := sqlp.GetEmployeeByID(tx, emp_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -280,7 +291,11 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
+		if emp_id == uid || role == "ADMIN" {
+			fmt.Println("Работодатель получил свои данные или админом")
+		} else {
+			fmt.Println("Получены данные не админом и не собственником данных")
+		}
 		ctx.JSON(200, gin.H{
 			"status":   "Ok!",
 			"Employee": data,

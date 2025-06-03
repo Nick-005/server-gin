@@ -2,6 +2,7 @@ package candid
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -316,6 +317,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
+// @Param candidateID query int true "ID соискателя"
 // @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и данные пользователя"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -332,13 +334,15 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if role != "candidate" && role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
+		candidId, err := strconv.Atoi(ctx.Query("candidateID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status": "Err",
-				"info":   "У вас нету прав к этому функционалу!",
+				"info":   "ошибка в попытке получить ID пользователя из параметра запроса. Перепроверьте данные и попробуйте снова!",
 			})
 			return
 		}
+
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -348,7 +352,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		data, err := sqlp.GetCandidateById(tx, uid)
+		data, err := sqlp.GetCandidateById(tx, candidId)
 		if err != nil {
 			ctx.JSON(200, gin.H{
 				"status": "Err",
@@ -357,11 +361,16 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
+		if candidId == uid || role == "ADMIN" {
+			fmt.Println("Соискатель получил свои данные или админом")
+		} else {
+			fmt.Println("Получены данные не админом и не собственником данных")
+		}
 		ctx.JSON(200, gin.H{
 			"status":         "Ok!",
 			"candidate_Info": data,
 		})
+
 	}
 }
 
