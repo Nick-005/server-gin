@@ -535,6 +535,24 @@ func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	return res_id, nil
 }
 
+func PatchVisibilityVacancy(storage *sqlx.Tx, vacID, empID int, visible bool) error {
+
+	query, args, err := psql.Update("vacancy").Set("is_visible", visible).Where(sq.Eq{"id": vacID, "emp_id": empID}).ToSql()
+	if err != nil {
+		return err
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как обновляемой вакансии не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+	return nil
+}
+
 func PatchResponse(storage *sqlx.Tx, req s.ResponsePatch) error {
 
 	query, args, err := psql.Update("response").

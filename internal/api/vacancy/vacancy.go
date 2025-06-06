@@ -12,6 +12,80 @@ import (
 	sqlp "main.go/internal/storage/postSQL"
 )
 
+// @Summary Изменить видимость вакансии
+// @Description Позволяет изменить видимость вакансии. Доступно только пользователям группы employee и ADMIN
+// @Tags vacancy
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param vacancyID query int true "ID вакансии, которую работодатель хочет скрыть или вернуть на всеобщее обозрение"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!'"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/visible [patch]
+func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "employee" && role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		emp_id, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+		vacID, err := strconv.Atoi(ctx.Query("vacancyID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+			})
+			return
+		}
+		data, err := sqlp.GetVacancyInfoByID(tx, vacID)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Такой вакансии нету в системе! Перепроверьте данные и попробуйте снова",
+				"Error":  err.Error(),
+			})
+			return
+		}
+
+		err = sqlp.PatchVisibilityVacancy(tx, vacID, emp_id, !data.IsVisible)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для обновления данных вакансии",
+				"Error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
+		})
+	}
+}
+
 // @Summary Обновить информцию о вакансии
 // @Description Позволяет обновить всю основную информацию о вакансии. Доступно только пользователям группы employee и ADMIN
 // @Tags vacancy

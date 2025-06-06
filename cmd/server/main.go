@@ -160,6 +160,9 @@ func main() {
 		// ? ----------------------- Обновить вакансии -----------------------
 		apiV1.PUT("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.PutVacancy(storage))
 
+		// ? ----------------------- Обновить видимость вакансии -----------------------
+		apiV1.PATCH("/vac/visible", AuthMiddleWare(), MakeTransaction(storage), vacancy.PatchVisibleVacancy(storage))
+
 		// ! ----------------------- Удаление вакансии -----------------------
 		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
 
