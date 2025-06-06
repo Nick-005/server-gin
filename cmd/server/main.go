@@ -67,7 +67,7 @@ func main() {
 
 		// & Статус
 		// * ----------------------- Все записи -----------------------
-		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
+		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
 
 		// ^ ----------------------- Добавить запись -----------------------
 		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
@@ -93,7 +93,7 @@ func main() {
 
 		// & Опыт
 		// * ----------------------- Все записи -----------------------
-		apiV1.GET("/exp", AuthMiddleWare(), MakeTransaction(storage), GetAllExperience(storage))
+		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
 
 		// ^ ----------------------- Добавить -----------------------
 		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
@@ -194,8 +194,7 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 }
 
 // @Summary Получение списка опыта
-// @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.
-// @Security ApiKeyAuth
+// @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.
 // @Tags ADMIN
 // @Produce json
 // @Success 200 {array} s.GetStatus "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
@@ -205,21 +204,21 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"Status": "Err",
-				"Info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
+		// role, ok := get.GetUserRoleFromContext(ctx)
+		// if !ok {
+		// 	ctx.JSON(http.StatusBadRequest, gin.H{
+		// 		"Status": "Err",
+		// 		"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+		// 	})
+		// 	return
+		// }
+		// if role != "ADMIN" {
+		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
+		// 		"Status": "Err",
+		// 		"Info":   "У вас нету прав к этому функционалу!",
+		// 	})
+		// 	return
+		// }
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -335,8 +334,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 }
 
 // @Summary Получение списка статусов
-// @Description Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.
-// @Security ApiKeyAuth
+// @Description Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ все.
 // @Tags ADMIN
 // @Accept json
 // @Produce json
@@ -348,21 +346,21 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
-		if role != "ADMIN" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"Status": "Err",
-				"Info":   "У вас нету прав к этому функционалу!",
-			})
-			return
-		}
+		// role, ok := get.GetUserRoleFromContext(ctx)
+		// if !ok {
+		// 	ctx.JSON(http.StatusBadRequest, gin.H{
+		// 		"Status": "Err",
+		// 		"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+		// 	})
+		// 	return
+		// }
+		// if role != "ADMIN" {
+		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
+		// 		"Status": "Err",
+		// 		"Info":   "У вас нету прав к этому функционалу!",
+		// 	})
+		// 	return
+		// }
 		data, err := sqlp.GetAllStatus(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
