@@ -263,6 +263,11 @@ type ResponseCreateNewVacancy struct {
 	Employer SuccessEmployer `json:"EmployerInfo"`
 }
 
+type ResponseInfoByVacancy struct {
+	VacancyInfo VacancyData `json:"VacancyInfo"`
+	Status      string      `json:"Status"`
+}
+
 type VacancyPut struct {
 	ID           int    `json:"ID"`
 	VacancyName  string `json:"VacancyName"`

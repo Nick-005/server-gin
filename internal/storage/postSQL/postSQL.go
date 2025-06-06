@@ -178,7 +178,9 @@ func GetVacancyByID(storage *sqlx.Tx, id int) (s.VacancyData, error) {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
 	err = storage.Get(&result, query, args...)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return result, err
+	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных вакансии ! error: %s", err.Error())
 	}
 	return result, nil
