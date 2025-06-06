@@ -166,7 +166,7 @@ func GetVacancyByID(storage *sqlx.Tx, id int) (s.VacancyData, error) {
 	var result s.VacancyData
 
 	query, args, err := psql.Select(
-		"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
+		"v.id", "v.name", "v.email", "v.price", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
 		"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
 	).
 		From("vacancy v").
@@ -389,6 +389,10 @@ func GetResponseOnVacancy(storage *sqlx.Tx, uid, vac_id int) (s.ResponseOnVacanc
 	}
 	result.IsResponsed = true
 	return result, nil
+}
+
+func AuthorizationMethodForUsers(storage *sqlx.Tx, email, password string) {
+
 }
 
 func CheckEmailIsValid(storage *sqlx.Tx, email string) (bool, error) {

@@ -193,6 +193,13 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// func AuthorizateUser(storage *sqlx.DB) gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+// 	}
+// }
+
 // @Summary Получение списка опыта
 // @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.
 // @Tags ADMIN
