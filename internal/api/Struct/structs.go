@@ -22,6 +22,15 @@ type SuccessEmployer struct {
 	UpdatedAt time.Time `db:"updated_at" json:"UpdatedAt"`
 }
 
+type ResponseOnVacancy struct {
+	IsResponsed bool `json:"IsResponsed"`
+	Status      struct {
+		ID        int       `db:"id" json:"ID"`
+		Name      string    `db:"name" json:"Name"`
+		CreatedAt time.Time `db:"created_at" json:"CreatedAt"`
+	} `db:"status" json:"Status"`
+}
+
 type Vacancy_Body struct {
 	Emp_ID      int    `json:"emp_id"`
 	Vac_Name    string `json:"vac_name"`
@@ -226,7 +235,7 @@ type ResponseEmployeeInfo struct {
 type ResponseCreateNewResponse struct {
 	Response_id     int         `json:"ID"`
 	Vacancy         VacancyData `json:"VacancyInfo"`
-	Response_status GetStatus   `json:"StatusInfo"`
+	Response_status GetStatus   `json:"ResponseStatus"`
 	Status          string      `json:"Status"`
 }
 

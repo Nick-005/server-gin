@@ -229,7 +229,7 @@ func GetVacancyLimit(storage *sqlx.Tx, limit, last_id int) ([]s.VacancyData_Limi
 	}
 	err = storage.Select(&result, query, args...)
 	if err != nil {
-		return result, fmt.Errorf("ошибка в маппинге данных резюме ! error: %s", err.Error())
+		return result, fmt.Errorf("ошибка в маппинге данных вакансий! error: %s", err.Error())
 	}
 	return result, nil
 }
@@ -360,6 +360,34 @@ func GetResponseByCandidate(storage *sqlx.Tx, uid int) ([]s.ResponseByVac, error
 	if err != nil {
 		return result, fmt.Errorf("ошибка при выполнении скрипта на получение данных. error: %s", err.Error())
 	}
+	return result, nil
+}
+
+func GetResponseOnVacancy(storage *sqlx.Tx, uid, vac_id int) (s.ResponseOnVacancy, error) {
+	var result s.ResponseOnVacancy
+	result.IsResponsed = false
+	query, args, err := psql.Select(
+		"s.id as \"status.id\"", "s.name as \"status.name\"", "s.created_at as \"status.created_at\"",
+		// "c.id as \"candidate.id\"", "c.name as \"candidate.name\"", "c.phone_number as \"candidate.phone_number\"", "c.email as \"candidate.email\"",
+		// "c.password as \"candidate.password\"", "c.created_at as \"candidate.created_at\"", "c.updated_at as \"candidate.updated_at\"",
+		// "s2.id as \"candidate.status.id\"", "s2.name as \"candidate.status.name\"", "s2.created_at as \"candidate.status.created_at\"",
+
+	).
+		From("response r").
+		Join("status s ON r.status_id = s.id").
+		Where(sq.Eq{"r.candidates_id": uid, "r.vacancy_id": vac_id}).
+		ToSql()
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
+	}
+	err = storage.Get(&result, query, args...)
+	if err == sql.ErrNoRows {
+		result.IsResponsed = false
+		return result, nil
+	} else if err != nil {
+		return result, fmt.Errorf("ошибка при выполнении скрипта на получения данных. error: %s", err.Error())
+	}
+	result.IsResponsed = true
 	return result, nil
 }
 

@@ -36,41 +36,20 @@ func main() {
 	connstring := fmt.Sprintf(
 		"host=%s port=%d dbname=%s user=%s password=%s target_session_attrs=read-write",
 		host, port, dbname, user, password)
-	fmt.Println(connstring)
-	// cfg := config.MustLoad()
 	storage, err := sqlx.Connect("pgx", connstring)
 	if err != nil {
 		log.Fatalln("Произошла ошибка в инициализации бд: ", err.Error())
 	}
 	defer storage.Close()
 
-	// Только для деплоя
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
-	// router.Use(gin.Logger())
 	router.RedirectTrailingSlash = false
-	// router.Use(cors.New(cors.Config{
-	// 	AllowOrigins: []string{
-	// 		"http://localhost:5173",      // Для локальной разработки
-	// 		"https://isp-workall.online", // Production-адрес фронтенда
-	// 	}, // Укажи точный origin фронтенда
-	// 	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-	// 	AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-	// 	ExposeHeaders:    []string{"Content-Length"},
-	// 	AllowCredentials: true,
-	// 	MaxAge:           12 * time.Hour,
-	// }))
 	docs.SwaggerInfo.BasePath = "/api/v1"
-
 	apiV1 := router.Group("/api/v1")
 	{
 		// ~ АДМИН ФУНКЦИОНАЛ
-
-		// & Статус - 	получение и добавление
-
-		// & Опыт - 	получение и добавление
-
 		// ! Удаление соискателей
 		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
 
@@ -87,7 +66,6 @@ func main() {
 		apiV1.GET("/adm/token", CheckToken())
 
 		// & Статус
-
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", AuthMiddleWare(), MakeTransaction(storage), GetAllStatus(storage))
 
@@ -95,7 +73,6 @@ func main() {
 		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
 
 		// & Работодатель
-
 		// * ----------------------- Получить данные работодателя -----------------------
 		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetEmployeeInfo(storage))
 
@@ -115,7 +92,6 @@ func main() {
 		apiV1.PATCH("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.PatchResponseStatus(storage))
 
 		// & Опыт
-
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/exp", AuthMiddleWare(), MakeTransaction(storage), GetAllExperience(storage))
 
@@ -123,7 +99,6 @@ func main() {
 		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
 
 		// & Соискатели
-
 		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
 
@@ -171,6 +146,8 @@ func main() {
 		// * ----------------------- Количество вакансий в системе -----------------------
 		apiV1.GET("/vac/num", MakeTransaction(storage), vacancy.GetVacanciesNumbers(storage))
 
+		apiV1.GET("/vac/user", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllResponseByVacancy(storage))
+
 		// * ----------------------- Все отклики на вакансию -----------------------
 		apiV1.GET("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.GetAllResponseByVacancy(storage))
 
@@ -210,12 +187,6 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 
 		if ctx.Writer.Status() < http.StatusBadRequest {
 			if err := tx.Commit(); err != nil {
-				// log.Printf("произошла ошибка при попытке закоммитить изменения. error: %v", err)
-				// ctx.JSON(http.StatusInternalServerError, gin.H{
-				// 	"status": "Err",
-				// 	"info":   "Ошибка при попытке закоммитить изменения в БД. Обратитесь к backend разрабу!",
-				// 	"error":  err.Error(),
-				// })
 				return
 			}
 		}
@@ -515,16 +486,6 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 func CheckToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		// authHeader :=
-		// if !strings.HasPrefix(authHeader, "Bearer ") {
-		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
-		// 		"status": "Err",
-		// 		"error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
-		// 	)
-		// 	// ctx.Abort()
-		// 	return
-		// }
-
 		tokenString := ctx.Query("token")
 		claim := &s.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
@@ -536,7 +497,6 @@ func CheckToken() gin.HandlerFunc {
 				"Error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
 			},
 			)
-			// ctx.Abort()
 			return
 		}
 
@@ -545,7 +505,6 @@ func CheckToken() gin.HandlerFunc {
 				"Status": "Err",
 				"Error":  "невалидный токен! Пожалуйста перепроверьте его",
 			})
-			// ctx.Abort()
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{

@@ -294,6 +294,72 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Проверка отклика
+// @Description Позволяет узнать, откликнулся ли ранее пользователь на эту вакансию. Если да, то какой у неё статус.
+// @Security ApiKeyAuth
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param vacancyID query int true "ID вакансии, на которую надо посмотреть отклик"
+// @Success 200 {array} s.ResponseOnVacancy "Возвращает откликнулся ли уже пользователь на эту вакансию и если это правда, то возвращает статус отклика"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/user [get]
+func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role == "employee" || role == "ADMIN" {
+			ctx.JSON(200, gin.H{
+				"Status": "Ok!",
+				"Info":   "Вы не можете откликаться на вакансии",
+			})
+			return
+		}
+		uid, ok := get.GetUserIDFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			})
+			return
+		}
+		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Error":  err.Error(),
+				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+			})
+			return
+		}
+		data, err := sqlp.GetResponseOnVacancy(tx, uid, vac_id)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле откликов",
+				"Error":  err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"IsResponsed":    data.IsResponsed,
+			"StatusResponse": data.Status,
+			"Status":         "Ok!",
+		})
+
+	}
+}
+
 // @Summary Все вакансии одного работодателя
 // @Description Позволяет получить массив всех вакансий работодателя. В результате клиент получит ID работодателя и массив всех его вакансий.
 // @Security ApiKeyAuth
