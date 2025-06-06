@@ -332,6 +332,11 @@ type InfoCandidate struct {
 	UpdatedAt time.Time `db:"updated_at" json:"UpdatedAt"`
 }
 
+type GetAllFromCandidates struct {
+	Candidate_Info InfoCandidate `json:"CandidateInfo"`
+	Status         string        `json:"Status"`
+}
+
 type SuccessResume struct {
 	Id            int       `db:"id" json:"ID"`
 	Candidate_id  int       `db:"candidate_id" json:"CandidateID"`

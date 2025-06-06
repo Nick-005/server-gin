@@ -318,7 +318,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param candidateID query int true "ID соискателя"
-// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и данные пользователя"
+// @Success 200 {array} s.GetAllFromCandidates "Возвращает статус 'Ok!' и данные пользователя"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
