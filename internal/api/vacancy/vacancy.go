@@ -295,8 +295,8 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary Проверка отклика
-// @Description Позволяет узнать, откликнулся ли ранее пользователь на эту вакансию. Если да, то какой у неё статус.
+// @Summary Данные вакансии по ID
+// @Description Позволяет получить все данные вакансии по её ID. Если да, то какой у неё статус.
 // @Tags vacancy
 // @Accept json
 // @Produce json
@@ -319,7 +319,7 @@ func GetVacancyInfoByID(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		data, err := sqlp.GetVacancyByID(tx, vac_id)
+		data, err := sqlp.GetVacancyInfoByID(tx, vac_id)
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",

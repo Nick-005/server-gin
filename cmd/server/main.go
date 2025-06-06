@@ -143,6 +143,7 @@ func main() {
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
+		// * ----------------------- Получить информацию о вакансии -----------------------
 		apiV1.GET("/vac/info", MakeTransaction(storage), vacancy.GetVacancyInfoByID(storage))
 
 		// * ----------------------- Количество вакансий в системе -----------------------

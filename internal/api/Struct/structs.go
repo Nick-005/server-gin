@@ -264,8 +264,8 @@ type ResponseCreateNewVacancy struct {
 }
 
 type ResponseInfoByVacancy struct {
-	VacancyInfo VacancyData `json:"VacancyInfo"`
-	Status      string      `json:"Status"`
+	VacancyInfo VacancyData_Limit `json:"VacancyInfo"`
+	Status      string            `json:"Status"`
 }
 
 type VacancyPut struct {
