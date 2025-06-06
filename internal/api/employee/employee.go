@@ -158,6 +158,15 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
+
+		ok, err := sqlp.CheckEmailIsValid(tx, req.Email)
+		if err != nil || !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Error":  err.Error(),
+			})
+			return
+		}
 		data, err := sqlp.PostNewEmployer(tx, req)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

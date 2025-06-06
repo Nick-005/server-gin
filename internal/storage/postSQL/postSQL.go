@@ -391,6 +391,39 @@ func GetResponseOnVacancy(storage *sqlx.Tx, uid, vac_id int) (s.ResponseOnVacanc
 	return result, nil
 }
 
+func CheckEmailIsValid(storage *sqlx.Tx, email string) (bool, error) {
+	var amnt_emp int = -1
+	var amnt_cnd int = -1
+	query, args, err := psql.Select("count(id)").From("employer").ToSql()
+
+	if err != nil {
+		return false, err
+	}
+
+	err = storage.Get(&amnt_emp, query, args...)
+	if err == sql.ErrNoRows {
+		amnt_emp = 0
+	} else if err != nil {
+		return false, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
+	}
+
+	query, args, err = psql.Select("count(id)").From("candidates").ToSql()
+	if err != nil {
+		return false, err
+	}
+	err = storage.Get(&amnt_cnd, query, args...)
+	if err == sql.ErrNoRows {
+		amnt_cnd = 0
+	} else if err != nil {
+		return false, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
+	}
+
+	if amnt_cnd+amnt_emp != 0 {
+		return false, fmt.Errorf("такой email уже используется! Выберите другой и попробуйте снова")
+	}
+	return true, nil
+}
+
 func GetResponseByVacancy(storage *sqlx.Tx, vac_id int) (s.SuccessResponse, error) {
 	var result s.SuccessResponse
 
