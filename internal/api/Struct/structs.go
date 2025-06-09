@@ -6,6 +6,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type SuccessAllEmployers struct {
+	Status        string            `json:"Status"`
+	EmployersInfo []SuccessEmployer `json:"EmployersInfo"`
+}
+
 type SuccessEmployer struct {
 	ID               int    `db:"id" json:"ID"`
 	NameOrganization string `db:"name_organization" json:"NameOrganization"`

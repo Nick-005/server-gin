@@ -150,10 +150,10 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param HelpData body s.ResponsePatch true "ID отклика, статус которого нужно обновить, а также ID статуса, на который нужно поменять"
-// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /vac/response [patch]
 func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -215,9 +215,9 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Param VacancyID query int true "ID вакансии, на которую нужно сделать отклик!"
 // @Success 200 {array} s.ResponseCreateNewResponse "Возвращает статус 'Ok!, ID отклика, данные вакансии, на которую откликнулись и статус отклика"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /vac/response [post]
 func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

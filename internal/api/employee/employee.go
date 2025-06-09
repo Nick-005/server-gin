@@ -23,10 +23,10 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Tags ADMIN
 // @Produce json
 // @Param EmployerID query int true "ID работодателя, которого нужно удалить"
-// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/emp [delete]
 func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -78,10 +78,10 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param EmployerInfo body s.RequestEmployer true "Данные о работодателе, на которые нужно обновить в системе"
-// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp [put]
 func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -110,7 +110,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if req.Email == "" || req.NameOrganization == "" || req.Password == "" || req.PhoneNumber == "" || req.Status_id <= 0 {
+		if req.Email == "" || req.NameOrganization == "" || req.PhoneNumber == "" || req.Status_id <= 0 {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
@@ -157,9 +157,9 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param EmployerInfo body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
-// @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp [post]
 func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -224,10 +224,10 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Success 200 {array} s.SuccessEmployer "Возвращает статус 'Ok!' и массив всех данных о работодателях"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.SuccessAllEmployers "Возвращает статус 'Ok!' и массив всех данных о работодателях"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/all [get]
 func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -258,8 +258,8 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		}
 
 		ctx.JSON(200, gin.H{
-			"Status":       "Ok!",
-			"EmployerInfo": data,
+			"Status":        "Ok!",
+			"EmployersInfo": data,
 		})
 
 	}
@@ -272,10 +272,10 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param EmployerID query int true "ID работодателя"
-// @Success 200 {array} s.ResponseEmployerInfo "Возвращает статус 'Ok!' и данные о работодателе"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.ResponseEmployerInfo "Возвращает статус 'Ok!' и данные о работодателе"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp [get]
 func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -336,9 +336,9 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Param Email query string true "email работодателя"
 // @Param Password query string true "password работодателя"
-// @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если такого пользователя в системе нету."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если такого пользователя в системе нету."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/auth [get]
 func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

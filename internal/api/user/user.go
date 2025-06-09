@@ -442,7 +442,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if req.Email == "" || req.Name == "" || req.Password == "" || req.PhoneNumber == "" || req.Status_id == 0 {
+		if req.Email == "" || req.Name == "" || req.PhoneNumber == "" || req.Status_id == 0 {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
@@ -614,9 +614,9 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Param CandidateID query int true "ID соискателя для получения его всех резюмешек"
 // @Success 200 {object} s.ResumeResult "Возвращает статус 'Ok!' и массив всех данных резюме соискателя"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/resume [get]
 func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -663,9 +663,9 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param Password query string true "новый пароль пользователя"
-// @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/recover [get]
 func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -724,8 +724,8 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 // @Param Email query string true "email пользователя"
 // @Param Password query string true "password пользователя"
 // @Success 200 {object} s.ResponseAuthorization "Возвращает статус 'Ok!', данные пользователя и его новый токен. Если он авторизовался как соискатель, то будут возвращены его данные. А если как работодатель, то тоже только его"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /auth [get]
 func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
