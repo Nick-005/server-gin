@@ -164,6 +164,14 @@ func PutCandidateResume(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
+		if req.Experience <= 0 || req.Description == "" || req.Resume_id <= 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
+			})
+			return
+		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -174,7 +182,7 @@ func PutCandidateResume(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		err := sqlp.UpdateCandidateResume(tx, req, uid)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
 				"Info":   "Ошибка в SQL файле для обновления данных резюме пользователя",
 				"Error":  err.Error(),
@@ -272,6 +280,14 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 				"Status": "Err",
 				"Info":   "Error in parse body in request! Please check your body in request!",
 				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Email == "" || req.Name == "" || req.Password == "" || req.PhoneNumber == "" || req.Status_id <= 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("Одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
 			})
 			return
 		}
@@ -424,9 +440,51 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
-				"Error":  fmt.Errorf(""),
+				"Error":  fmt.Errorf("одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
 			})
 			return
+		}
+		uEmail, ok := get.GetUserEmailFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if uEmail != req.Email {
+			ok, err := sqlp.CheckEmailIsValid(tx, req.Email)
+			if err != nil || !ok {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"Status": "Err",
+					"Error":  err.Error(),
+				})
+				return
+			}
+			// uid, ok := get.GetUserIDFromContext(ctx)
+			// if !ok {
+			// 	ctx.JSON(http.StatusBadRequest, gin.H{
+			// 		"Status": "Err",
+			// 		"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+			// 	})
+			// 	return
+			// }
+
+			// err = sqlp.UpdateCandidateInfo(tx, req, uid)
+			// if err != nil {
+			// 	ctx.JSON(http.StatusInternalServerError, gin.H{
+			// 		"Status": "Err",
+			// 		"Info":   "Ошибка в SQL файле для обновления данных о соискателе",
+			// 		"Error":  err.Error(),
+			// 	})
+			// 	return
+			// }
+
+			// ctx.JSON(200, gin.H{
+			// 	"Status": "Ok!",
+			// 	"Info":   "Данные успешно обновлены!",
+			// })
+
 		}
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
@@ -451,6 +509,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			"Status": "Ok!",
 			"Info":   "Данные успешно обновлены!",
 		})
+
 	}
 }
 

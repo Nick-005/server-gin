@@ -275,7 +275,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -324,7 +324,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -415,7 +415,7 @@ func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -461,7 +461,7 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -511,7 +511,7 @@ func CheckToken() gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
+				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
 			},
 			)
 			return
@@ -520,13 +520,13 @@ func CheckToken() gin.HandlerFunc {
 		if !token.Valid {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  "невалидный токен! Пожалуйста перепроверьте его",
+				"Error":  "Невалидный токен! Пожалуйста перепроверьте его",
 			})
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{
 			"Status": "Ok!",
-			"Info":   "токен валидный, всё ок",
+			"Info":   "Токен валидный, всё ок",
 		})
 	}
 }
@@ -538,7 +538,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		if authHeader == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  "Authorization заголовок обязательый, а его нету! Переделывай"},
+				"Error":  "Authorization заголовок обязательый, а его нету! Пожалуйста перепроверьте его наличие и попробуйте снова!"},
 			)
 			ctx.Abort()
 			return
@@ -547,7 +547,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  "не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
+				"Error":  "Не верный формат авторизации. Добавить или перепроверить правильность написания Bearer перед токеном"},
 			)
 			ctx.Abort()
 			return
@@ -561,7 +561,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  fmt.Sprintf("ошибка при дешифровке токена! error: %v", err),
+				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
 			},
 			)
 			ctx.Abort()
@@ -571,7 +571,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		if !token.Valid {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
-				"Error":  "невалидный токен! Пожалуйста перепроверьте его",
+				"Error":  "Невалидный токен! Пожалуйста перепроверьте его",
 			})
 			ctx.Abort()
 			return

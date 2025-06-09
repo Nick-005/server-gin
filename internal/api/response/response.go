@@ -1,6 +1,7 @@
 package response
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -30,7 +31,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -46,7 +47,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -97,7 +98,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -112,7 +113,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -121,7 +122,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID резюме! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID резюме! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -130,7 +131,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "произошла ошибка при попытке удалить резюме",
+				"Info":   "Произошла ошибка при попытке удалить резюме",
 			})
 			return
 		}
@@ -161,7 +162,7 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -176,8 +177,16 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши данные в Body запроса и попробуйте снова!",
 				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Response_id <= 0 || req.Status_id <= 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
 			})
 			return
 		}
@@ -217,7 +226,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -232,7 +241,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -241,7 +250,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}

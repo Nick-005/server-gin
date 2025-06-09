@@ -2,6 +2,7 @@ package vacancy
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -32,7 +33,7 @@ func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -47,7 +48,7 @@ func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -56,7 +57,7 @@ func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -106,7 +107,7 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -121,8 +122,16 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши данные в Body запроса и попробуйте снова!",
 				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Email == "" || req.VacancyName == "" || req.ID <= 0 || req.PhoneNumber == "" || req.Price <= 0 || req.About == "" || req.ExperienceId <= 0 || req.Location == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
 			})
 			return
 		}
@@ -130,10 +139,11 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
+
 		err := sqlp.UpdateVacancyInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -201,7 +211,7 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить кол-во limit! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить кол-во limit! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -210,7 +220,7 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить кол-во last_id! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить кол-во last_id! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -242,6 +252,7 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /vac/time [get]
 func GetVacancyWithLimitByTime(storage *sqlx.DB) gin.HandlerFunc {
+	// TODO доделать эту поеботу
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		var cursor struct {
@@ -290,7 +301,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -306,7 +317,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -315,7 +326,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -325,13 +336,13 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "произошла ошибка при попытке удалить резюме",
+				"Info":   "Произошла ошибка при попытке удалить резюме",
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
 			"Status": "Ok!",
-			"Info":   "успешно удалили данные!",
+			"Info":   "Успешно удалили данные!",
 		})
 	}
 }
@@ -356,7 +367,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -371,7 +382,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -380,8 +391,16 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши данные в Body запроса и попробуйте снова!",
 				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Email == "" || req.VacancyName == "" || req.PhoneNumber == "" || req.Price <= 0 || req.About == "" || req.ExperienceId <= 0 || req.Location == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
 			})
 			return
 		}
@@ -431,7 +450,7 @@ func GetVacancyInfoByID(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -479,7 +498,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -494,7 +513,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -503,7 +522,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID вакансии! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -544,7 +563,7 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -559,7 +578,7 @@ func GetAllVacanciesByEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}

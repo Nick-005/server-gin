@@ -15,6 +15,19 @@ func GetUserRoleFromContext(ctx *gin.Context) (string, bool) {
 	return role, true
 }
 
+func GetUserEmailFromContext(ctx *gin.Context) (string, bool) {
+	roleGet, fjd := ctx.Get("email")
+	if !fjd {
+		return "", false
+	}
+	role, ok := roleGet.(string)
+	if !ok {
+
+		return "", false
+	}
+	return role, true
+}
+
 func GetUserIDFromContext(ctx *gin.Context) (int, bool) {
 
 	id, isThere := ctx.Get("id")

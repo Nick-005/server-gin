@@ -35,7 +35,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -51,7 +51,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID работодателя! проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID работодателя! проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -77,7 +77,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param Employee_info body s.RequestEmployee true "Данные о работодателе, на которые нужно обновить в системе"
+// @Param Employer_info body s.RequestEmployer true "Данные о работодателе, на которые нужно обновить в системе"
 // @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -90,7 +90,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -101,11 +101,27 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		var req s.RequestEmployee
+		var req s.RequestEmployer
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши данные в Body запроса и попробуйте снова!",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Email == "" || req.NameOrganization == "" || req.Password == "" || req.PhoneNumber == "" || req.Status_id <= 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf("Одно или несколько полей с данными у вас отсутствуют или имеют неверное значение").Error(),
+			})
+			return
+		}
+		ok, err := sqlp.CheckEmailIsValid(tx, req.Email)
+		if err != nil || !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
 				"Error":  err.Error(),
 			})
 			return
@@ -114,11 +130,11 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
-		err := sqlp.UpdateEmployeeInfo(tx, req, uid)
+		err = sqlp.UpdateEmployeeInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
@@ -140,7 +156,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags employer
 // @Accept json
 // @Produce json
-// @Param Employee_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
+// @Param Employer_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
 // @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -153,7 +169,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши данные в Body запроса и попробуйте снова!",
 				"Error":  err.Error(),
 			})
 			return
@@ -220,7 +236,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -256,7 +272,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param employerID query int true "ID работодателя"
-// @Success 200 {array} s.ResponseEmployeeInfo "Возвращает статус 'Ok!' и данные о работодателе"
+// @Success 200 {array} s.ResponseEmployerInfo "Возвращает статус 'Ok!' и данные о работодателе"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -268,7 +284,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
 			})
 			return
 		}
@@ -277,7 +293,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
-				"Info":   "ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
+				"Info":   "Ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
 			})
 			return
 		}
@@ -286,7 +302,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
+				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}

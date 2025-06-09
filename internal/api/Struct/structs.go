@@ -131,6 +131,14 @@ type RequestEmployee struct {
 	Status_id        int    `json:"StatusID"`
 }
 
+type RequestEmployer struct {
+	NameOrganization string `json:"NameOrganization"`
+	PhoneNumber      string `json:"PhoneNumber"`
+	Email            string `json:"Email"`
+	Password         string `json:"Password"`
+	Status_id        int    `json:"StatusID"`
+}
+
 // неиспользуется
 type DBResponse struct {
 	ID            int       `db:"id"`
@@ -227,7 +235,7 @@ type ResponseAllResponsesOnVacancy struct {
 	} `db:"responses" json:"ResponseInfo"`
 }
 
-type ResponseEmployeeInfo struct {
+type ResponseEmployerInfo struct {
 	Status   string          ` json:"Status"`
 	Employer SuccessEmployer `json:"EmployerInfo"`
 }
@@ -271,7 +279,7 @@ type ResponseInfoByVacancy struct {
 type VacancyPut struct {
 	ID           int    `json:"ID"`
 	VacancyName  string `json:"VacancyName"`
-	Price        string `json:"Price"`
+	Price        int    `json:"Price"`
 	Email        string `json:"Email"`
 	PhoneNumber  string `json:"PhoneNumber"`
 	Location     string `json:"Location"`

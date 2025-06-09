@@ -459,7 +459,7 @@ func AuthorizationMethodForUsers(storage *sqlx.Tx, email, password string) {
 func CheckEmailIsValid(storage *sqlx.Tx, email string) (bool, error) {
 	var amnt_emp int = -1
 	var amnt_cnd int = -1
-	query, args, err := psql.Select("count(id)").From("employer").ToSql()
+	query, args, err := psql.Select("count(id)").From("employer").Where(sq.Eq{"email": email}).ToSql()
 
 	if err != nil {
 		return false, err
@@ -472,7 +472,7 @@ func CheckEmailIsValid(storage *sqlx.Tx, email string) (bool, error) {
 		return false, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
 	}
 
-	query, args, err = psql.Select("count(id)").From("candidates").ToSql()
+	query, args, err = psql.Select("count(id)").From("candidates").Where(sq.Eq{"email": email}).ToSql()
 	if err != nil {
 		return false, err
 	}
@@ -975,13 +975,12 @@ func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmploye
 	return result, nil
 }
 
-func UpdateEmployeeInfo(storage *sqlx.Tx, req s.RequestEmployee, uid int) error {
+func UpdateEmployeeInfo(storage *sqlx.Tx, req s.RequestEmployer, uid int) error {
 
 	query, args, err := psql.Update("employer").
 		Set("name_organization", req.NameOrganization).
 		Set("phone_number", req.PhoneNumber).
 		Set("email", req.Email).
-		Set("inn", req.INN).
 		Set("password", req.Password).
 		Set("status_id", req.Status_id).
 		Where(sq.Eq{"id": uid}).
