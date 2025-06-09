@@ -406,7 +406,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		employee, err := sqlp.GetEmployeeByID(tx, emp_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Info":   "Ошибка в SQL файле для получения данных о работодателе",
 				"Error":  err.Error(),
@@ -415,7 +415,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		data, err := sqlp.PostNewVacancy(tx, req, emp_id)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
 				"Info":   "Ошибка в SQL файле для получения данных о вакансиях работодателя",
 				"Error":  err.Error(),

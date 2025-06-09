@@ -112,7 +112,7 @@ type Vacancies struct {
 	ID           int       `db:"id" json:"ID"`
 	Emp_ID       int       `db:"emp_id" json:"EmployerID"`
 	Name         string    `db:"name" json:"Name"`
-	Price        string    `db:"price" json:"Price"`
+	Price        int       `db:"price" json:"Price"`
 	Email        string    `db:"email" json:"Email"`
 	PhoneNumber  string    `db:"phone_number" json:"PhoneNumber"`
 	Location     string    `db:"location" json:"Location"`
@@ -152,7 +152,7 @@ type VacanciesToResponse struct {
 	ID            int       `db:"id" json:"ID"`
 	Employer_name string    `db:"employee_name" json:"EmployerName"`
 	Name          string    `db:"name" json:"Name"`
-	Price         string    `db:"price" json:"Price"`
+	Price         int       `db:"price" json:"Price"`
 	Email         string    `db:"email" json:"Email"`
 	PhoneNumber   string    `db:"phone_number" json:"PhoneNumber"`
 	Location      string    `db:"location" json:"Location"`
@@ -199,7 +199,7 @@ type VacancyData_Limit struct {
 	ID          int             `db:"id" json:"ID"`
 	Employer    SuccessEmployer `db:"employer" json:"EmployerInfo"`
 	Name        string          `db:"name" json:"Name"`
-	Price       string          `db:"price" json:"Price"`
+	Price       int             `db:"price" json:"Price"`
 	Email       string          `db:"email" json:"Email"`
 	PhoneNumber string          `db:"phone_number" json:"PhoneNumber"`
 	Location    string          `db:"location" json:"Location"`
