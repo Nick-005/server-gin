@@ -3,7 +3,6 @@ package candid
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -275,11 +274,11 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		if err := mailer.Send("nikolay.borodin.1996@bk.ru", "подтверждение почты", "TEst"); err != nil {
-			log.Printf("Failed to send email: %v", err)
-			ctx.JSON(500, gin.H{"error": "Failed to send email"})
-			return
-		}
+		// if err := mailer.Send("nikolay.borodin.1996@bk.ru", "подтверждение почты", "TEst"); err != nil {
+		// 	log.Printf("Failed to send email: %v", err)
+		// 	ctx.JSON(500, gin.H{"error": "Failed to send email"})
+		// 	return
+		// }
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -346,7 +345,7 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param СandidateID query int true "ID соискателя"
+// @Param CandidateID query int true "ID соискателя"
 // @Success 200 {object} s.GetAllFromCandidates "Возвращает статус 'Ok!' и данные пользователя"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -363,7 +362,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		candidId, err := strconv.Atoi(ctx.Query("СandidateID"))
+		candidId, err := strconv.Atoi(ctx.Query("CandidateID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
