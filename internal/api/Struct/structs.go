@@ -253,13 +253,18 @@ type ResponseAllVacancyByEmployee struct {
 	Employer_id int           `json:"EmployerID"`
 }
 
-type ResponseCreateCandiate struct {
+type ResponseAuthorization struct {
+	CandidateInfo ResponseCreateCandidate `json:"CandidateInfo"`
+	EmployerInfo  ResponseCreateEmployer  `json:"EmployerInfo"`
+}
+
+type ResponseCreateCandidate struct {
 	Status         string        `json:"Status"`
 	Candidate_Info InfoCandidate `json:"CandidateInfo"`
 	Token          string        `json:"Token"`
 }
 
-type ResponseCreateEmployee struct {
+type ResponseCreateEmployer struct {
 	Status       Ok              `json:"Status"`
 	EmployerInfo SuccessEmployer `json:"EmployerInfo"`
 	Token        string          `json:"Token"`

@@ -266,7 +266,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param Candidate_info body s.RequestCandidate true "Основные данные для добавления соискателя. В поле статус указывайте ID, который уже есть в системе!"
-// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные нового пользователя и его персональный токен, который можно использовать в течении 24 часов!"
+// @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные нового пользователя и его персональный токен, который можно использовать в течении 24 часов!"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [post]
@@ -678,7 +678,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param password query string true "новый пароль пользователя"
-// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные соискателя и новый токен"
+// @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/recover [get]
@@ -731,6 +731,105 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Авторизовать пользователя
+// @Description Позволяет получить новый токен для пользователя, чтобы у него сохранился доступ к функционалу
+// @Tags ADMIN
+// @Accept json
+// @Produce json
+// @Param email query string true "email пользователя"
+// @Param password query string true "password пользователя"
+// @Success 200 {object} s.ResponseAuthorization "Возвращает статус 'Ok!', данные пользователя и его новый токен. Если он авторизовался как соискатель, то будут возвращены его данные. А если как работодатель, то тоже только его"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /auth [get]
+func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+		uEmail := ctx.Query("email")
+		uPassword := ctx.Query("password")
+
+		isEmp, err := sqlp.CheckUserByEmailOnEmployer(tx, uEmail)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Произошла ошибка при попытке проверить пользователя в таблице Работодателей. Ошибка в SQL файле",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		fmt.Println(isEmp)
+		if isEmp {
+			data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Status": "Err",
+					"Info":   "Произошла ошибка при попытке получить данные работодателя. Ошибка в SQL файле",
+					"Error":  err.Error(),
+				})
+				return
+			}
+			claim := &s.Claims{
+				ID:    data.ID,
+				Role:  "employee",
+				Email: data.Email,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(expirationTime),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
+			}
+			token, err := sqlp.CreateAccessToken(claim)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Status": "Err",
+					"Info":   "Ошибка при создании токена аутентификации",
+					"Error":  err.Error(),
+				})
+				return
+			}
+			ctx.JSON(200, gin.H{
+				"Status":       "Ok!",
+				"EmployerInfo": data,
+				"Token":        token,
+			})
+		} else {
+			data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Status": "Err",
+					"Info":   "Произошла ошибка при попытке получить данные соискателя. Ошибка в SQL файле",
+					"Error":  err.Error(),
+				})
+				return
+			}
+			claim := &s.Claims{
+				ID:    data.ID,
+				Role:  "candidate",
+				Email: data.Email,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(expirationTime),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
+			}
+			token, err := sqlp.CreateAccessToken(claim)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Status": "Err",
+					"Info":   "Произошла ошибка на стороне сервера. Ошибка при создании токена аутентификации",
+					"Error":  err.Error(),
+				})
+				return
+			}
+			ctx.JSON(200, gin.H{
+				"Status":        "Ok!",
+				"CandidateInfo": data,
+				"Token":         token,
+			})
+		}
+
+	}
+}
+
 // @Summary Авторизовать соискателя
 // @Description Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу
 // @Tags candidate
@@ -738,7 +837,7 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Param email query string true "email соискателя"
 // @Param password query string true "password соискателя"
-// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные соискателя и новый токен"
+// @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/auth [get]

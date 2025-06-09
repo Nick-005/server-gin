@@ -65,6 +65,8 @@ func main() {
 		// * Проверка токена на валидность
 		apiV1.GET("/adm/token", CheckToken())
 
+		apiV1.GET("/auth", MakeTransaction(storage), candid.AuthorizationMethodForAnybody(storage)) // TODO доделать авторизацию
+
 		// & Статус
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
@@ -100,7 +102,7 @@ func main() {
 
 		// & Соискатели
 
-		apiV1.GET("/user/recover", MakeTransaction(storage))
+		apiV1.GET("/user/recover", MakeTransaction(storage)) // TODO доделать
 
 		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
@@ -147,7 +149,7 @@ func main() {
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
 		// * ----------------------- Все вакансии работодателя по 'странично' по времени -----------------------
-		apiV1.GET("/vac/time", MakeTransaction(storage), vacancy.GetVacancyWithLimitByTime(storage))
+		apiV1.GET("/vac/time", MakeTransaction(storage), vacancy.GetVacancyWithLimitByTime(storage)) // TODO доделать
 
 		// * ----------------------- Получить информацию о вакансии -----------------------
 		apiV1.GET("/vac/info", MakeTransaction(storage), vacancy.GetVacancyInfoByID(storage))

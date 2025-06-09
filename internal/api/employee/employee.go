@@ -157,7 +157,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param Employer_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
-// @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp [post]
@@ -336,7 +336,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Param email query string true "email работодателя"
 // @Param password query string true "password работодателя"
-// @Success 200 {array} s.ResponseCreateEmployee "Возвращает статус 'Ok!', данные работодателя и новый токен"
+// @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если такого пользователя в системе нету."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /emp/auth [get]
