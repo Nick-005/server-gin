@@ -652,7 +652,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		uid, err := strconv.Atoi(ctx.Query("candidate_id"))
+		uid, err := strconv.Atoi(ctx.Query("CandidateID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
