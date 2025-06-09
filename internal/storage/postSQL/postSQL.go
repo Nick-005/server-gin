@@ -150,7 +150,7 @@ func GetEmployeeByEmail(storage *sqlx.Tx, email string) (s.SuccessEmployer, erro
 func GetNumberOfVacancies(storage *sqlx.Tx) (int, error) {
 	var number int = -1
 
-	query, args, err := psql.Select("count(id)").From("vacancy").ToSql()
+	query, args, err := psql.Select("count(id)").From("vacancy").Where(sq.Eq{"is_visible": true}).ToSql()
 
 	if err != nil {
 		return number, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
@@ -284,7 +284,7 @@ func GetVacancyLimit(storage *sqlx.Tx, limit, last_id int) ([]s.VacancyData_Limi
 		Join("experience e ON v.experience_id = e.id").
 		Join("employer em ON v.emp_id = em.id").
 		Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
-		Where(sq.Gt{"v.id": last_id}).Limit(uint64(limit)).ToSql()
+		Where(sq.Gt{"v.id": last_id}).Where(sq.Eq{"v.is_visible": true}).Limit(uint64(limit)).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}
