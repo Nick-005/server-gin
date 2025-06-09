@@ -686,7 +686,7 @@ func GetCandidateByEmail(storage *sqlx.Tx, email string) (s.InfoCandidate, error
 }
 
 func DeleteResponse(storage *sqlx.Tx, id, uid int) error {
-	query, args, err := psql.Delete("response").Where(sq.Eq{"id": id, "candidates_id": uid}).ToSql()
+	query, args, err := psql.Delete("response").Where(sq.Eq{"vacancy_id": id, "candidates_id": uid}).ToSql()
 	if err != nil {
 		return fmt.Errorf("ошибка в создании SQL скрипта для удаления данных! error: %s", err.Error())
 	}

@@ -205,6 +205,11 @@ type SuccessVacancy struct {
 	Vacancies []VacancyData   `db:"vacancies" json:"VacancyInfo"`
 }
 
+type VacanciesByLimitResponse struct {
+	Status        string              `json:"Status"`
+	VacanciesInfo []VacancyData_Limit `json:"VacanciesInfo"`
+}
+
 type VacancyData_Limit struct {
 	ID          int             `db:"id" json:"ID"`
 	Employer    SuccessEmployer `db:"employer" json:"EmployerInfo"`

@@ -199,7 +199,7 @@ func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Param Limit query int true "Кол-во вакансий, в соответствии с которым нужно вернуть их"
 // @Param LastID query int true "После какого ID будет идти отсчёт limit"
-// @Success 200 {array} s.VacancyData_Limit "Возвращает статус 'Ok!' и массив всех данных вакансий"
+// @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /vac [get]

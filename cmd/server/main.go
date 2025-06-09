@@ -75,7 +75,7 @@ func main() {
 		apiV1.GET("/adm/token", CheckToken())
 
 		// * Авторизация всех пользователей, вне зависимости от роли: Соискатель или работодатель
-		apiV1.GET("/auth", MakeTransaction(storage), candid.AuthorizationMethodForAnybody(storage)) // TODO доделать авторизацию
+		apiV1.GET("/auth", MakeTransaction(storage), candid.AuthorizationMethodForAnybody(storage))
 
 		// & Статус
 		// * ----------------------- Все записи -----------------------
