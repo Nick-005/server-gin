@@ -415,8 +415,16 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Error in parse body in request! Please check your body in request!",
+				"Info":   "Ошибка при парсинге данных! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
 				"Error":  err.Error(),
+			})
+			return
+		}
+		if req.Email == "" || req.Name == "" || req.Password == "" || req.PhoneNumber == "" || req.Status_id == 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Вы не передали все необходимые данные! Пожалуйста перепроверьте данные, которые вы передаете в Body запроса и попробуйте снова!",
+				"Error":  fmt.Errorf(""),
 			})
 			return
 		}
@@ -601,6 +609,65 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 			"Data":   data,
 			"Status": "Ok!",
+		})
+	}
+}
+
+// @Summary Восстановить пароль
+// @Description Позволяет восстановить пароль пользователю, если он забыл его
+// @Tags ADMIN
+// @Accept json
+// @Produce json
+// @Param password query string true "новый пароль пользователя"
+// @Success 200 {array} s.ResponseCreateCandiate "Возвращает статус 'Ok!', данные соискателя и новый токен"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/recover [get]
+func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+		uEmail := ctx.Query("email")
+		uPassword := ctx.Query("password")
+
+		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Info":   "Такого пользователя не было найдено в системе! Перепроверьте данные и попробуйте снова!",
+				"Error":  err.Error(),
+			})
+			return
+		} else if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Произошла ошибка на стороне сервера. Ошибка в SQL файле",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		claim := &s.Claims{
+			ID:    data.ID,
+			Role:  "candidate",
+			Email: data.Email,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		}
+		token, err := sqlp.CreateAccessToken(claim)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Произошла ошибка на стороне сервера. Ошибка при создании токена аутентификации",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"Status":        "Ok!",
+			"CandidateInfo": data,
+			"Token":         token,
 		})
 	}
 }

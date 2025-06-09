@@ -99,6 +99,9 @@ func main() {
 		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
 
 		// & Соискатели
+
+		apiV1.GET("/user/recover", MakeTransaction(storage))
+
 		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
 
@@ -142,6 +145,9 @@ func main() {
 
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
+
+		// * ----------------------- Все вакансии работодателя по 'странично' по времени -----------------------
+		apiV1.GET("/vac/time", MakeTransaction(storage), vacancy.GetVacancyWithLimitByTime(storage))
 
 		// * ----------------------- Получить информацию о вакансии -----------------------
 		apiV1.GET("/vac/info", MakeTransaction(storage), vacancy.GetVacancyInfoByID(storage))
