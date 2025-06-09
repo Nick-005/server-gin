@@ -24,7 +24,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Produce json
-// @Param userID query int true "ID пользователя, которого нужно удалить"
+// @Param UserID query int true "ID пользователя, которого нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -48,7 +48,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		user, err := strconv.Atoi(ctx.Query("userID"))
+		user, err := strconv.Atoi(ctx.Query("UserID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
@@ -133,7 +133,7 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags candidate
 // @Accept json
 // @Produce json
-// @Param ResumaData body s.RequestResumeUpdate true "Данные, которые можно изменить. Это только опыт (стаж) и описание. НО также указываете ID резюме, которое необходимо изменить!"
+// @Param ResumeData body s.RequestResumeUpdate true "Данные, которые можно изменить. Это только опыт (стаж) и описание. НО также указываете ID резюме, которое необходимо изменить!"
 // @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -346,7 +346,7 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param candidateID query int true "ID соискателя"
+// @Param СandidateID query int true "ID соискателя"
 // @Success 200 {object} s.GetAllFromCandidates "Возвращает статус 'Ok!' и данные пользователя"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -548,7 +548,7 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param InfoResume body s.RequestResume true "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!"
+// @Param ResumeInfo body s.RequestResume true "Основные данные для резюме. В поле experience_id указывайте ID, который уже есть в системе!"
 // @Success 200 {object} s.Ok "Возвращает статус 'Ok!"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -656,12 +656,13 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// TODO доделать
 // @Summary Восстановить пароль
 // @Description Позволяет восстановить пароль пользователю, если он забыл его
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Param password query string true "новый пароль пользователя"
+// @Param Password query string true "новый пароль пользователя"
 // @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -671,7 +672,7 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
 		uEmail := ctx.Query("email")
-		uPassword := ctx.Query("password")
+		uPassword := ctx.Query("Password")
 
 		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {
@@ -720,8 +721,8 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Param email query string true "email пользователя"
-// @Param password query string true "password пользователя"
+// @Param Email query string true "email пользователя"
+// @Param Password query string true "password пользователя"
 // @Success 200 {object} s.ResponseAuthorization "Возвращает статус 'Ok!', данные пользователя и его новый токен. Если он авторизовался как соискатель, то будут возвращены его данные. А если как работодатель, то тоже только его"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -730,8 +731,8 @@ func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("email")
-		uPassword := ctx.Query("password")
+		uEmail := ctx.Query("Email")
+		uPassword := ctx.Query("Password")
 
 		isEmp, err := sqlp.CheckUserByEmailOnEmployer(tx, uEmail)
 		if err != nil {
@@ -819,8 +820,8 @@ func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags candidate
 // @Accept json
 // @Produce json
-// @Param email query string true "email соискателя"
-// @Param password query string true "password соискателя"
+// @Param Email query string true "email соискателя"
+// @Param Password query string true "password соискателя"
 // @Success 200 {object} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -829,8 +830,8 @@ func AuthorizationMethod(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("email")
-		uPassword := ctx.Query("password")
+		uEmail := ctx.Query("Email")
+		uPassword := ctx.Query("Password")
 
 		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {

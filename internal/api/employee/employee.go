@@ -22,7 +22,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Produce json
-// @Param empID query int true "ID работодателя, которого нужно удалить"
+// @Param EmployerID query int true "ID работодателя, которого нужно удалить"
 // @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -46,7 +46,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		user, err := strconv.Atoi(ctx.Query("empID"))
+		user, err := strconv.Atoi(ctx.Query("EmployerID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
@@ -77,7 +77,7 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param Employer_info body s.RequestEmployer true "Данные о работодателе, на которые нужно обновить в системе"
+// @Param EmployerInfo body s.RequestEmployer true "Данные о работодателе, на которые нужно обновить в системе"
 // @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -156,7 +156,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags employer
 // @Accept json
 // @Produce json
-// @Param Employer_info body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
+// @Param EmployerInfo body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
 // @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -271,7 +271,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param employerID query int true "ID работодателя"
+// @Param EmployerID query int true "ID работодателя"
 // @Success 200 {array} s.ResponseEmployerInfo "Возвращает статус 'Ok!' и данные о работодателе"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -288,7 +288,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		emp_id, err := strconv.Atoi(ctx.Query("employerID"))
+		emp_id, err := strconv.Atoi(ctx.Query("EmployerID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
@@ -334,8 +334,8 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags employer
 // @Accept json
 // @Produce json
-// @Param email query string true "email работодателя"
-// @Param password query string true "password работодателя"
+// @Param Email query string true "email работодателя"
+// @Param Password query string true "password работодателя"
 // @Success 200 {array} s.ResponseCreateEmployer "Возвращает статус 'Ok!', данные работодателя и новый токен"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если такого пользователя в системе нету."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -344,8 +344,8 @@ func AuthorizationMethodEmp(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("email")
-		uPassword := ctx.Query("password")
+		uEmail := ctx.Query("Email")
+		uPassword := ctx.Query("Password")
 
 		data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
 		if err == sql.ErrNoRows {

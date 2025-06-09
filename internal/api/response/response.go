@@ -18,7 +18,7 @@ import (
 // @Tags vacancy
 // @Accept json
 // @Produce json
-// @Param vacancyID query int true "ID вакансии, на которую надо посмотреть все отклики"
+// @Param VacancyID query int true "ID вакансии, на которую надо посмотреть все отклики"
 // @Success 200 {array} s.ResponseAllResponsesOnVacancy "Возвращает данные вакансии и все её отклики"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -42,7 +42,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
+		vac_id, err := strconv.Atoi(ctx.Query("VacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
@@ -85,7 +85,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags vacancy
 // @Accept json
 // @Produce json
-// @Param vacancy_id query int true "ID вакансии"
+// @Param VacancyID query int true "ID вакансии"
 // @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -117,7 +117,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancy_id"))
+		vac_id, err := strconv.Atoi(ctx.Query("VacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
@@ -149,7 +149,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param Help_data body s.ResponsePatch true "ID отклика, статус которого нужно обновить, а также ID статуса, на который нужно поменять"
+// @Param HelpData body s.ResponsePatch true "ID отклика, статус которого нужно обновить, а также ID статуса, на который нужно поменять"
 // @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -213,7 +213,7 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param vacancyID query int true "ID вакансии, на которую нужно сделать отклик!"
+// @Param VacancyID query int true "ID вакансии, на которую нужно сделать отклик!"
 // @Success 200 {array} s.ResponseCreateNewResponse "Возвращает статус 'Ok!, ID отклика, данные вакансии, на которую откликнулись и статус отклика"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
@@ -245,7 +245,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		vac_id, err := strconv.Atoi(ctx.Query("vacancyID"))
+		vac_id, err := strconv.Atoi(ctx.Query("VacancyID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",

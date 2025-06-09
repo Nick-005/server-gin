@@ -291,6 +291,11 @@ type ResponseInfoByVacancy struct {
 	Status      string            `json:"Status"`
 }
 
+type ResponseInfoByVacancyByTimes struct {
+	VacanciesInfo []VacancyData_Limit `json:"VacanciesInfo"`
+	Status        string              `json:"Status"`
+}
+
 type VacancyPut struct {
 	ID           int    `json:"ID"`
 	VacancyName  string `json:"VacancyName"`

@@ -228,28 +228,12 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 // @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.
 // @Tags ADMIN
 // @Produce json
-// @Success 200 {array} s.GetStatus "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID."
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Success 200 {object} s.GetStatus "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
 // @Router /exp [get]
 func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		// role, ok := get.GetUserRoleFromContext(ctx)
-		// if !ok {
-		// 	ctx.JSON(http.StatusBadRequest, gin.H{
-		// 		"Status": "Err",
-		// 		"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-		// 	})
-		// 	return
-		// }
-		// if role != "ADMIN" {
-		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
-		// 		"Status": "Err",
-		// 		"Info":   "У вас нету прав к этому функционалу!",
-		// 	})
-		// 	return
-		// }
 		data, err := sqlp.GetAllExperience(tx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -274,11 +258,11 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Param name query string true "Наименование нового опыта"
-// @Success 200 {array} s.Ok "Добавляет новое значение в таблицу"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param Name query string true "Наименование нового опыта"
+// @Success 200 {object} s.Ok "Добавляет новое значение в таблицу"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /exp [post]
 func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -322,11 +306,11 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Param name query string true "Наименование нового статуса"
-// @Success 200 {array} s.Ok "Добавляет новое значение в таблицу и просто возвращает статус 'Ok!'"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param Name query string true "Наименование нового статуса"
+// @Success 200 {object} s.Ok "Добавляет новое значение в таблицу и просто возвращает статус 'Ok!'"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /status [post]
 func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -369,10 +353,10 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags ADMIN
 // @Accept json
 // @Produce json
-// @Success 200 {array} s.GetStatus "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.GetStatus "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить из токена ID (авторизовать пользователя)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /status [get]
 func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -414,11 +398,11 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Produce json
-// @Param name query string true "наименование записи, которую нужно удалить"
-// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param Name query string true "наименование записи, которую нужно удалить"
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/status [delete]
 func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -460,11 +444,11 @@ func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Tags ADMIN
 // @Produce json
-// @Param name query string true "наименование записи, которую нужно удалить"
-// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param Name query string true "наименование записи, которую нужно удалить"
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/exp [delete]
 func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -506,11 +490,11 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Description Позволяет проверить токен пользователя на актуальность
 // @Tags ADMIN
 // @Produce json
-// @Param token query string true "токен, который надо проверить"
-// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param Token query string true "токен, который надо проверить"
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/token [get]
 func CheckToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
