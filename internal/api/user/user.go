@@ -267,10 +267,10 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Tags candidate
 // @Accept json
 // @Produce json
-// @Param Candidate_info body s.RequestCandidate true "Основные данные для добавления соискателя. В поле статус указывайте ID, который уже есть в системе!"
-// @Success 200 {array} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные нового пользователя и его персональный токен, который можно использовать в течении 24 часов!"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Param CandidateInfo body s.RequestCandidate true "Основные данные для добавления соискателя. В поле статус указывайте ID, который уже есть в системе!"
+// @Success 200 {object} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные нового пользователя и его персональный токен, который можно использовать в течении 24 часов!"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [post]
 func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -347,10 +347,10 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param candidateID query int true "ID соискателя"
-// @Success 200 {array} s.GetAllFromCandidates "Возвращает статус 'Ok!' и данные пользователя"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.GetAllFromCandidates "Возвращает статус 'Ok!' и данные пользователя"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [get]
 func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -410,10 +410,10 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param CandidateInfo body s.RequestCandidate true "Данные о соискателе, на которые нужно обновить в системе"
-// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и небольшую информацию"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [put]
 func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -467,29 +467,6 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 				})
 				return
 			}
-			// uid, ok := get.GetUserIDFromContext(ctx)
-			// if !ok {
-			// 	ctx.JSON(http.StatusBadRequest, gin.H{
-			// 		"Status": "Err",
-			// 		"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
-			// 	})
-			// 	return
-			// }
-
-			// err = sqlp.UpdateCandidateInfo(tx, req, uid)
-			// if err != nil {
-			// 	ctx.JSON(http.StatusInternalServerError, gin.H{
-			// 		"Status": "Err",
-			// 		"Info":   "Ошибка в SQL файле для обновления данных о соискателе",
-			// 		"Error":  err.Error(),
-			// 	})
-			// 	return
-			// }
-
-			// ctx.JSON(200, gin.H{
-			// 	"Status": "Ok!",
-			// 	"Info":   "Данные успешно обновлены!",
-			// })
 
 		}
 		uid, ok := get.GetUserIDFromContext(ctx)
@@ -525,10 +502,10 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и массив всех данных о соискателях"
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.InfoAboutAllCandidates "Возвращает статус 'Ok!' и массив всех данных о соискателях"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/all [get]
 func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -559,8 +536,8 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 		}
 
 		ctx.JSON(200, gin.H{
-			"Status":        "Ok!",
-			"CandidateInfo": data,
+			"Status":         "Ok!",
+			"CandidatesInfo": data,
 		})
 	}
 }
