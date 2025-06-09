@@ -95,7 +95,7 @@ func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param VacancyInfo body s.VacancyPut  true "Данные о вакансии, на которые нужно обновить в системе"
-// @Success 200 {array} s.InfoCandidate "Возвращает статус 'Ok!' и небольшую информацию"
+// @Success 200 {array} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
