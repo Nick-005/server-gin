@@ -79,10 +79,10 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 // @Tags candidate
 // @Accept json
 // @Produce json
-// @Success 200 {array} s.ResponseByVac "Возвращает ID отклика, данные об этой вакансии, на которую откликнулся пользователь и статус отклика "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.ResponsesByVac "Возвращает ID отклика, данные об этой вакансии, на которую откликнулся пользователь и статус отклика "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/response [get]
 func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -120,8 +120,8 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"Status": "Ok!",
-			"Data":   data,
+			"Status":    "Ok!",
+			"Responses": data,
 		})
 
 	}

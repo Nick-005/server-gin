@@ -184,6 +184,11 @@ type ResponseByVac struct {
 	Status  GetStatus           `db:"status" json:"StatusInfo"`
 }
 
+type ResponsesByVac struct {
+	Status    string          `json:"Status"`
+	Responses []ResponseByVac `json:"Responses"`
+}
+
 // неиспользуется
 type RequestResponse struct {
 	Vacancy_id int `json:"vacancy_id"`
