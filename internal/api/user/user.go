@@ -25,10 +25,10 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Tags ADMIN
 // @Produce json
 // @Param userID query int true "ID пользователя, которого нужно удалить"
-// @Success 200 {array} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/user [delete]
 func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -635,7 +635,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param candidate_id query int true "ID соискателя для получения его всех резюмешек"
+// @Param CandidateID query int true "ID соискателя для получения его всех резюмешек"
 // @Success 200 {object} s.ResumeResult "Возвращает статус 'Ok!' и массив всех данных резюме соискателя"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
