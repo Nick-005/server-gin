@@ -3,6 +3,7 @@ package candid
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	s "main.go/internal/api/Struct"
 	"main.go/internal/api/get"
+	mailer "main.go/internal/email-sender"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -270,10 +272,14 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [post]
-func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
+func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-
+		if err := mailer.Send("nikolay.borodin.1996@bk.ru", "подтверждение почты", "TEst"); err != nil {
+			log.Printf("Failed to send email: %v", err)
+			ctx.JSON(500, gin.H{"error": "Failed to send email"})
+			return
+		}
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -630,7 +636,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param candidate_id query int true "ID соискателя для получения его всех резюмешек"
-// @Success 200 {array} s.ResumeResult "Возвращает статус 'Ok!' и массив всех данных резюме соискателя"
+// @Success 200 {object} s.ResumeResult "Возвращает статус 'Ok!' и массив всех данных резюме соискателя"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {array} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -666,8 +672,9 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 		}
 		ctx.JSON(200, gin.H{
 
-			"Data":   data,
-			"Status": "Ok!",
+			"ResumesInfo":   data.Resumes,
+			"CandidateInfo": data.Candidate,
+			"Status":        "Ok!",
 		})
 	}
 }

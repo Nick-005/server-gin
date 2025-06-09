@@ -256,7 +256,7 @@ func GetVacancyLimitByTimes(storage *sqlx.Tx, limit int, time time.Time) ([]s.Va
 		Join("experience e ON v.experience_id = e.id").
 		Join("employer em ON v.emp_id = em.id").
 		Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
-		Where(sq.Gt{"v.id": time}).Limit(uint64(limit)).ToSql()
+		Where(sq.Gt{"v.created_at": time}).Limit(uint64(limit)).ToSql()
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}

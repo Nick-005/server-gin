@@ -240,24 +240,22 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary !!!TEST!!! Получение списка вакансий по 'странично' по ВРЕМЕНИ
+// @Summary Получение списка вакансий по 'странично' по ВРЕМЕНИ
 // @Description Позволяет получить всю основную информацию про все вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. CreatedAt - время, после которого будет идти отсчёт limit.
 // @Tags vacancy
 // @Accept json
 // @Produce json
 // @Param limit query int true "Кол-во вакансий, в соответствии с которым нужно вернуть их"
-// @Param created_at query string true "время, после которого будет идти отсчёт limit"
+// @Param created_at query string true "время, после которого будет идти отсчёт limit. Сюда указываем время создания последней отображаемой вакансии. Работает, только если использовать время в формате, как в примере: '2025-06-06T22:40:44Z' или '2006-01-02T15:04:05Z'"
 // @Success 200 {array} s.VacancyData_Limit "Возвращает статус 'Ok!' и массив всех данных вакансий"
 // @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /vac/time [get]
 func GetVacancyWithLimitByTime(storage *sqlx.DB) gin.HandlerFunc {
-	// TODO доделать эту поеботу
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		var cursor struct {
 			CreatedAt time.Time `form:"created_at" time_format:"2006-01-02T15:04:05Z"`
-			ID        uint      `form:"id"`
 			Limit     int       `form:"limit,default=5"`
 		}
 
