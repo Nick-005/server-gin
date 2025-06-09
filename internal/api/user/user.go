@@ -363,7 +363,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		candidId, err := strconv.Atoi(ctx.Query("candidateID"))
+		candidId, err := strconv.Atoi(ctx.Query("СandidateID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",

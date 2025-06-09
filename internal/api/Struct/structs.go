@@ -343,6 +343,11 @@ type StatusInfo struct {
 	Info   string `json:"Info"`
 }
 
+type GetAllStatuses struct {
+	Status string      `json:"Status"`
+	Data   []GetStatus `json:"Data"`
+}
+
 type GetStatus struct {
 	ID        int       `db:"id" json:"ID"`
 	Name      string    `db:"name" json:"Name"`
