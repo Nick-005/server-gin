@@ -367,15 +367,30 @@ func UpdateVacancyInfo(storage *sqlx.Tx, req s.VacancyPut, uid int) error {
 }
 
 func UpdateCandidateInfo(storage *sqlx.Tx, req s.RequestCandidate, id int) error {
+	var args []interface{}
+	var query string
+	var err error
 
-	query, args, err := psql.Update("candidates").
-		Set("name", req.Name).
-		Set("phone_number", req.PhoneNumber).
-		Set("email", req.Email).
-		Set("password", req.Password).
-		Set("status_id", req.Status_id).
-		Where(sq.Eq{"id": id}).
-		ToSql()
+	if len(req.Password) <= 3 {
+		query, args, err = psql.Update("candidates").
+			Set("name", req.Name).
+			Set("phone_number", req.PhoneNumber).
+			Set("email", req.Email).
+			// Set("password", req.Password).
+			Set("status_id", req.Status_id).
+			Where(sq.Eq{"id": id}).
+			ToSql()
+	} else {
+		query, args, err = psql.Update("candidates").
+			Set("name", req.Name).
+			Set("phone_number", req.PhoneNumber).
+			Set("email", req.Email).
+			Set("password", req.Password).
+			Set("status_id", req.Status_id).
+			Where(sq.Eq{"id": id}).
+			ToSql()
+	}
+
 	if err != nil {
 		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
 	}
@@ -994,15 +1009,29 @@ func PostNewEmployer(storage *sqlx.Tx, body s.RequestEmployee) (s.SuccessEmploye
 }
 
 func UpdateEmployeeInfo(storage *sqlx.Tx, req s.RequestEmployer, uid int) error {
+	var args []interface{}
+	var query string
+	var err error
+	if len(req.Password) <= 3 {
+		query, args, err = psql.Update("employer").
+			Set("name_organization", req.NameOrganization).
+			Set("phone_number", req.PhoneNumber).
+			Set("email", req.Email).
+			// Set("password", req.Password).
+			Set("status_id", req.Status_id).
+			Where(sq.Eq{"id": uid}).
+			ToSql()
+	} else {
+		query, args, err = psql.Update("employer").
+			Set("name_organization", req.NameOrganization).
+			Set("phone_number", req.PhoneNumber).
+			Set("email", req.Email).
+			Set("password", req.Password).
+			Set("status_id", req.Status_id).
+			Where(sq.Eq{"id": uid}).
+			ToSql()
+	}
 
-	query, args, err := psql.Update("employer").
-		Set("name_organization", req.NameOrganization).
-		Set("phone_number", req.PhoneNumber).
-		Set("email", req.Email).
-		Set("password", req.Password).
-		Set("status_id", req.Status_id).
-		Where(sq.Eq{"id": uid}).
-		ToSql()
 	if err != nil {
 		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
 	}

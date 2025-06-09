@@ -86,6 +86,14 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		email, ok := get.GetUserEmailFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в попытке получить почту пользователя из заголовка токена",
+			})
+			return
+		}
 		role, ok := get.GetUserRoleFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -118,14 +126,17 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		ok, err := sqlp.CheckEmailIsValid(tx, req.Email)
-		if err != nil || !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Error":  err.Error(),
-			})
-			return
+		if req.Email != email {
+			ok, err := sqlp.CheckEmailIsValid(tx, req.Email)
+			if err != nil || !ok {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"Status": "Err",
+					"Error":  err.Error(),
+				})
+				return
+			}
 		}
+
 		uid, ok := get.GetUserIDFromContext(ctx)
 		if !ok {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -134,7 +145,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		err = sqlp.UpdateEmployeeInfo(tx, req, uid)
+		err := sqlp.UpdateEmployeeInfo(tx, req, uid)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",

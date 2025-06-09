@@ -663,6 +663,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param Password query string true "новый пароль пользователя"
+// @Param Token query string true "новый пароль пользователя"
 // @Success 200 {object} s.ResponseCreateCandidate "Возвращает статус 'Ok!', данные соискателя и новый токен"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -671,7 +672,7 @@ func RecoverPassword(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-		uEmail := ctx.Query("email")
+		uEmail := ctx.Query("Token")
 		uPassword := ctx.Query("Password")
 
 		data, err := sqlp.GetCandidateByLogin(tx, uEmail, uPassword)
