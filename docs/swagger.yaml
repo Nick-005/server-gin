@@ -1,363 +1,418 @@
 definitions:
+  main_go_internal_api_Struct.GetAllFromCandidates:
+    properties:
+      CandidateInfo:
+        $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+      Status:
+        type: string
+    type: object
   main_go_internal_api_Struct.GetStatus:
     properties:
-      crated_At:
+      CreatedAt:
         type: string
-      id:
+      ID:
         type: integer
-      name:
+      Name:
         type: string
     type: object
   main_go_internal_api_Struct.InfoCandidate:
     properties:
-      created_at:
+      CreatedAt:
         type: string
-      email:
+      Email:
         type: string
-      id:
+      ID:
         type: integer
-      name:
+      Name:
         type: string
-      password:
+      Password:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      status:
+      StatusInfo:
         properties:
-          crated_At:
+          CreatedAt:
             type: string
-          id:
+          ID:
             type: integer
-          name:
+          Name:
             type: string
         type: object
-      updated_at:
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.InfoError:
     properties:
-      error:
+      Error:
         type: string
-      info:
+      Info:
         type: string
-      status:
+      Status:
+        type: string
+    type: object
+  main_go_internal_api_Struct.NumberOfVacancies:
+    properties:
+      Quantity:
+        type: integer
+      Status:
         type: string
     type: object
   main_go_internal_api_Struct.Ok:
     properties:
-      status:
+      Status:
         type: string
     type: object
   main_go_internal_api_Struct.RequestCandidate:
     properties:
-      email:
+      Email:
         type: string
-      name:
+      Name:
         type: string
-      password:
+      Password:
         type: string
-      phone_number:
+      PhoneNumber:
         type: string
-      status_id:
+      StatusId:
         type: integer
     type: object
   main_go_internal_api_Struct.RequestEmployee:
     properties:
-      email:
+      Email:
         type: string
-      inn:
+      INN:
         type: string
-      name_organization:
+      NameOrganization:
         type: string
-      password:
+      Password:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      status_id:
+      StatusID:
+        type: integer
+    type: object
+  main_go_internal_api_Struct.RequestEmployer:
+    properties:
+      Email:
+        type: string
+      NameOrganization:
+        type: string
+      Password:
+        type: string
+      PhoneNumber:
+        type: string
+      StatusID:
         type: integer
     type: object
   main_go_internal_api_Struct.RequestResume:
     properties:
-      description:
+      Description:
         type: string
-      experience_id:
+      ExperienceID:
         type: integer
     type: object
   main_go_internal_api_Struct.RequestResumeUpdate:
     properties:
+      ExperienceID:
+        type: integer
+      ResumeID:
+        type: integer
       description:
         type: string
-      experience_id:
-        type: integer
-      resume_id:
-        type: integer
     type: object
   main_go_internal_api_Struct.ResponseAllResponsesOnVacancy:
     properties:
-      responses:
+      ResponseInfo:
         items:
           properties:
-            candidate:
+            CandidateInfo:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
-            created_at:
+            CreatedAt:
               type: string
-            id:
+            ID:
               type: integer
-            status:
+            StatusInfo:
               $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
           type: object
         type: array
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      vacancy:
+      Status:
+        type: string
+      VacancyInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
   main_go_internal_api_Struct.ResponseAllVacancyByEmployee:
     properties:
-      employee_id:
+      EmployerID:
         type: integer
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      vacancies:
+      VacanciesInfo:
         items:
           $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
         type: array
+      status:
+        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+    type: object
+  main_go_internal_api_Struct.ResponseAuthorization:
+    properties:
+      CandidateInfo:
+        $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate'
+      EmployerInfo:
+        $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer'
     type: object
   main_go_internal_api_Struct.ResponseByVac:
     properties:
-      id:
+      ID:
         type: integer
-      status:
+      StatusInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      vacancy:
+      VacancyInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.VacanciesToResponse'
     type: object
-  main_go_internal_api_Struct.ResponseCreateCandiate:
+  main_go_internal_api_Struct.ResponseCreateCandidate:
     properties:
-      candidate_Info:
+      CandidateInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      token:
+      Status:
+        type: string
+      Token:
         type: string
     type: object
-  main_go_internal_api_Struct.ResponseCreateEmployee:
+  main_go_internal_api_Struct.ResponseCreateEmployer:
     properties:
-      candidate_Info:
+      EmployerInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
-      status:
+      Status:
         $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      token:
+      Token:
         type: string
     type: object
   main_go_internal_api_Struct.ResponseCreateNewResponse:
     properties:
-      response_id:
+      ID:
         type: integer
-      response_status:
+      ResponseStatus:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      vacancy:
+      Status:
+        type: string
+      VacancyInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
   main_go_internal_api_Struct.ResponseCreateNewVacancy:
     properties:
-      employee:
+      EmployerInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
-      vacancy:
+      Status:
+        type: string
+      VacancyInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.VacancyData'
     type: object
-  main_go_internal_api_Struct.ResponseEmployeeInfo:
+  main_go_internal_api_Struct.ResponseEmployerInfo:
     properties:
-      employee:
+      EmployerInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
-      status:
-        $ref: '#/definitions/main_go_internal_api_Struct.Ok'
+      Status:
+        type: string
+    type: object
+  main_go_internal_api_Struct.ResponseInfoByVacancy:
+    properties:
+      Status:
+        type: string
+      VacancyInfo:
+        $ref: '#/definitions/main_go_internal_api_Struct.VacancyData_Limit'
+    type: object
+  main_go_internal_api_Struct.ResponseOnVacancy:
+    properties:
+      IsResponsed:
+        type: boolean
+      Status:
+        properties:
+          CreatedAt:
+            type: string
+          ID:
+            type: integer
+          Name:
+            type: string
+        type: object
     type: object
   main_go_internal_api_Struct.ResponsePatch:
     properties:
-      response_id:
+      ResponseID:
         type: integer
-      status_id:
+      StatusID:
         type: integer
     type: object
   main_go_internal_api_Struct.ResponseVac:
     properties:
-      about:
+      About:
         type: string
-      email:
+      Email:
         type: string
-      exp_id:
+      ExperienceId:
         type: integer
-      is_visible:
+      IsVisible:
         type: boolean
-      location:
+      Location:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      price:
-        type: string
-      vac_name:
+      Price:
+        type: integer
+      VacancyName:
         type: string
     type: object
   main_go_internal_api_Struct.ResumeResult:
     properties:
-      candidate:
+      CandidateInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
-      resumes:
+      ResumesInfo:
         items:
           $ref: '#/definitions/main_go_internal_api_Struct.ResumeResult_slice'
         type: array
     type: object
   main_go_internal_api_Struct.ResumeResult_slice:
     properties:
-      created_at:
+      CreatedAt:
         type: string
-      description:
+      Description:
         type: string
-      experience:
+      ExperienceInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      id:
+      ID:
         type: integer
-      updated_at:
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.StatusInfo:
     properties:
-      info:
+      Info:
         type: string
-      status:
+      Status:
         type: string
     type: object
   main_go_internal_api_Struct.SuccessEmployer:
     properties:
-      createdAt:
+      CreatedAt:
         type: string
-      email:
+      Email:
         type: string
-      id:
+      ID:
         type: integer
-      inn:
+      INN:
         type: string
-      nameOrganization:
+      NameOrganization:
         type: string
-      password:
+      Password:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      status:
+      Status:
         properties:
-          createdAt:
+          CreatedAt:
             type: string
-          id:
+          ID:
             type: integer
-          name:
+          Name:
             type: string
         type: object
-      updatedAt:
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.VacanciesToResponse:
     properties:
-      aboutWork:
+      AboutWork:
         type: string
-      created_at:
+      CreatedAt:
         type: string
-      email:
+      Email:
         type: string
-      employee_name:
+      EmployerName:
         type: string
-      experience:
+      ExperienceInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      id:
+      ID:
         type: integer
-      isVisible:
+      IsVisible:
         type: boolean
-      location:
+      Location:
         type: string
-      name:
+      Name:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      price:
-        type: string
-      updated_at:
+      Price:
+        type: integer
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.VacancyData:
     properties:
-      aboutWork:
+      AboutWork:
         type: string
-      created_at:
+      CreatedAt:
         type: string
-      email:
+      Email:
         type: string
-      experience:
+      Experience:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      id:
+      ID:
         type: integer
-      isVisible:
+      IsVisible:
         type: boolean
-      location:
+      Location:
         type: string
-      name:
+      Name:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      price:
-        type: string
-      updated_at:
+      Price:
+        type: integer
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.VacancyData_Limit:
     properties:
-      aboutWork:
+      AboutWork:
         type: string
-      created_at:
+      CreatedAt:
         type: string
-      email:
+      Email:
         type: string
-      employee:
+      EmployerInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.SuccessEmployer'
-      experience:
+      ExperienceInfo:
         $ref: '#/definitions/main_go_internal_api_Struct.GetStatus'
-      id:
+      ID:
         type: integer
-      isVisible:
+      IsVisible:
         type: boolean
-      location:
+      Location:
         type: string
-      name:
+      Name:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      price:
-        type: string
-      updated_at:
+      Price:
+        type: integer
+      UpdatedAt:
         type: string
     type: object
   main_go_internal_api_Struct.VacancyPut:
     properties:
-      about:
+      About:
         type: string
-      email:
+      Email:
         type: string
-      exp_id:
+      ExperienceId:
         type: integer
-      id:
+      ID:
         type: integer
-      is_visible:
+      IsVisible:
         type: boolean
-      location:
+      Location:
         type: string
-      phoneNumber:
+      PhoneNumber:
         type: string
-      price:
-        type: string
-      vac_name:
+      Price:
+        type: integer
+      VacancyName:
         type: string
     type: object
 info:
@@ -495,6 +550,47 @@ paths:
       summary: Удаление статуса
       tags:
       - ADMIN
+  /adm/token:
+    get:
+      description: Позволяет проверить токен пользователя на актуальность
+      parameters:
+      - description: токен, который надо проверить
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Возвращает статус и краткую информацию '
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Проверка токена
+      tags:
+      - ADMIN
   /adm/user:
     delete:
       description: Позволяет удалить соискателя из системы. Доступ имеют только пользователи
@@ -539,16 +635,59 @@ paths:
       summary: Удаление аккаунта соискателя
       tags:
       - ADMIN
+  /auth:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить новый токен для пользователя, чтобы у него сохранился
+        доступ к функционалу
+      parameters:
+      - description: email пользователя
+        in: query
+        name: email
+        required: true
+        type: string
+      - description: password пользователя
+        in: query
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные пользователя и его новый токен.
+            Если он авторизовался как соискатель, то будут возвращены его данные.
+            А если как работодатель, то тоже только его
+          schema:
+            $ref: '#/definitions/main_go_internal_api_Struct.ResponseAuthorization'
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Авторизовать пользователя
+      tags:
+      - ADMIN
   /emp:
     get:
       consumes:
       - application/json
       description: Позволяет получить всю основную информацию про работодатля. Доступно
-        всем авторизованным пользователям, но токен обязателен!
+        всем авторизованным пользователям, поэтому токен обязателен!
       parameters:
       - description: ID работодателя
         in: query
-        name: employeeID
+        name: employerID
         required: true
         type: integer
       produces:
@@ -558,7 +697,7 @@ paths:
           description: Возвращает статус 'Ok!' и данные о работодателе
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResponseEmployeeInfo'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseEmployerInfo'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -585,7 +724,7 @@ paths:
       - ApiKeyAuth: []
       summary: Получить информцию про работодателя
       tags:
-      - employee
+      - employer
     post:
       consumes:
       - application/json
@@ -595,7 +734,7 @@ paths:
       - description: Основные данные для добавления работодателя. В поле статус указывайте
           ID, который уже есть в системе!
         in: body
-        name: Employee_info
+        name: Employer_info
         required: true
         schema:
           $ref: '#/definitions/main_go_internal_api_Struct.RequestEmployee'
@@ -606,7 +745,7 @@ paths:
           description: Возвращает статус 'Ok!', данные работодателя и новый токен
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -624,7 +763,7 @@ paths:
             type: array
       summary: Добавить нового работодателя
       tags:
-      - employee
+      - employer
     put:
       consumes:
       - application/json
@@ -634,10 +773,10 @@ paths:
       parameters:
       - description: Данные о работодателе, на которые нужно обновить в системе
         in: body
-        name: Employee_info
+        name: Employer_info
         required: true
         schema:
-          $ref: '#/definitions/main_go_internal_api_Struct.RequestEmployee'
+          $ref: '#/definitions/main_go_internal_api_Struct.RequestEmployer'
       produces:
       - application/json
       responses:
@@ -672,7 +811,7 @@ paths:
       - ApiKeyAuth: []
       summary: Обновить информцию о работодателе
       tags:
-      - employee
+      - employer
   /emp/all:
     get:
       consumes:
@@ -713,7 +852,7 @@ paths:
       - ApiKeyAuth: []
       summary: Получить информцию про всех работодателей
       tags:
-      - employee
+      - employer
   /emp/auth:
     get:
       consumes:
@@ -721,14 +860,14 @@ paths:
       description: Позволяет получить новый токен для работодателя, чтобы у него сохранился
         доступ к функционалу
       parameters:
-      - description: Email работодателя
+      - description: email работодателя
         in: query
-        name: Email
+        name: email
         required: true
         type: string
-      - description: Password работодателя
+      - description: password работодателя
         in: query
-        name: Password
+        name: password
         required: true
         type: string
       produces:
@@ -738,7 +877,13 @@ paths:
           description: Возвращает статус 'Ok!', данные работодателя и новый токен
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer'
+            type: array
+        "401":
+          description: Возвращает ошибку, если такого пользователя в системе нету.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
         "500":
           description: Возвращает ошибку, если на сервере произошла непредвиденная
@@ -749,11 +894,11 @@ paths:
             type: array
       summary: Авторизовать работодателя
       tags:
-      - employee
+      - employer
   /exp:
     get:
       description: Возвращает список всех опыта, который будет использоваться в дальнейшем.
-        Имееют доступ только пользователи роли ADMIN.
+        Имееют доступ все.
       produces:
       - application/json
       responses:
@@ -777,8 +922,6 @@ paths:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
-      security:
-      - ApiKeyAuth: []
       summary: Получение списка опыта
       tags:
       - ADMIN
@@ -833,7 +976,7 @@ paths:
       consumes:
       - application/json
       description: Возвращает список всех значений статусов, который будет использоваться
-        в дальнейшем. Имееют доступ только пользователи роли ADMIN.
+        в дальнейшем. Имееют доступ все.
       produces:
       - application/json
       responses:
@@ -865,8 +1008,6 @@ paths:
             items:
               $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
             type: array
-      security:
-      - ApiKeyAuth: []
       summary: Получение списка статусов
       tags:
       - ADMIN
@@ -922,7 +1063,13 @@ paths:
       consumes:
       - application/json
       description: Позволяет получить всю основную информацию о соискателе при помощи
-        его персонального токена
+        его ID. Доступно всем авторизованным пользователям, поэтому токен обязателен!
+      parameters:
+      - description: ID соискателя
+        in: query
+        name: candidateID
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -930,7 +1077,7 @@ paths:
           description: Возвращает статус 'Ok!' и данные пользователя
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+              $ref: '#/definitions/main_go_internal_api_Struct.GetAllFromCandidates'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -980,7 +1127,7 @@ paths:
             токен, который можно использовать в течении 24 часов!
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -1095,14 +1242,14 @@ paths:
       description: Позволяет получить новый токен для соискателя, чтобы у него сохранился
         доступ к функционалу
       parameters:
-      - description: Email соискателя
+      - description: email соискателя
         in: query
-        name: Email
+        name: email
         required: true
         type: string
-      - description: Password соискателя
+      - description: password соискателя
         in: query
-        name: Password
+        name: password
         required: true
         type: string
       produces:
@@ -1112,7 +1259,7 @@ paths:
           description: Возвращает статус 'Ok!', данные соискателя и новый токен
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate'
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -1131,6 +1278,43 @@ paths:
       summary: Авторизовать соискателя
       tags:
       - candidate
+  /user/recover:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет восстановить пароль пользователю, если он забыл его
+      parameters:
+      - description: новый пароль пользователя
+        in: query
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!', данные соискателя и новый токен
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Восстановить пароль
+      tags:
+      - ADMIN
   /user/response:
     get:
       consumes:
@@ -1238,9 +1422,7 @@ paths:
         "200":
           description: Возвращает статус 'Ok!' и массив всех данных резюме соискателя
           schema:
-            items:
-              $ref: '#/definitions/main_go_internal_api_Struct.ResumeResult'
-            type: array
+            $ref: '#/definitions/main_go_internal_api_Struct.ResumeResult'
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
             (токен или передача каких-либо других данных)
@@ -1516,7 +1698,7 @@ paths:
           description: Возвращает статус 'Ok!' и небольшую информацию
           schema:
             items:
-              $ref: '#/definitions/main_go_internal_api_Struct.InfoCandidate'
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
             type: array
         "400":
           description: Возвращает ошибку, если не удалось получить данные из запроса
@@ -1584,6 +1766,90 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Все вакансии одного работодателя
+      tags:
+      - vacancy
+  /vac/info:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить все данные вакансии по её ID. Если да, то какой
+        у неё статус.
+      parameters:
+      - description: ID вакансии, о которой хотите получить данные
+        in: query
+        name: vacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает информацию о вакансии
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseInfoByVacancy'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Данные вакансии по ID
+      tags:
+      - vacancy
+  /vac/num:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить количество вакансий в системе, доступных для
+        получения. Доступно всем пользователям
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и количество вакансий
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.NumberOfVacancies'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Получить кол-во вакансий в системе
       tags:
       - vacancy
   /vac/response:
@@ -1771,6 +2037,148 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Добавить новый отклик на вакансию
+      tags:
+      - vacancy
+  /vac/time:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить всю основную информацию про все вакансии, которые
+        у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно
+        вернуть. CreatedAt - время, после которого будет идти отсчёт limit.
+      parameters:
+      - description: Кол-во вакансий, в соответствии с которым нужно вернуть их
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: 'время, после которого будет идти отсчёт limit. Сюда указываем
+          время создания последней отображаемой вакансии. Работает, только если использовать
+          время в формате, как в примере: ''2025-06-06T22:40:44Z'' или ''2006-01-02T15:04:05Z'''
+        in: query
+        name: created_at
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!' и массив всех данных вакансий
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.VacancyData_Limit'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      summary: Получение списка вакансий по 'странично' по ВРЕМЕНИ
+      tags:
+      - vacancy
+  /vac/user:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет узнать, откликнулся ли ранее пользователь на эту вакансию.
+        Если да, то какой у неё статус.
+      parameters:
+      - description: ID вакансии, на которую надо посмотреть отклик
+        in: query
+        name: vacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает откликнулся ли уже пользователь на эту вакансию
+            и если это правда, то возвращает статус отклика
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.ResponseOnVacancy'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Проверка отклика
+      tags:
+      - vacancy
+  /vac/visible:
+    patch:
+      consumes:
+      - application/json
+      description: Позволяет изменить видимость вакансии. Доступно только пользователям
+        группы employee и ADMIN
+      parameters:
+      - description: ID вакансии, которую работодатель хочет скрыть или вернуть на
+          всеобщее обозрение
+        in: query
+        name: vacancyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Возвращает статус 'Ok!'
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.StatusInfo'
+            type: array
+        "400":
+          description: Возвращает ошибку, если не удалось получить данные из запроса
+            (токен или передача каких-либо других данных)
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "401":
+          description: Возвращает ошибку, если у пользователя нету доступа к этому
+            функционалу.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+        "500":
+          description: Возвращает ошибку, если на сервере произошла непредвиденная
+            ошибка.
+          schema:
+            items:
+              $ref: '#/definitions/main_go_internal_api_Struct.InfoError'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить видимость вакансии
       tags:
       - vacancy
 securityDefinitions:

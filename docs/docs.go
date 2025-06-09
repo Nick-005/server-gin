@@ -207,6 +207,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/adm/token": {
+            "get": {
+                "description": "Позволяет проверить токен пользователя на актуальность",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Проверка токена",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен, который надо проверить",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус и краткую информацию ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/adm/user": {
             "delete": {
                 "security": [
@@ -271,14 +330,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/emp": {
+        "/auth": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, но токен обязателен!",
+                "description": "Позволяет получить новый токен для пользователя, чтобы у него сохранился доступ к функционалу",
                 "consumes": [
                     "application/json"
                 ],
@@ -286,14 +340,76 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employee"
+                    "ADMIN"
+                ],
+                "summary": "Авторизовать пользователя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "email пользователя",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "password пользователя",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!', данные пользователя и его новый токен. Если он авторизовался как соискатель, то будут возвращены его данные. А если как работодатель, то тоже только его",
+                        "schema": {
+                            "$ref": "#/definitions/main_go_internal_api_Struct.ResponseAuthorization"
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/emp": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, поэтому токен обязателен!",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employer"
                 ],
                 "summary": "Получить информцию про работодателя",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "ID работодателя",
-                        "name": "employeeID",
+                        "name": "employerID",
                         "in": "query",
                         "required": true
                     }
@@ -304,7 +420,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseEmployeeInfo"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseEmployerInfo"
                             }
                         }
                     },
@@ -351,17 +467,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employee"
+                    "employer"
                 ],
                 "summary": "Обновить информцию о работодателе",
                 "parameters": [
                     {
                         "description": "Данные о работодателе, на которые нужно обновить в системе",
-                        "name": "Employee_info",
+                        "name": "Employer_info",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestEmployee"
+                            "$ref": "#/definitions/main_go_internal_api_Struct.RequestEmployer"
                         }
                     }
                 ],
@@ -413,13 +529,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employee"
+                    "employer"
                 ],
                 "summary": "Добавить нового работодателя",
                 "parameters": [
                     {
                         "description": "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!",
-                        "name": "Employee_info",
+                        "name": "Employer_info",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -433,7 +549,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer"
                             }
                         }
                     },
@@ -473,7 +589,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employee"
+                    "employer"
                 ],
                 "summary": "Получить информцию про всех работодателей",
                 "responses": {
@@ -526,21 +642,21 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employee"
+                    "employer"
                 ],
                 "summary": "Авторизовать работодателя",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email работодателя",
-                        "name": "Email",
+                        "description": "email работодателя",
+                        "name": "email",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Password работодателя",
-                        "name": "Password",
+                        "description": "password работодателя",
+                        "name": "password",
                         "in": "query",
                         "required": true
                     }
@@ -551,7 +667,16 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployee"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если такого пользователя в системе нету.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
                             }
                         }
                     },
@@ -569,12 +694,7 @@ const docTemplate = `{
         },
         "/exp": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.",
+                "description": "Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.",
                 "produces": [
                     "application/json"
                 ],
@@ -680,12 +800,7 @@ const docTemplate = `{
         },
         "/status": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ только пользователи роли ADMIN.",
+                "description": "Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ все.",
                 "consumes": [
                     "application/json"
                 ],
@@ -808,7 +923,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Позволяет получить всю основную информацию о соискателе при помощи его персонального токена",
+                "description": "Позволяет получить всю основную информацию о соискателе при помощи его ID. Доступно всем авторизованным пользователям, поэтому токен обязателен!",
                 "consumes": [
                     "application/json"
                 ],
@@ -819,13 +934,22 @@ const docTemplate = `{
                     "candidate"
                 ],
                 "summary": "Получить информцию о соискателе",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID соискателя",
+                        "name": "candidateID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Возвращает статус 'Ok!' и данные пользователя",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.GetAllFromCandidates"
                             }
                         }
                     },
@@ -954,7 +1078,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate"
                             }
                         }
                     },
@@ -1053,15 +1177,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email соискателя",
-                        "name": "Email",
+                        "description": "email соискателя",
+                        "name": "email",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Password соискателя",
-                        "name": "Password",
+                        "description": "password соискателя",
+                        "name": "password",
                         "in": "query",
                         "required": true
                     }
@@ -1072,7 +1196,60 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandiate"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/recover": {
+            "get": {
+                "description": "Позволяет восстановить пароль пользователю, если он забыл его",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ADMIN"
+                ],
+                "summary": "Восстановить пароль",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "новый пароль пользователя",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!', данные соискателя и новый токен",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate"
                             }
                         }
                     },
@@ -1186,10 +1363,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Возвращает статус 'Ok!' и массив всех данных резюме соискателя",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.ResumeResult"
-                            }
+                            "$ref": "#/definitions/main_go_internal_api_Struct.ResumeResult"
                         }
                     },
                     "400": {
@@ -1514,7 +1688,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
                             }
                         }
                     },
@@ -1702,6 +1876,121 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/main_go_internal_api_Struct.ResponseAllVacancyByEmployee"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vac/info": {
+            "get": {
+                "description": "Позволяет получить все данные вакансии по её ID. Если да, то какой у неё статус.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Данные вакансии по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии, о которой хотите получить данные",
+                        "name": "vacancyID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает информацию о вакансии",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseInfoByVacancy"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vac/num": {
+            "get": {
+                "description": "Позволяет получить количество вакансий в системе, доступных для получения. Доступно всем пользователям",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Получить кол-во вакансий в системе",
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и количество вакансий",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.NumberOfVacancies"
                             }
                         }
                     },
@@ -1998,19 +2287,224 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/vac/time": {
+            "get": {
+                "description": "Позволяет получить всю основную информацию про все вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. CreatedAt - время, после которого будет идти отсчёт limit.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Получение списка вакансий по 'странично' по ВРЕМЕНИ",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Кол-во вакансий, в соответствии с которым нужно вернуть их",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "время, после которого будет идти отсчёт limit. Сюда указываем время создания последней отображаемой вакансии. Работает, только если использовать время в формате, как в примере: '2025-06-06T22:40:44Z' или '2006-01-02T15:04:05Z'",
+                        "name": "created_at",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!' и массив всех данных вакансий",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData_Limit"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vac/user": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет узнать, откликнулся ли ранее пользователь на эту вакансию. Если да, то какой у неё статус.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Проверка отклика",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии, на которую надо посмотреть отклик",
+                        "name": "vacancyID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает откликнулся ли уже пользователь на эту вакансию и если это правда, то возвращает статус отклика",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.ResponseOnVacancy"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vac/visible": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Позволяет изменить видимость вакансии. Доступно только пользователям группы employee и ADMIN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancy"
+                ],
+                "summary": "Изменить видимость вакансии",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID вакансии, которую работодатель хочет скрыть или вернуть на всеобщее обозрение",
+                        "name": "vacancyID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Возвращает статус 'Ok!'",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.StatusInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Возвращает ошибку, если у пользователя нету доступа к этому функционалу.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Возвращает ошибку, если на сервере произошла непредвиденная ошибка.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main_go_internal_api_Struct.InfoError"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "main_go_internal_api_Struct.GetAllFromCandidates": {
+            "type": "object",
+            "properties": {
+                "CandidateInfo": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
+                },
+                "Status": {
+                    "type": "string"
+                }
+            }
+        },
         "main_go_internal_api_Struct.GetStatus": {
             "type": "object",
             "properties": {
-                "crated_At": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 }
             }
@@ -2018,39 +2512,39 @@ const docTemplate = `{
         "main_go_internal_api_Struct.InfoCandidate": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "status": {
+                "StatusInfo": {
                     "type": "object",
                     "properties": {
-                        "crated_At": {
+                        "CreatedAt": {
                             "type": "string"
                         },
-                        "id": {
+                        "ID": {
                             "type": "integer"
                         },
-                        "name": {
+                        "Name": {
                             "type": "string"
                         }
                     }
                 },
-                "updated_at": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2058,13 +2552,24 @@ const docTemplate = `{
         "main_go_internal_api_Struct.InfoError": {
             "type": "object",
             "properties": {
-                "error": {
+                "Error": {
                     "type": "string"
                 },
-                "info": {
+                "Info": {
                     "type": "string"
                 },
-                "status": {
+                "Status": {
+                    "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.NumberOfVacancies": {
+            "type": "object",
+            "properties": {
+                "Quantity": {
+                    "type": "integer"
+                },
+                "Status": {
                     "type": "string"
                 }
             }
@@ -2072,7 +2577,7 @@ const docTemplate = `{
         "main_go_internal_api_Struct.Ok": {
             "type": "object",
             "properties": {
-                "status": {
+                "Status": {
                     "type": "string"
                 }
             }
@@ -2080,19 +2585,19 @@ const docTemplate = `{
         "main_go_internal_api_Struct.RequestCandidate": {
             "type": "object",
             "properties": {
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "phone_number": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "status_id": {
+                "StatusId": {
                     "type": "integer"
                 }
             }
@@ -2100,22 +2605,42 @@ const docTemplate = `{
         "main_go_internal_api_Struct.RequestEmployee": {
             "type": "object",
             "properties": {
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "inn": {
+                "INN": {
                     "type": "string"
                 },
-                "name_organization": {
+                "NameOrganization": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "status_id": {
+                "StatusID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.RequestEmployer": {
+            "type": "object",
+            "properties": {
+                "Email": {
+                    "type": "string"
+                },
+                "NameOrganization": {
+                    "type": "string"
+                },
+                "Password": {
+                    "type": "string"
+                },
+                "PhoneNumber": {
+                    "type": "string"
+                },
+                "StatusID": {
                     "type": "integer"
                 }
             }
@@ -2123,10 +2648,10 @@ const docTemplate = `{
         "main_go_internal_api_Struct.RequestResume": {
             "type": "object",
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "experience_id": {
+                "ExperienceID": {
                     "type": "integer"
                 }
             }
@@ -2134,44 +2659,44 @@ const docTemplate = `{
         "main_go_internal_api_Struct.RequestResumeUpdate": {
             "type": "object",
             "properties": {
+                "ExperienceID": {
+                    "type": "integer"
+                },
+                "ResumeID": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
-                },
-                "experience_id": {
-                    "type": "integer"
-                },
-                "resume_id": {
-                    "type": "integer"
                 }
             }
         },
         "main_go_internal_api_Struct.ResponseAllResponsesOnVacancy": {
             "type": "object",
             "properties": {
-                "responses": {
+                "ResponseInfo": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "candidate": {
+                            "CandidateInfo": {
                                 "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
                             },
-                            "created_at": {
+                            "CreatedAt": {
                                 "type": "string"
                             },
-                            "id": {
+                            "ID": {
                                 "type": "integer"
                             },
-                            "status": {
+                            "StatusInfo": {
                                 "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                             }
                         }
                     }
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                "Status": {
+                    "type": "string"
                 },
-                "vacancy": {
+                "VacancyInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
                 }
             }
@@ -2179,58 +2704,69 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResponseAllVacancyByEmployee": {
             "type": "object",
             "properties": {
-                "employee_id": {
+                "EmployerID": {
                     "type": "integer"
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
-                },
-                "vacancies": {
+                "VacanciesInfo": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
                     }
+                },
+                "status": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponseAuthorization": {
+            "type": "object",
+            "properties": {
+                "CandidateInfo": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateCandidate"
+                },
+                "EmployerInfo": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.ResponseCreateEmployer"
                 }
             }
         },
         "main_go_internal_api_Struct.ResponseByVac": {
             "type": "object",
             "properties": {
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "status": {
+                "StatusInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "vacancy": {
+                "VacancyInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.VacanciesToResponse"
                 }
             }
         },
-        "main_go_internal_api_Struct.ResponseCreateCandiate": {
+        "main_go_internal_api_Struct.ResponseCreateCandidate": {
             "type": "object",
             "properties": {
-                "candidate_Info": {
+                "CandidateInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                "Status": {
+                    "type": "string"
                 },
-                "token": {
+                "Token": {
                     "type": "string"
                 }
             }
         },
-        "main_go_internal_api_Struct.ResponseCreateEmployee": {
+        "main_go_internal_api_Struct.ResponseCreateEmployer": {
             "type": "object",
             "properties": {
-                "candidate_Info": {
+                "EmployerInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
                 },
-                "status": {
+                "Status": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
                 },
-                "token": {
+                "Token": {
                     "type": "string"
                 }
             }
@@ -2238,16 +2774,16 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResponseCreateNewResponse": {
             "type": "object",
             "properties": {
-                "response_id": {
+                "ID": {
                     "type": "integer"
                 },
-                "response_status": {
+                "ResponseStatus": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                "Status": {
+                    "type": "string"
                 },
-                "vacancy": {
+                "VacancyInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
                 }
             }
@@ -2255,35 +2791,68 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResponseCreateNewVacancy": {
             "type": "object",
             "properties": {
-                "employee": {
+                "EmployerInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                "Status": {
+                    "type": "string"
                 },
-                "vacancy": {
+                "VacancyInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData"
                 }
             }
         },
-        "main_go_internal_api_Struct.ResponseEmployeeInfo": {
+        "main_go_internal_api_Struct.ResponseEmployerInfo": {
             "type": "object",
             "properties": {
-                "employee": {
+                "EmployerInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
                 },
-                "status": {
-                    "$ref": "#/definitions/main_go_internal_api_Struct.Ok"
+                "Status": {
+                    "type": "string"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponseInfoByVacancy": {
+            "type": "object",
+            "properties": {
+                "Status": {
+                    "type": "string"
+                },
+                "VacancyInfo": {
+                    "$ref": "#/definitions/main_go_internal_api_Struct.VacancyData_Limit"
+                }
+            }
+        },
+        "main_go_internal_api_Struct.ResponseOnVacancy": {
+            "type": "object",
+            "properties": {
+                "IsResponsed": {
+                    "type": "boolean"
+                },
+                "Status": {
+                    "type": "object",
+                    "properties": {
+                        "CreatedAt": {
+                            "type": "string"
+                        },
+                        "ID": {
+                            "type": "integer"
+                        },
+                        "Name": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
         "main_go_internal_api_Struct.ResponsePatch": {
             "type": "object",
             "properties": {
-                "response_id": {
+                "ResponseID": {
                     "type": "integer"
                 },
-                "status_id": {
+                "StatusID": {
                     "type": "integer"
                 }
             }
@@ -2291,28 +2860,28 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResponseVac": {
             "type": "object",
             "properties": {
-                "about": {
+                "About": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "exp_id": {
+                "ExperienceId": {
                     "type": "integer"
                 },
-                "is_visible": {
+                "IsVisible": {
                     "type": "boolean"
                 },
-                "location": {
+                "Location": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "string"
+                "Price": {
+                    "type": "integer"
                 },
-                "vac_name": {
+                "VacancyName": {
                     "type": "string"
                 }
             }
@@ -2320,10 +2889,10 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResumeResult": {
             "type": "object",
             "properties": {
-                "candidate": {
+                "CandidateInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.InfoCandidate"
                 },
-                "resumes": {
+                "ResumesInfo": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/main_go_internal_api_Struct.ResumeResult_slice"
@@ -2334,19 +2903,19 @@ const docTemplate = `{
         "main_go_internal_api_Struct.ResumeResult_slice": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "experience": {
+                "ExperienceInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "updated_at": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2354,10 +2923,10 @@ const docTemplate = `{
         "main_go_internal_api_Struct.StatusInfo": {
             "type": "object",
             "properties": {
-                "info": {
+                "Info": {
                     "type": "string"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 }
             }
@@ -2365,42 +2934,42 @@ const docTemplate = `{
         "main_go_internal_api_Struct.SuccessEmployer": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "inn": {
+                "INN": {
                     "type": "string"
                 },
-                "nameOrganization": {
+                "NameOrganization": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "status": {
+                "Status": {
                     "type": "object",
                     "properties": {
-                        "createdAt": {
+                        "CreatedAt": {
                             "type": "string"
                         },
-                        "id": {
+                        "ID": {
                             "type": "integer"
                         },
-                        "name": {
+                        "Name": {
                             "type": "string"
                         }
                     }
                 },
-                "updatedAt": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2408,40 +2977,40 @@ const docTemplate = `{
         "main_go_internal_api_Struct.VacanciesToResponse": {
             "type": "object",
             "properties": {
-                "aboutWork": {
+                "AboutWork": {
                     "type": "string"
                 },
-                "created_at": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "employee_name": {
+                "EmployerName": {
                     "type": "string"
                 },
-                "experience": {
+                "ExperienceInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "isVisible": {
+                "IsVisible": {
                     "type": "boolean"
                 },
-                "location": {
+                "Location": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "string"
+                "Price": {
+                    "type": "integer"
                 },
-                "updated_at": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2449,37 +3018,37 @@ const docTemplate = `{
         "main_go_internal_api_Struct.VacancyData": {
             "type": "object",
             "properties": {
-                "aboutWork": {
+                "AboutWork": {
                     "type": "string"
                 },
-                "created_at": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "experience": {
+                "Experience": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "isVisible": {
+                "IsVisible": {
                     "type": "boolean"
                 },
-                "location": {
+                "Location": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "string"
+                "Price": {
+                    "type": "integer"
                 },
-                "updated_at": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2487,40 +3056,40 @@ const docTemplate = `{
         "main_go_internal_api_Struct.VacancyData_Limit": {
             "type": "object",
             "properties": {
-                "aboutWork": {
+                "AboutWork": {
                     "type": "string"
                 },
-                "created_at": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "employee": {
+                "EmployerInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.SuccessEmployer"
                 },
-                "experience": {
+                "ExperienceInfo": {
                     "$ref": "#/definitions/main_go_internal_api_Struct.GetStatus"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "isVisible": {
+                "IsVisible": {
                     "type": "boolean"
                 },
-                "location": {
+                "Location": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "string"
+                "Price": {
+                    "type": "integer"
                 },
-                "updated_at": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -2528,31 +3097,31 @@ const docTemplate = `{
         "main_go_internal_api_Struct.VacancyPut": {
             "type": "object",
             "properties": {
-                "about": {
+                "About": {
                     "type": "string"
                 },
-                "email": {
+                "Email": {
                     "type": "string"
                 },
-                "exp_id": {
+                "ExperienceId": {
                     "type": "integer"
                 },
-                "id": {
+                "ID": {
                     "type": "integer"
                 },
-                "is_visible": {
+                "IsVisible": {
                     "type": "boolean"
                 },
-                "location": {
+                "Location": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "PhoneNumber": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "string"
+                "Price": {
+                    "type": "integer"
                 },
-                "vac_name": {
+                "VacancyName": {
                     "type": "string"
                 }
             }

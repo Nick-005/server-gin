@@ -21,6 +21,7 @@ import (
 	"main.go/internal/api/response"
 	candid "main.go/internal/api/user"
 	"main.go/internal/api/vacancy"
+	mailer "main.go/internal/email-sender"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -28,6 +29,14 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	mailer := mailer.New(
+		"sm26.hosting.reg.ru",    // SMTP-сервер
+		465,                      // Порт (587 для TLS, 465 для SSL)
+		"noreply@isp-workall.ru", // Логин от почты
+		"mE3aL8xD2llD0bU7",       // Пароль
+		"noreply@isp-workall.ru", // Отправитель
+	)
+
 	host := os.Getenv("DB_DOMEN")
 	port := 5432
 	user := os.Getenv("DB_USER")
@@ -121,7 +130,7 @@ func main() {
 		apiV1.GET("/user/response", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllUserResponse(storage))
 
 		// ^ ----------------------- Добавить/зарегестрировать нового пользователя -----------------------
-		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
+		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage, mailer))
 
 		// ^ ----------------------- Добавить резюме -----------------------
 		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
@@ -150,7 +159,7 @@ func main() {
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
 
 		// * ----------------------- Все вакансии работодателя по 'странично' по времени -----------------------
-		apiV1.GET("/vac/time", MakeTransaction(storage), vacancy.GetVacancyWithLimitByTime(storage)) // TODO доделать
+		apiV1.GET("/vac/time", MakeTransaction(storage), vacancy.GetVacancyWithLimitByTime(storage))
 
 		// * ----------------------- Получить информацию о вакансии -----------------------
 		apiV1.GET("/vac/info", MakeTransaction(storage), vacancy.GetVacancyInfoByID(storage))
