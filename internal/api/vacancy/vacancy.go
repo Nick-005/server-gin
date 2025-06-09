@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -214,6 +215,47 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		data, err := sqlp.GetVacancyLimit(tx, limit, last_id)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"Status":      "Ok!",
+			"VacancyInfo": data,
+		})
+	}
+}
+
+// @Summary !!!TEST!!! Получение списка вакансий по 'странично' по ВРЕМЕНИ
+// @Description Позволяет получить всю основную информацию про все вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. CreatedAt - время, после которого будет идти отсчёт limit.
+// @Tags vacancy
+// @Accept json
+// @Produce json
+// @Param limit query int true "Кол-во вакансий, в соответствии с которым нужно вернуть их"
+// @Param created_at query string true "время, после которого будет идти отсчёт limit"
+// @Success 200 {array} s.VacancyData_Limit "Возвращает статус 'Ok!' и массив всех данных вакансий"
+// @Failure 400 {array} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 500 {array} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /vac/time [get]
+func GetVacancyWithLimitByTime(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		var cursor struct {
+			CreatedAt time.Time `form:"created_at" time_format:"2006-01-02T15:04:05Z"`
+			ID        uint      `form:"id"`
+			Limit     int       `form:"limit,default=5"`
+		}
+
+		if err := ctx.ShouldBindQuery(&cursor); err != nil {
+			ctx.JSON(400, gin.H{"error": "Invalid query parameters"})
+			return
+		}
+
+		data, err := sqlp.GetVacancyLimitByTimes(tx, cursor.Limit, cursor.CreatedAt)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
