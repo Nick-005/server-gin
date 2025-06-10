@@ -476,18 +476,21 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 func CheckToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		tokenString := ctx.Query("token")
+		tokenString := ctx.Query("Token")
+		// fmt.Println(tokenString)
 		claim := &s.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
 		})
 		if err != nil {
+
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"Status": "Err",
 				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
 			},
 			)
 			return
+
 		}
 
 		if !token.Valid {

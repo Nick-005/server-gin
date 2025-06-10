@@ -742,7 +742,7 @@ func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		fmt.Println(isEmp)
+		// fmt.Println(isEmp)
 		if isEmp {
 			data, err := sqlp.GetEmployeeLogin(tx, uEmail, uPassword)
 			if err != nil {
