@@ -272,7 +272,7 @@ func PostNewRespone(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		status_info, err := sqlp.GetStatusByID(tx, 7)
+		status_info, err := sqlp.GetStatusByID(tx, 3)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
