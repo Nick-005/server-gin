@@ -267,24 +267,47 @@ func GetVacancyLimitByTimes(storage *sqlx.Tx, limit int, time time.Time) ([]s.Va
 	return result, nil
 }
 
-func GetVacancyLimit(storage *sqlx.Tx, limit, last_id int) ([]s.VacancyData_Limit, error) {
+func GetVacancyLimit(storage *sqlx.Tx, limit int, last_id string) ([]s.VacancyData_Limit, error) {
 	var result []s.VacancyData_Limit
-	query, args, err := psql.Select(
-		"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
+	var query string
+	var args []interface{}
+	var err error
+	if last_id != "" {
+		query, args, err = psql.Select(
+			"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
 
-		"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
+			"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
 
-		"em.id as \"employer.id\"", "em.name_organization as \"employer.name_organization\"",
-		"em.phone_number as \"employer.phone_number\"", "em.email as \"employer.email\"",
-		"em.inn as \"employer.inn\"", "em.password as \"employer.password\"",
-		"em.created_at as \"employer.created_at\"", "em.updated_at as \"employer.updated_at\"",
+			"em.id as \"employer.id\"", "em.name_organization as \"employer.name_organization\"",
+			"em.phone_number as \"employer.phone_number\"", "em.email as \"employer.email\"",
+			"em.inn as \"employer.inn\"", "em.password as \"employer.password\"",
+			"em.created_at as \"employer.created_at\"", "em.updated_at as \"employer.updated_at\"",
 
-		"s.id as \"employer.status.id\"", "s.name as \"employer.status.name\"", "s.created_at as \"employer.status.created_at\"",
-	).From("vacancy v").
-		Join("experience e ON v.experience_id = e.id").
-		Join("employer em ON v.emp_id = em.id").
-		Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
-		Where(sq.Gt{"v.id": last_id}).Where(sq.Eq{"v.is_visible": true}).Limit(uint64(limit)).ToSql()
+			"s.id as \"employer.status.id\"", "s.name as \"employer.status.name\"", "s.created_at as \"employer.status.created_at\"",
+		).From("vacancy v").
+			Join("experience e ON v.experience_id = e.id").
+			Join("employer em ON v.emp_id = em.id").
+			Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
+			Where(sq.Eq{"v.is_visible": true}, "v.ctid >", last_id).Limit(uint64(limit)).ToSql()
+	} else {
+		query, args, err = psql.Select(
+			"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
+
+			"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
+
+			"em.id as \"employer.id\"", "em.name_organization as \"employer.name_organization\"",
+			"em.phone_number as \"employer.phone_number\"", "em.email as \"employer.email\"",
+			"em.inn as \"employer.inn\"", "em.password as \"employer.password\"",
+			"em.created_at as \"employer.created_at\"", "em.updated_at as \"employer.updated_at\"",
+
+			"s.id as \"employer.status.id\"", "s.name as \"employer.status.name\"", "s.created_at as \"employer.status.created_at\"",
+		).From("vacancy v").
+			Join("experience e ON v.experience_id = e.id").
+			Join("employer em ON v.emp_id = em.id").
+			Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
+			Where(sq.Eq{"v.is_visible": true}).Limit(uint64(limit)).ToSql()
+	}
+
 	if err != nil {
 		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
 	}

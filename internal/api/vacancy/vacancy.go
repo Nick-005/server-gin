@@ -198,7 +198,7 @@ func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param Limit query int true "Кол-во вакансий, в соответствии с которым нужно вернуть их"
-// @Param LastID query int true "После какого ID будет идти отсчёт limit"
+// @Param CTID query string true "После какого порядкого номера по списку в таблице будет идти отсчёт для limit"
 // @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
@@ -215,15 +215,7 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		last_id, err := strconv.Atoi(ctx.Query("LastID"))
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Error":  err.Error(),
-				"Info":   "Ошибка при попытке получить кол-во last_id! проверьте его и попробуйте снова",
-			})
-			return
-		}
+		last_id := ctx.Query("CTID")
 		data, err := sqlp.GetVacancyLimit(tx, limit, last_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

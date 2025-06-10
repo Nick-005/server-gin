@@ -12,7 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	s "main.go/internal/api/Struct"
 	"main.go/internal/api/get"
-	mailer "main.go/internal/email-sender"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -271,7 +270,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [post]
-func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
+func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		// if err := mailer.Send("nikolay.borodin.1996@bk.ru", "подтверждение почты", "TEst"); err != nil {
@@ -382,7 +381,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 		data, err := sqlp.GetCandidateById(tx, candidId)
 		if err != nil {
-			ctx.JSON(200, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
 				"Info":   "Ошибка в SQL файле",
 				"Error":  err.Error(),
