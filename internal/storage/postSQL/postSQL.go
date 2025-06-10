@@ -590,7 +590,7 @@ func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	var res_id int
 
 	query, args, err := psql.Insert("response").Columns("candidates_id", "vacancy_id", "status_id").
-		Values(id, vac_id, 7).Suffix("ON CONFLICT (candidates_id, vacancy_id) DO NOTHING RETURNING id").ToSql()
+		Values(id, vac_id, 3).Suffix("ON CONFLICT (candidates_id, vacancy_id) DO NOTHING RETURNING id").ToSql()
 	if err != nil {
 		return -1, fmt.Errorf("ошибка в создании SQL скрипта для добавления данных! error: %s", err.Error())
 	}
