@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	s "main.go/internal/api/Struct"
 	"main.go/internal/api/get"
+	mailer "main.go/internal/email-sender"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -270,14 +271,9 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user [post]
-func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
+func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		// if err := mailer.Send("nikolay.borodin.1996@bk.ru", "подтверждение почты", "TEst"); err != nil {
-		// 	log.Printf("Failed to send email: %v", err)
-		// 	ctx.JSON(500, gin.H{"error": "Failed to send email"})
-		// 	return
-		// }
 		var req s.RequestCandidate
 		if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -321,6 +317,7 @@ func PostNewCandidate(storag *sqlx.DB) gin.HandlerFunc {
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		}
+
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

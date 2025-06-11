@@ -42,6 +42,8 @@ func (m *Mailer) worker() {
 	for msg := range m.queue {
 		if err := m.send(msg.To, msg.Subject, msg.Body); err != nil {
 			log.Printf("Failed to send email to %s: %v", msg.To, err)
+		} else {
+			log.Printf("\nSend to %s\n", msg.To)
 		}
 		m.waitGroup.Done()
 	}

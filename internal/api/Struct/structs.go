@@ -207,7 +207,7 @@ type SuccessVacancy struct {
 
 type VacanciesByLimitResponse struct {
 	Status        string              `json:"Status"`
-	VacanciesInfo []VacancyData_Limit `json:"VacanciesInfo"`
+	VacanciesInfo []VacancyData_Limit `json:"VacancyInfo"`
 }
 
 type VacancyData_Limit struct {

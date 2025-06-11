@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -21,6 +23,7 @@ import (
 	"main.go/internal/api/response"
 	candid "main.go/internal/api/user"
 	"main.go/internal/api/vacancy"
+	mailer "main.go/internal/email-sender"
 	sqlp "main.go/internal/storage/postSQL"
 )
 
@@ -28,7 +31,23 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	mailer := mailer.New(
+		os.Getenv("SMTP_HOSTING"),
+		465,
+		os.Getenv("SMTP_DOMEN"),
+		os.Getenv("SMTP_PASSWORD"),
+		os.Getenv("SMTP_DOMEN"),
+		2, // Количество горутин-воркеров
+	)
 
+	// Graceful shutdown: закрываем mailer при завершении
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+		mailer.Close()
+		os.Exit(0)
+	}()
 	host := os.Getenv("DB_DOMEN")
 	port := 5432
 	user := os.Getenv("DB_USER")
@@ -122,7 +141,7 @@ func main() {
 		apiV1.GET("/user/response", AuthMiddleWare(), MakeTransaction(storage), candid.GetAllUserResponse(storage))
 
 		// ^ ----------------------- Добавить/зарегестрировать нового пользователя -----------------------
-		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage))
+		apiV1.POST("/user", MakeTransaction(storage), candid.PostNewCandidate(storage, mailer))
 
 		// ^ ----------------------- Добавить резюме -----------------------
 		apiV1.POST("/user/resume", AuthMiddleWare(), MakeTransaction(storage), candid.PostNewResume(storage))
@@ -176,6 +195,7 @@ func main() {
 		// ! ----------------------- Удаление вакансии -----------------------
 		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
 
+		apiV1.GET("/search", MakeTransaction(storage), SearchSystemXD(storage))
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -209,12 +229,33 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// func AuthorizateUser(storage *sqlx.DB) gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-
-// 	}
-// }
+// @Summary Поиск вакансий
+// @Description Возвращает список всех вакансий, у которых название будет иметь предаваемую часть слова в наименовании вакансии. Имееют доступ все.
+// @Tags vacancy
+// @Produce json
+// @Param Text query string true "Искомый текст в названии вакансии"
+// @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
+// @Router /search [get]
+func SearchSystemXD(storage *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		name := ctx.Query("Text")
+		data, err := sqlp.GetVacanciesBySearchingSubstring(tx, name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"Status":      "Ok!",
+			"VacancyInfo": data,
+		})
+	}
+}
 
 // @Summary Получение списка опыта
 // @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.
@@ -274,7 +315,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		name := ctx.Query("name")
+		name := ctx.Query("Name")
 		err := sqlp.PostNewExperience(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -323,7 +364,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		name := ctx.Query("name")
+		name := ctx.Query("Name")
 		err := sqlp.PostNewStatus(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
