@@ -69,7 +69,7 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	apiV1 := router.Group("/api/v1")
 	{
-		// ~ АДМИН ФУНКЦИОНАЛ
+		// ~ ---------------------------------------------- АДМИН ФУНКЦИОНАЛ ----------------------------------------------
 		// ! Удаление соискателей
 		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
 
@@ -88,14 +88,14 @@ func main() {
 		// * Авторизация всех пользователей, вне зависимости от роли: Соискатель или работодатель
 		apiV1.GET("/auth", MakeTransaction(storage), candid.AuthorizationMethodForAnybody(storage))
 
-		// & Статус
+		// & ---------------------------------------------- Статус ----------------------------------------------
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/status", MakeTransaction(storage), GetAllStatus(storage))
 
 		// ^ ----------------------- Добавить запись -----------------------
 		apiV1.POST("/status", AuthMiddleWare(), MakeTransaction(storage), AddNewStatus(storage))
 
-		// & Работодатель
+		// & ---------------------------------------------- Работодатель ----------------------------------------------
 		// * ----------------------- Получить данные работодателя -----------------------
 		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetEmployeeInfo(storage))
 
@@ -114,14 +114,14 @@ func main() {
 		// ? ----------------------- Обновить статус отклика на вакансию -----------------------
 		apiV1.PATCH("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.PatchResponseStatus(storage))
 
-		// & Опыт
+		// & ---------------------------------------------- Опыт ----------------------------------------------
 		// * ----------------------- Все записи -----------------------
 		apiV1.GET("/exp", MakeTransaction(storage), GetAllExperience(storage))
 
 		// ^ ----------------------- Добавить -----------------------
 		apiV1.POST("/exp", AuthMiddleWare(), MakeTransaction(storage), PostNewExperience(storage))
 
-		// & Соискатели
+		// & ---------------------------------------------- Соискатели ----------------------------------------------
 
 		apiV1.GET("/user/recover", MakeTransaction(storage)) // TODO доделать
 
@@ -161,10 +161,15 @@ func main() {
 		// ! ----------------------- Удаление отклика на вакансию -----------------------
 		apiV1.DELETE("/vac/response", AuthMiddleWare(), MakeTransaction(storage), response.DeleteResponse(storage))
 
-		// & Вакансии
-
+		// & ---------------------------------------------- Вакансии ----------------------------------------------
 		// * ----------------------- Все вакансии работодателя -----------------------
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
+
+		// * ----------------------- Все вакансии, которые включают получаемую подстроку -----------------------
+		apiV1.GET("/vac/search", MakeTransaction(storage), vacancy.SearchVacancies(storage))
+
+		// * ----------------------- Все вакансии, которые подходят под критерии -----------------------
+		apiV1.GET("/vac/filter", MakeTransaction(storage), vacancy.FilterVacanciesByParams(storage))
 
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))
@@ -195,7 +200,6 @@ func main() {
 		// ! ----------------------- Удаление вакансии -----------------------
 		apiV1.DELETE("/vac", AuthMiddleWare(), MakeTransaction(storage), vacancy.DeleteVacancy(storage))
 
-		apiV1.GET("/search", MakeTransaction(storage), SearchSystemXD(storage))
 	}
 
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -226,34 +230,6 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 				return
 			}
 		}
-	}
-}
-
-// @Summary Поиск вакансий
-// @Description Возвращает список всех вакансий, у которых название будет иметь предаваемую часть слова в наименовании вакансии. Имееют доступ все.
-// @Tags vacancy
-// @Produce json
-// @Param Text query string true "Искомый текст в названии вакансии"
-// @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
-// @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
-// @Router /search [get]
-func SearchSystemXD(storage *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		name := ctx.Query("Text")
-		data, err := sqlp.GetVacanciesBySearchingSubstring(tx, name)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"Status": "Err",
-				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
-				"Error":  err.Error(),
-			})
-			return
-		}
-		ctx.JSON(200, gin.H{
-			"Status":      "Ok!",
-			"VacancyInfo": data,
-		})
 	}
 }
 
