@@ -234,6 +234,7 @@ func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
 					"Error":  err.Error(),
 					"Info":   "Ошибка при попытке получить кол-во ExpID! проверьте его и попробуйте снова",
 				})
+				return
 			}
 		}
 		if isMin {
@@ -244,6 +245,7 @@ func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
 					"Error":  err.Error(),
 					"Info":   "Ошибка при попытке получить кол-во Min! проверьте его и попробуйте снова",
 				})
+				return
 			}
 		}
 		if isMax {
@@ -254,6 +256,7 @@ func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
 					"Error":  err.Error(),
 					"Info":   "Ошибка при попытке получить кол-во Max! проверьте его и попробуйте снова",
 				})
+				return
 			}
 		}
 		if isText {

@@ -71,6 +71,72 @@ func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Изменить статус работодателя
+// @Description Позволяет изменить статус работодателя. Доступно только пользователям группы ADMIN
+// @Tags ADMIN
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param EmployerID query int true "ID работодателя, статус которого нужно обновить"
+// @Param StatusID query int true "ID статуса, на который нужно поменять"
+// @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!' и небольшую информацию"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /adm/emp [patch]
+func PatchEmployerStatus(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		role, ok := get.GetUserRoleFromContext(ctx)
+		if !ok {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
+			})
+			return
+		}
+		if role != "ADMIN" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Info":   "У вас нету прав к этому функционалу!",
+			})
+			return
+		}
+		queryParams := ctx.Request.URL.Query()
+		EmpID, err := strconv.Atoi(queryParams.Get("EmployerID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши передаваемые данные и попробуйте снова!",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		StatusID, err := strconv.Atoi(queryParams.Get("StatusID"))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в парсинге запроса! Пожалуйста перепроверьте ваши передаваемые данные и попробуйте снова!",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		err = sqlp.PatchStatusEmployer(tx, StatusID, EmpID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка в SQL файле для обновления данных отклика на вакансию",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
+		})
+	}
+}
+
 // @Summary Обновить информцию о работодателе
 // @Description Позволяет обновить всю основную информацию о работодателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы employee и ADMIN
 // @Tags employer
@@ -231,7 +297,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех работодателей
 // @Description Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN
-// @Tags employer
+// @Tags ADMIN
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -239,7 +305,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
-// @Router /emp/all [get]
+// @Router /adm/emp [get]
 func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)

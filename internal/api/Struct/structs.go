@@ -113,6 +113,11 @@ type ResponsePatch struct {
 	Status_id   int `json:"StatusID"`
 }
 
+type EmployerInfoForPatch struct {
+	Employer_id int `json:"EmployerID"`
+	Status_id   int `json:"StatusID"`
+}
+
 type Vacancies struct {
 	ID           int       `db:"id" json:"ID"`
 	Emp_ID       int       `db:"emp_id" json:"EmployerID"`

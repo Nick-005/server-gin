@@ -82,6 +82,12 @@ func main() {
 		// ! Удаление опыта
 		apiV1.DELETE("/adm/exp", AuthMiddleWare(), MakeTransaction(storage), DeleteExperience(storage))
 
+		// ? ----------------------- Обновить статус работодателя -----------------------
+		apiV1.PATCH("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.PatchEmployerStatus(storage))
+
+		// * ----------------------- Получить список всех работодателей -----------------------
+		apiV1.GET("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
+
 		// * Проверка токена на валидность
 		apiV1.GET("/adm/token", CheckToken())
 
@@ -98,9 +104,6 @@ func main() {
 		// & ---------------------------------------------- Работодатель ----------------------------------------------
 		// * ----------------------- Получить данные работодателя -----------------------
 		apiV1.GET("/emp", AuthMiddleWare(), MakeTransaction(storage), employee.GetEmployeeInfo(storage))
-
-		// * ----------------------- Получить список всех работодателей -----------------------
-		apiV1.GET("/emp/all", AuthMiddleWare(), MakeTransaction(storage), employee.GetAllEmployee(storage))
 
 		// * ----------------------- Авторизовать работодателя (выдать новый токен) -----------------------
 		apiV1.GET("/emp/auth", MakeTransaction(storage), employee.AuthorizationMethodEmp(storage))
