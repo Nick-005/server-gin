@@ -215,7 +215,7 @@ func FilterVacanciesByParams(storage *sqlx.DB) gin.HandlerFunc {
 		if !(isExp || isMin || isMax) {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
-				"Info":   "Вы передали ни одного фильтра! А нахуй тогда нужен этот фильтр, если никаких фильтров нету?",
+				"Info":   "Вы передали ни одного фильтра!",
 			})
 			return
 		}
