@@ -267,6 +267,54 @@ func GetVacancyLimitByTimes(storage *sqlx.Tx, limit int, time time.Time) ([]s.Va
 	return result, nil
 }
 
+func GetVacanciesToFind(storage *sqlx.Tx, ExpID, Max, Min int, Text string, IsExp, IsMax, IsMin, IsText bool) ([]s.VacancyData_Limit, error) {
+	var result []s.VacancyData_Limit
+
+	queryBuilder := psql.Select(
+		"v.id", "v.name", "v.price", "v.email", "v.phone_number", "v.location", "v.about_work", "v.is_visible", "v.created_at", "v.updated_at",
+
+		"e.id as \"experience.id\"", "e.name as \"experience.name\"", "e.created_at as \"experience.created_at\"",
+
+		"em.id as \"employer.id\"", "em.name_organization as \"employer.name_organization\"",
+		"em.phone_number as \"employer.phone_number\"", "em.email as \"employer.email\"",
+		"em.inn as \"employer.inn\"", "em.password as \"employer.password\"",
+		"em.created_at as \"employer.created_at\"", "em.updated_at as \"employer.updated_at\"",
+
+		"s.id as \"employer.status.id\"", "s.name as \"employer.status.name\"", "s.created_at as \"employer.status.created_at\"",
+	).From("vacancy v").
+		Join("experience e ON v.experience_id = e.id").
+		Join("employer em ON v.emp_id = em.id").
+		Join("status s ON em.status_id = s.id").OrderBy("v.id ASC").
+		Where(sq.Eq{"v.is_visible": true})
+
+	if IsExp {
+		queryBuilder = queryBuilder.Where(sq.Eq{"e.id": ExpID})
+	}
+
+	if IsMax && IsMin {
+		queryBuilder = queryBuilder.Where(sq.GtOrEq{"v.price": Min}).Where(sq.LtOrEq{"v.price": Max})
+	} else if IsMax {
+		queryBuilder = queryBuilder.Where(sq.LtOrEq{"v.price": Max})
+	} else if IsMin {
+		queryBuilder = queryBuilder.Where(sq.GtOrEq{"v.price": Min})
+	}
+
+	if IsText {
+		queryBuilder = queryBuilder.Where(sq.ILike{"v.name": "%" + Text + "%"})
+	}
+
+	query, args, err := queryBuilder.ToSql()
+
+	if err != nil {
+		return result, fmt.Errorf("ошибка в создании SQL скрипта для получения данных! error: %s", err.Error())
+	}
+	err = storage.Select(&result, query, args...)
+	if err != nil {
+		return result, fmt.Errorf("ошибка в маппинге данных вакансий! error: %s", err.Error())
+	}
+	return result, nil
+}
+
 func GetVacanciesByFilter(storage *sqlx.Tx, ExpID, Max, Min int, IsExp, IsMax, IsMin bool) ([]s.VacancyData_Limit, error) {
 	var result []s.VacancyData_Limit
 
