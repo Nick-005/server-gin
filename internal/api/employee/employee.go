@@ -269,15 +269,29 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		claim := &s.Claims{
-			ID:    data.ID,
-			Role:  "employee",
-			Email: data.Email,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(expirationTime),
-				IssuedAt:  jwt.NewNumericDate(time.Now()),
-			},
+		claim := &s.Claims{}
+		if data.Status.ID == 2 {
+			claim = &s.Claims{
+				ID:    data.ID,
+				Role:  "ADMIN",
+				Email: data.Email,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 5 * 12)),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
+			}
+		} else {
+			claim = &s.Claims{
+				ID:    data.ID,
+				Role:  "employee",
+				Email: data.Email,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(expirationTime),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
+			}
 		}
+
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
