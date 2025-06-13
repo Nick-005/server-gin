@@ -165,13 +165,8 @@ func main() {
 		// * ----------------------- Все вакансии работодателя -----------------------
 		apiV1.GET("/vac/emp", AuthMiddleWare(), MakeTransaction(storage), vacancy.GetAllVacanciesByEmployee(storage))
 
-		apiV1.GET("/vac/find", MakeTransaction(storage), vacancy.FindVacanciesBySomeCriteries(storage))
-
 		// * ----------------------- Все вакансии, которые включают получаемую подстроку -----------------------
 		apiV1.GET("/vac/search", MakeTransaction(storage), vacancy.SearchVacancies(storage))
-
-		// * ----------------------- Все вакансии, которые подходят под критерии -----------------------
-		apiV1.GET("/vac/filter", MakeTransaction(storage), vacancy.FilterVacanciesByParams(storage))
 
 		// * ----------------------- Все вакансии работодателя по 'странично' -----------------------
 		apiV1.GET("/vac", MakeTransaction(storage), vacancy.GetVacancyWithLimit(storage))

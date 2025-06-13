@@ -203,8 +203,8 @@ func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 // @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если произошла при попытке получить передаваемые данные. Или если параметров для фильтрации вообще не будет"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
-// @Router /vac/find [get]
-func FindVacanciesBySomeCriteries(storage *sqlx.DB) gin.HandlerFunc {
+// @Router /vac/search [get]
+func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		queryParams := ctx.Request.URL.Query()
@@ -260,112 +260,6 @@ func FindVacanciesBySomeCriteries(storage *sqlx.DB) gin.HandlerFunc {
 			Text = queryParams.Get("Text")
 		}
 		data, err := sqlp.GetVacanciesToFind(tx, ExpID, Max, Min, Text, isExp, isMax, isMin, isText)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"Status": "Err",
-				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
-				"Error":  err.Error(),
-			})
-			return
-		}
-		ctx.JSON(200, gin.H{
-			"Status":      "Ok!",
-			"VacancyInfo": data,
-		})
-	}
-}
-
-// @Summary фильтр ВИДИМЫХ вакансий
-// @Description Возвращает список всех вакансий, которые будут соответствовать передаваемым требованиям. Имееют доступ все.
-// @Tags vacancy
-// @Produce json
-// @Param ExpID query int false "ID опыта"
-// @Param Min query int false "Минимальная ЗП"
-// @Param Max query int false "Максимальная ЗП"
-// @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
-// @Failure 400 {object} s.InfoError "Возвращает ошибку, если произошла при попытке получить передаваемые данные. Или если параметров для фильтрации вообще не будет"
-// @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
-// @Router /vac/filter [get]
-func FilterVacanciesByParams(storage *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		queryParams := ctx.Request.URL.Query()
-
-		isExp := queryParams.Has("ExpID")
-		isMin := queryParams.Has("Min")
-		isMax := queryParams.Has("Max")
-
-		if !(isExp || isMin || isMax) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "Вы передали ни одного фильтра!",
-			})
-			return
-		}
-		var err error
-		var ExpID int
-		var Min int
-		var Max int
-
-		if isExp {
-			ExpID, err = strconv.Atoi(queryParams.Get("ExpID"))
-			if err != nil {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"Status": "Err",
-					"Error":  err.Error(),
-					"Info":   "Ошибка при попытке получить кол-во ExpID! проверьте его и попробуйте снова",
-				})
-			}
-		}
-		if isMin {
-			Min, err = strconv.Atoi(queryParams.Get("Min"))
-			if err != nil {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"Status": "Err",
-					"Error":  err.Error(),
-					"Info":   "Ошибка при попытке получить кол-во Min! проверьте его и попробуйте снова",
-				})
-			}
-		}
-		if isMax {
-			Max, err = strconv.Atoi(queryParams.Get("Max"))
-			if err != nil {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"Status": "Err",
-					"Error":  err.Error(),
-					"Info":   "Ошибка при попытке получить кол-во Max! проверьте его и попробуйте снова",
-				})
-			}
-		}
-		data, err := sqlp.GetVacanciesByFilter(tx, ExpID, Max, Min, isExp, isMax, isMin)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"Status": "Err",
-				"Info":   "Ошибка в SQL файле для получения данных о вакансиях",
-				"Error":  err.Error(),
-			})
-			return
-		}
-		ctx.JSON(200, gin.H{
-			"Status":      "Ok!",
-			"VacancyInfo": data,
-		})
-	}
-}
-
-// @Summary Поиск ВИДИМЫХ вакансий
-// @Description Возвращает список всех вакансий, у которых название будет иметь предаваемую часть слова в наименовании вакансии. Имееют доступ все.
-// @Tags vacancy
-// @Produce json
-// @Param Text query string true "Искомый текст в названии вакансии"
-// @Success 200 {object} s.VacanciesByLimitResponse "Возвращает статус 'Ok!' и массив всех данных вакансий"
-// @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
-// @Router /vac/search [get]
-func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		name := ctx.Query("Text")
-		data, err := sqlp.GetVacanciesBySearchingSubstring(tx, name)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Status": "Err",
