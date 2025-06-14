@@ -410,3 +410,11 @@ type Claims struct {
 	Role  string `json:"role"`
 	jwt.RegisteredClaims
 }
+
+type ClaimsToVerify struct {
+	ID    int    `json:"uid"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	Used  bool   `json:isUsed`
+	jwt.RegisteredClaims
+}

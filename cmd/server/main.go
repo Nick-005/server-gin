@@ -128,6 +128,8 @@ func main() {
 
 		apiV1.GET("/user/recover", MakeTransaction(storage)) // TODO доделать
 
+		apiV1.GET("/user/confirm-email", MakeTransaction(storage), candid.CheckToken(storage))
+
 		// * ----------------------- Получить все данные пользователя -----------------------
 		apiV1.GET("/user", AuthMiddleWare(), MakeTransaction(storage), candid.GetCandidateInfo(storage))
 

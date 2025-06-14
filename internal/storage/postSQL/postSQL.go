@@ -732,6 +732,23 @@ func PostResponse(storage *sqlx.Tx, id, vac_id int) (int, error) {
 	return res_id, nil
 }
 
+func ConfirmUserEmail(storage *sqlx.Tx, email string) error {
+	query, args, err := psql.Update("candidates").Set("verify", true).Where(sq.Eq{"email": email}).ToSql()
+	if err != nil {
+		return err
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("данные не были обновлены, так как обновляемого работодателя не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+	return nil
+}
+
 func PatchStatusEmployer(storage *sqlx.Tx, statusID, empID int) error {
 
 	query, args, err := psql.Update("employer").Set("status_id", statusID).Where(sq.Eq{"id": empID}).ToSql()
@@ -825,7 +842,7 @@ func GetCandidateByLogin(storage *sqlx.Tx, email, password string) (s.InfoCandid
 
 	err = storage.Get(&result, query, args...)
 	if err == sql.ErrNoRows {
-		return result, fmt.Errorf("Неверный логин или пароль. Такого соискателя нету в системе! error: %v", err)
+		return result, fmt.Errorf("неверный логин или пароль. Такого соискателя нету в системе! error: %v", err)
 	} else if err != nil {
 		return result, fmt.Errorf("ошибка в маппинге данных! error: %s", err.Error())
 	}
@@ -1210,4 +1227,40 @@ func CreateAccessToken(claim *s.Claims) (string, error) {
 	result = strings.ReplaceAll(result, "+", "-")
 	result = strings.ReplaceAll(result, "/", "_")
 	return result, nil
+}
+
+func CreateVerifyToken(claim *s.ClaimsToVerify) (string, error) {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	result, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN_USER")))
+	if err != nil {
+		return "error", err
+	}
+	result = strings.ReplaceAll(result, "+", "-")
+	result = strings.ReplaceAll(result, "/", "_")
+	return result, nil
+}
+func GetGenerateTokenToVerify(email string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": email,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+	})
+
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN_USER")))
+}
+
+func ParseVerifyToken(tokenString string) (string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET_TOKEN_USER")), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims["email"].(string), nil
+	}
+
+	return "", fmt.Errorf("invalid token")
 }
