@@ -943,7 +943,7 @@ func RecoverPassword(mailer *mailer.Mailer) gin.HandlerFunc {
 // @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /user/reset-password [get]
-func ResetPasswordForUser() gin.HandlerFunc {
+func ResetPasswordForUser(mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		token := ctx.Query("Token")
@@ -978,6 +978,9 @@ func ResetPasswordForUser() gin.HandlerFunc {
 			})
 			return
 		}
+		text := fmt.Sprintf("Ваш старый пароль был успешно сброшен!\n\nВот ваш новый пароль от учётной записи:\n\nЛогин:%s\nПароль:%s\n\n\n\nС уважением, WorkAll!", tokenArgs.Email, newPassword)
+		mailer.SendAsync(tokenArgs.Email, "Ваш пароль был обновлён!", text)
+
 		ctx.Redirect(302, "https://workall-9eca6.web.app/auth")
 	}
 }

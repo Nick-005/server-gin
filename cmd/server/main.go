@@ -128,7 +128,7 @@ func main() {
 
 		apiV1.GET("/user/recover", MakeTransaction(storage), candid.RecoverPassword(mailer)) // TODO доделать
 
-		apiV1.GET("/user/reset-password", MakeTransaction(storage), candid.ResetPasswordForUser())
+		apiV1.GET("/user/reset-password", MakeTransaction(storage), candid.ResetPasswordForUser(mailer))
 
 		apiV1.GET("/user/confirm-email", MakeTransaction(storage), candid.CheckToken(storage))
 
