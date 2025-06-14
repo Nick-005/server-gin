@@ -765,7 +765,6 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
-// TODO доделать
 // @Summary Восстановить пароль
 // @Description Позволяет восстановить пароль пользователю, если он забыл его
 // @Tags ADMIN
@@ -822,119 +821,11 @@ func RecoverPassword(mailer *mailer.Mailer) gin.HandlerFunc {
 		}
 
 		ctx.Redirect(302, "https://workall-9eca6.web.app/auth")
-		// token := ctx.Query("token")
-		// if token == "" {
-		// 	ctx.JSON(http.StatusBadRequest, gin.H{"error": "Token is required"})
-		// 	return
-		// }
-
-		// // Проверяем токен
-		// var tokenInfo struct {
-		// 	ID        int
-		// 	UserID    int
-		// 	Email     string
-		// 	ExpiresAt time.Time
-		// 	Used      bool
-		// }
-
-		// query := h.db.Select("prt.id, prt.user_id, u.email, prt.expires_at, prt.used").
-		// 	From("password_reset_tokens prt").
-		// 	Join("users u ON prt.user_id = u.id").
-		// 	Where(squirrel.Eq{"prt.token": token})
-
-		// err := query.QueryRow().Scan(
-		// 	&tokenInfo.ID,
-		// 	&tokenInfo.UserID,
-		// 	&tokenInfo.Email,
-		// 	&tokenInfo.ExpiresAt,
-		// 	&tokenInfo.Used,
-		// )
-
-		// if err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired token"})
-		// 	return
-		// }
-
-		// if tokenInfo.Used || time.Now().After(tokenInfo.ExpiresAt) {
-		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Token already used or expired"})
-		// 	return
-		// }
-
-		// Генерируем новый пароль
-		// newPassword, err := utils.GenerateMediumPassword()
-		// if err != nil {
-		// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate password"})
-		// 	return
-		// }
-
-		// // Хешируем пароль перед сохранением
-		// hashedPassword, err := utils.HassPassword(newPassword)
-		// if err != nil {
-		// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		// 	return
-		// }
-
-		// Обновляем пароль пользователя
-		// _, err = h.db.Update("users").
-		// 	Set("password", hashedPassword).
-		// 	Where(squirrel.Eq{"id": tokenInfo.UserID}).
-		// 	Exec()
-
-		// if err != nil {
-		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
-		// 	return
-		// }
-
-		// // Помечаем токен как использованный
-		// _, err = h.db.Update("password_reset_tokens").
-		// 	Set("used", true).
-		// 	Where(squirrel.Eq{"id": tokenInfo.ID}).
-		// 	Exec()
-
-		// if err != nil {
-		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark token as used"})
-		// 	return
-		// }
-
-		// Отправляем письмо с новым паролем
-		// subject := "Your New Password"
-		// body := fmt.Sprintf("Your new password is: %s\n\nPlease change it after login.", newPassword)
-
-		// mailer.SendAsync(tokenInfo.Email, subject, body)
-
-		// ctx.JSON(http.StatusOK, gin.H{"message": "Password has been reset and sent to your email"})
-		// token := ctx.Query("Token")
-		// password := ctx.Query("Password")
-
-		// email, err := sqlp.ParseVerifyToken(token)
-		// if err != nil {
-		// 	ctx.JSON(http.StatusUnauthorized, gin.H{
-		// 		"Status": "Err",
-		// 		"Info":   "Ошибка при дешифровке токена!",
-		// 		"Error":  err.Error(),
-		// 	})
-		// 	return
-		// }
-
-		// err = sqlp.PatchCandidatePassword(tx, email, password)
-		// // token, err := sqlp.CreateAccessToken(claim)
-		// if err != nil {
-		// 	ctx.JSON(http.StatusInternalServerError, gin.H{
-		// 		"Status": "Err",
-		// 		"Info":   "Произошла ошибка на стороне сервера. Ошибка при обновлении пароля",
-		// 		"Error":  err.Error(),
-		// 	})
-		// 	return
-		// }
-		// ctx.JSON(200, gin.H{
-		// 	"Status": "Ok!",
-		// 	"Info":   "Пароль успешно обновлён",
-		// })
 	}
 }
 
-// @Summary Сбросить пароль
-// @Description Позволяет сбросить пароль пользователю, если он забыл его. Система сама присвоит ему новый пароль
+// @Summary Сгенерировать новый пароль
+// @Description Позволяет сгенерировать и присвоить новый пароль пользователю. Новый пароль будет отправлен ему на почту.
 // @Tags ADMIN
 // @Accept json
 // @Produce json
