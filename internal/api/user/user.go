@@ -444,10 +444,7 @@ func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		ctx.JSON(http.StatusOK, gin.H{
-			"Status": "Ok!",
-			"Info":   "Почта успешно подтверждена!",
-		})
+		ctx.Redirect(http.StatusFound, "https://workall-9eca6.web.app/auth")
 	}
 }
 
