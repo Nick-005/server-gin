@@ -261,6 +261,61 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 	}
 }
 
+// @Summary Подтвердить email
+// @Description Позволяет изменить статус подтверждения email пользователя.
+// @Tags ADMIN
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param Token query string true "Токен для подтверждения почты, который приходит на почту пользователю"
+// @Success 200 {object} s.StatusInfo "Возвращает статус 'Ok!'"
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /verify [patch]
+// func PatchVerifyStatus(storag *sqlx.DB) gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+
+// 		tokenString := ctx.Query("Token")
+// 		claim := &s.ClaimsToVerify{}
+// 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
+// 			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
+// 		})
+// 		if err != nil {
+
+// 			ctx.JSON(http.StatusUnauthorized, gin.H{
+// 				"Status": "Err",
+// 				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
+// 			},
+// 			)
+// 			return
+
+// 		}
+// 		if !token.Valid {
+// 			ctx.JSON(http.StatusUnauthorized, gin.H{
+// 				"Status": "Err",
+// 				"Error":  "Невалидный токен! Пожалуйста перепроверьте его",
+// 			})
+// 			return
+// 		}
+// 		err = sqlp.ConfirmUserEmail(tx, claim.Email)
+// 		if err != nil {
+// 			ctx.JSON(http.StatusBadRequest, gin.H{
+// 				"Status": "Err",
+// 				"Info":   "Произошла ошибка в ",
+// 				"Error":  err.Error(),
+// 			})
+// 			return
+// 		}
+
+// 		ctx.JSON(200, gin.H{
+// 			"Status": "Ok!",
+// 			"Info":   "Данные успешно обновлены!",
+// 		})
+// 	}
+// }
+
 // @Summary Добавить нового соискателя
 // @Description Позволяет добавлять нового соискателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу. Доступ имеют роли Candidate и ADMIN
 // @Tags candidate
@@ -330,6 +385,18 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 				},
 			}
 		}
+		tokenVerify, err := sqlp.GetGenerateTokenToVerify(data.Email)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Info":   "Ошибка при создании токена для подтверждения почты пользователя. Обратитесь в поддержку!",
+				"Error":  err.Error(),
+			})
+			return
+		}
+		link := fmt.Sprint("https://isp-workall.online/api/v1/user/confirm-email?Token=")
+		textToSend := fmt.Sprintf("Здравствуйте, %s!\n\nБлагодарим вас за регистрацию на нашем сервисе!\n\nДля подтверждения почты, пожалуйста, перейдите по ссылке ниже:\n%s%s", data.Name, link, tokenVerify)
+		mailer.SendAsync(data.Email, "Подтверждения почты!", textToSend)
 		token, err := sqlp.CreateAccessToken(claim)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -343,6 +410,43 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 			"Status":        "Ok!",
 			"CandidateInfo": data,
 			"Token":         token,
+		})
+	}
+}
+
+// @Summary Подтверждение почты пользователя
+// @Description Позволяет подтвердить почту пользователя
+// @Tags ADMIN
+// @Produce json
+// @Param Token query string true "токен, который надо проверить"
+// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
+// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
+// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
+// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
+// @Router /user/confirm-email [get]
+func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
+		tokenString := ctx.Query("Token")
+		email, err := sqlp.ParseVerifyToken(tokenString)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
+			})
+			return
+		}
+		err = sqlp.ConfirmUserEmail(tx, email)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Status": "Err",
+				"Error":  fmt.Sprintf("Ошибка в SQL файле! error: %v", err),
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"Status": "Ok!",
+			"Info":   "Почта успешно подтверждена!",
 		})
 	}
 }
