@@ -806,7 +806,7 @@ func RecoverPassword(mailer *mailer.Mailer) gin.HandlerFunc {
 				return
 			}
 
-			link := fmt.Sprintf("https://isp-workall.online/api/v1/user/pr#Token=%s", token)
+			link := fmt.Sprintf("https://isp-workall.online/api/v1/user/pr?Token=%s", token)
 			text := fmt.Sprintf("Учётная запись в системе WorkAll\n\nМы получили запрос на сброс вашего пароля. Подтвердите это действие и перейдтие по ссылке ниже, чтобы сбросить пароль от вашей учётной записи. Иначе, просто проигнорируйте это письмо!\n%s\n\nС уважением, WorkAll!", link)
 			mailer.SendAsync(email, "Сброс пароля", text)
 
