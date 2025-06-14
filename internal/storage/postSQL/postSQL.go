@@ -598,8 +598,38 @@ func GetResponseOnVacancy(storage *sqlx.Tx, uid, vac_id int) (s.ResponseOnVacanc
 	return result, nil
 }
 
-func AuthorizationMethodForUsers(storage *sqlx.Tx, email, password string) {
+func CheckEmailInSystem(storage *sqlx.Tx, email string) (bool, int, error) {
+	countEmp, countUsr := -1, -1
 
+	query1, args1, err := psql.Select("count(id)").From("employer").Where(sq.Eq{"email": email}).ToSql()
+	if err != nil {
+		return false, -1, err
+	}
+
+	err = storage.Get(&countEmp, query1, args1...)
+	if err == sql.ErrNoRows {
+		countEmp = 0
+	} else if err != nil {
+		return false, -1, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
+	}
+
+	query2, args2, err := psql.Select("count(id)").From("candidates").Where(sq.Eq{"email": email}).ToSql()
+
+	if err != nil {
+		return false, -1, err
+	}
+	err = storage.Get(&countUsr, query2, args2...)
+	if err == sql.ErrNoRows {
+		countUsr = 0
+	} else if err != nil {
+		return false, -1, fmt.Errorf("ошибка при выполнении скрипта на добавления данных. error: %s", err.Error())
+	}
+
+	if countEmp == 0 && countUsr == 0 {
+		return true, -1, fmt.Errorf("пользователя с такой почтой не существует в системе. Проверьте почту и попробуйте снова")
+	}
+
+	return true, countEmp, nil
 }
 
 func CheckEmailIsValid(storage *sqlx.Tx, email string) (bool, error) {
@@ -868,6 +898,48 @@ func GetCandidateByEmail(storage *sqlx.Tx, email string) (s.InfoCandidate, error
 	}
 
 	return result, nil
+}
+
+func PatchEmployerPassword(storage *sqlx.Tx, email, password string) error {
+
+	query, args, err := psql.Update("employer").
+		Set("password", password).
+		Where(sq.Eq{"email": email}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("пароль не был обновлён, так как обновляемого работодателя не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
+}
+
+func PatchCandidatePassword(storage *sqlx.Tx, email, password string) error {
+
+	query, args, err := psql.Update("candidates").
+		Set("password", password).
+		Where(sq.Eq{"email": email}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("ошибка в создании SQL скрипта для обновления данных! error: %s", err.Error())
+	}
+	result, err := storage.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("пароль не был обновлён, так как обновляемого пользователя не было найдено! Перепроверьте данные и попробуйте снова")
+	}
+
+	return nil
 }
 
 func DeleteResponse(storage *sqlx.Tx, id, uid int) error {
@@ -1243,7 +1315,7 @@ func CreateVerifyToken(claim *s.ClaimsToVerify) (string, error) {
 func GetGenerateTokenToVerify(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"exp":   time.Now().Add(time.Minute * 30).Unix(),
 	})
 
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN_USER")))
