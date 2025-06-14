@@ -30,7 +30,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/user [delete]
-func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
+func DeleteUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		role, ok := get.GetUserRoleFromContext(ctx)
@@ -415,16 +415,6 @@ func PostNewCandidate(storag *sqlx.DB, mailer *mailer.Mailer) gin.HandlerFunc {
 	}
 }
 
-// @Summary Подтверждение почты пользователя
-// @Description Позволяет подтвердить почту пользователя
-// @Tags ADMIN
-// @Produce json
-// @Param Token query string true "токен, который надо проверить"
-// @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
-// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса"
-// @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
-// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
-// @Router /user/confirm-email [get]
 func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
@@ -445,7 +435,9 @@ func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		ctx.Redirect(http.StatusFound, "https://workall-9eca6.web.app/auth")
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+		})
 	}
 }
 
@@ -820,7 +812,9 @@ func RecoverPassword(mailer *mailer.Mailer) gin.HandlerFunc {
 
 		}
 
-		ctx.Redirect(302, "https://workall-9eca6.web.app/auth")
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+		})
 	}
 }
 
@@ -862,7 +856,9 @@ func ResetPasswordForUser(mailer *mailer.Mailer) gin.HandlerFunc {
 		text := fmt.Sprintf("Ваш старый пароль был успешно сброшен!\n\nВот ваш новый пароль от учётной записи:\n\nЛогин:%s\nПароль:%s\n\n\n\nС уважением, WorkAll!", tokenArgs.Email, newPassword)
 		mailer.SendAsync(tokenArgs.Email, "Ваш пароль был обновлён!", text)
 
-		ctx.Redirect(302, "https://workall-9eca6.web.app/auth")
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+		})
 	}
 }
 

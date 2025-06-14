@@ -28,7 +28,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /adm/emp [delete]
-func DeleteUser(storage *sqlx.DB) gin.HandlerFunc {
+func DeleteUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
 		role, ok := get.GetUserRoleFromContext(ctx)

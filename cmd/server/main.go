@@ -71,10 +71,10 @@ func main() {
 	{
 		// ~ ---------------------------------------------- АДМИН ФУНКЦИОНАЛ ----------------------------------------------
 		// ! Удаление соискателей
-		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser(storage))
+		apiV1.DELETE("/adm/user", AuthMiddleWare(), MakeTransaction(storage), candid.DeleteUser())
 
 		// ! Удаление работодателей
-		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.DeleteUser(storage))
+		apiV1.DELETE("/adm/emp", AuthMiddleWare(), MakeTransaction(storage), employee.DeleteUser())
 
 		// ! Удаление статуса
 		apiV1.DELETE("/adm/status", AuthMiddleWare(), MakeTransaction(storage), DeleteStatus(storage))
