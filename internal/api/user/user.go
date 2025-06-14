@@ -824,16 +824,6 @@ func RecoverPassword(mailer *mailer.Mailer) gin.HandlerFunc {
 	}
 }
 
-// @Summary Сгенерировать новый пароль
-// @Description Позволяет сгенерировать и присвоить новый пароль пользователю. Новый пароль будет отправлен ему на почту.
-// @Tags ADMIN
-// @Accept json
-// @Produce json
-// @Param Token query string true "токен доступа"
-// @Success 200 {object} s.Ok "Возвращает статус 'Ok!'"
-// @Failure 400 {object} s.InfoError "Возвращает ошибку, если не удалось получить данные из запроса (токен или передача каких-либо других данных)"
-// @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
-// @Router /user/reset-password [get]
 func ResetPasswordForUser(mailer *mailer.Mailer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
