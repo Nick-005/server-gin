@@ -459,28 +459,12 @@ func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
+
 		candidId, err := strconv.Atoi(ctx.Query("CandidateID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Info":   "ошибка в попытке получить ID пользователя из параметра запроса. Перепроверьте данные и попробуйте снова!",
-			})
-			return
-		}
-
-		uid, ok := get.GetUserIDFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -494,11 +478,11 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if candidId == uid || role == "ADMIN" {
-			fmt.Println("Соискатель получил свои данные или админом")
-		} else {
-			fmt.Println("Получены данные не админом и не собственником данных")
-		}
+		// if candidId == uid || role == "ADMIN" {
+		// 	fmt.Println("Соискатель получил свои данные или админом")
+		// } else {
+		// 	fmt.Println("Получены данные не админом и не собственником данных")
+		// }
 		ctx.JSON(200, gin.H{
 			"Status":        "Ok!",
 			"CandidateInfo": data,

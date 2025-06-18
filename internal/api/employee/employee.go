@@ -371,29 +371,13 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tx := ctx.MustGet("tx").(*sqlx.Tx)
-		role, ok := get.GetUserRoleFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "Ошибка в попытке получить роль пользователя из заголовка токена",
-			})
-			return
-		}
+
 		emp_id, err := strconv.Atoi(ctx.Query("EmployerID"))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"Status": "Err",
 				"Error":  err.Error(),
 				"Info":   "Ошибка при попытке получить ID работодателя! Проверьте его и попробуйте снова",
-			})
-			return
-		}
-
-		uid, ok := get.GetUserIDFromContext(ctx)
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Status": "Err",
-				"Info":   "Ошибка в попытке получить ID пользователя из заголовка токена",
 			})
 			return
 		}
@@ -407,11 +391,11 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		if emp_id == uid || role == "ADMIN" {
-			fmt.Println("Работодатель получил свои данные или админом")
-		} else {
-			fmt.Println("Получены данные не админом и не собственником данных")
-		}
+		// if emp_id == uid || role == "ADMIN" {
+		// 	fmt.Println("Работодатель получил свои данные или админом")
+		// } else {
+		// 	fmt.Println("Получены данные не админом и не собственником данных")
+		// }
 		ctx.JSON(200, gin.H{
 			"Status":       "Ok!",
 			"EmployerInfo": data,

@@ -576,7 +576,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 		ctx.Set("id", claim.ID)
 		ctx.Set("email", claim.Email)
 		ctx.Set("role", claim.Role)
-		fmt.Println(claim.ID)
+		// fmt.Println(claim.ID)
 		ctx.Next()
 	}
 }
