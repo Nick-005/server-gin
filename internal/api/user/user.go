@@ -23,7 +23,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Summary Удаление аккаунта соискателя
 // @Description Позволяет удалить соискателя из системы. Доступ имеют только пользователи роли ADMIN
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Param UserID query int true "ID пользователя, которого нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
@@ -77,7 +77,7 @@ func DeleteUser() gin.HandlerFunc {
 // @Summary Все отклики соискателя
 // @Description Позволяет получить массив всех откликов соискателя. В результате клиент получит ID отклика, данные о всех вакансиях, на которые он откликнулся, а также статус этого отклика
 // @Security ApiKeyAuth
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Success 200 {object} s.ResponsesByVac "Возвращает ID отклика, данные об этой вакансии, на которую откликнулся пользователь и статус отклика "
@@ -131,7 +131,7 @@ func GetAllUserResponse(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Обновить данные об резюме соискателя
 // @Description Позволяет обновить данные, которые касаются только резюме соискателя. Доступ имеют роли Candidate и ADMIN
 // @Security ApiKeyAuth
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Param ResumeData body s.RequestResumeUpdate true "Данные, которые можно изменить. Это только опыт (стаж) и описание. НО также указываете ID резюме, которое необходимо изменить!"
@@ -203,7 +203,7 @@ func PutCandidateResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Summary Удалить резюме соискателя
 // @Description Позволяет удалить данные об резюме пользователя. Доступ имеют роли Candidate и ADMIN
 // @Security ApiKeyAuth
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Param ResumeID query int true "ID резюме пользователя, чтобы найти и удалить его"
@@ -265,7 +265,7 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Подтвердить email
 // @Description Позволяет изменить статус подтверждения email пользователя.
-// @Tags ADMIN
+// @Tags Admin
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -320,7 +320,7 @@ func PatchVerifyStatus(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить нового соискателя
 // @Description Позволяет добавлять нового соискателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу. Доступ имеют роли Candidate и ADMIN
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Param CandidateInfo body s.RequestCandidate true "Основные данные для добавления соискателя. В поле статус указывайте ID, который уже есть в системе!"
@@ -446,7 +446,7 @@ func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию о соискателе
 // @Description Позволяет получить всю основную информацию о соискателе при помощи его ID. Доступно всем авторизованным пользователям, поэтому токен обязателен!
-// @Tags candidate
+// @Tags Candidate
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -493,7 +493,7 @@ func GetCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Обновить информцию о соискателе
 // @Description Позволяет обновить всю основную информацию о соискателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы Candidate и ADMIN
-// @Tags candidate
+// @Tags Candidate
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -586,7 +586,7 @@ func PutCandidateInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех соискателях
 // @Description Позволяет получить всю основную информацию про всех соискателях. Доступно только пользователям с ролью ADMIN
-// @Tags candidate
+// @Tags Candidate
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -632,7 +632,7 @@ func GetAllCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить новое резюме для соискателя
 // @Description Позволяет добавить к соискателю новое резюме.
-// @Tags candidate
+// @Tags Candidate
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -696,7 +696,7 @@ func PostNewResume(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Информация про все резюме
 // @Description Позволяет получить всю основную информацию про все резюме пользователя, которые у него есть в системе. Доступно для всех пользователей, но токен обязательный!
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -746,7 +746,7 @@ func GetResumeOfCandidates(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Восстановить пароль
 // @Description Позволяет восстановить пароль пользователю, если он забыл его
-// @Tags ADMIN
+// @Tags Admin
 // @Accept json
 // @Produce json
 // @Param Email query string true "почта пользователя, на которую должно прийти письмо"
@@ -854,7 +854,7 @@ func ResetPasswordForUser(mailer *mailer.Mailer) gin.HandlerFunc {
 
 // @Summary Авторизовать пользователя
 // @Description Позволяет получить новый токен для пользователя, чтобы у него сохранился доступ к функционалу
-// @Tags ADMIN
+// @Tags Admin
 // @Accept json
 // @Produce json
 // @Param Email query string true "email пользователя"
@@ -979,7 +979,7 @@ func AuthorizationMethodForAnybody(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Авторизовать соискателя
 // @Description Позволяет получить новый токен для соискателя, чтобы у него сохранился доступ к функционалу
-// @Tags candidate
+// @Tags Candidate
 // @Accept json
 // @Produce json
 // @Param Email query string true "email соискателя"

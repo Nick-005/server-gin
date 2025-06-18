@@ -15,7 +15,7 @@ import (
 // @Summary Все отклики соискателей на вакансию
 // @Description Позволяет получить массив всех откликов соискателей на одну определенную вакансию.
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param VacancyID query int true "ID вакансии, на которую надо посмотреть все отклики"
@@ -82,7 +82,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Удалить отклик соискателя
 // @Description Позволяет удалить данные об отклике пользователя на вакансию. Доступ имеют роли Candidate и ADMIN
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param VacancyID query int true "ID вакансии"
@@ -145,7 +145,7 @@ func DeleteResponse(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Изменить статус отклика
 // @Description Позволяет изменить статус отклика на вакансию. Доступно только пользователям группы employee и ADMIN
-// @Tags vacancy
+// @Tags Vacancy
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -209,7 +209,7 @@ func PatchResponseStatus(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить новый отклик на вакансию
 // @Description Позволяет создать в системе новый отклик соискателя на вакансию.
-// @Tags vacancy
+// @Tags Vacancy
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json

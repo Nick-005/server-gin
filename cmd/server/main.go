@@ -239,7 +239,7 @@ func MakeTransaction(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получение списка опыта
 // @Description Возвращает список всех опыта, который будет использоваться в дальнейшем. Имееют доступ все.
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Success 200 {object} s.GetAllStatuses "Возвращает массив всех значений опыта. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если произошла на стороне сервера."
@@ -268,7 +268,7 @@ func GetAllExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Добавление новой записи в таблицу с опытом
 // @Description Добавляет новую запись в таблицу, которая отвечает за хранение "констант опыта"
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Accept json
 // @Produce json
 // @Param Name query string true "Наименование нового опыта"
@@ -316,7 +316,7 @@ func PostNewExperience(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Добавление новой записи в таблицу с статусом
 // @Description Добавляет новую запись в таблицу, которая отвечает за хранение "констант статуса"
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Accept json
 // @Produce json
 // @Param Name query string true "Наименование нового статуса"
@@ -363,7 +363,7 @@ func AddNewStatus(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получение списка статусов
 // @Description Возвращает список всех значений статусов, который будет использоваться в дальнейшем. Имееют доступ все.
-// @Tags ADMIN
+// @Tags Admin
 // @Accept json
 // @Produce json
 // @Success 200 {object} s.GetAllStatuses "Возвращает массив всех значений статусов. Если произошла ошибка - статус будет 'Err' и будет возвращен текст ошибки!"
@@ -394,7 +394,7 @@ func GetAllStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Удаление статуса
 // @Description Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Param Name query string true "наименование записи, которую нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
@@ -440,7 +440,7 @@ func DeleteStatus(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Удаление опыта
 // @Description Позволяет удалить запись из системы. Доступ имеют только пользователи роли ADMIN
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Param Name query string true "наименование записи, которую нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
@@ -486,7 +486,7 @@ func DeleteExperience(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Проверка токена
 // @Description Позволяет проверить токен пользователя на актуальность
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Param Token query string true "токен, который надо проверить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "

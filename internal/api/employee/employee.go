@@ -20,7 +20,7 @@ var expirationTime = time.Now().Add(24 * time.Hour)
 // @Summary Удаление аккаунта работодателя
 // @Description Позволяет удалить работодателя из системы. Доступ имеют только пользователи роли ADMIN
 // @Security ApiKeyAuth
-// @Tags ADMIN
+// @Tags Admin
 // @Produce json
 // @Param EmployerID query int true "ID работодателя, которого нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
@@ -73,7 +73,7 @@ func DeleteUser() gin.HandlerFunc {
 
 // @Summary Изменить статус работодателя
 // @Description Позволяет изменить статус работодателя. Доступно только пользователям группы ADMIN
-// @Tags ADMIN
+// @Tags Admin
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -139,7 +139,7 @@ func PatchEmployerStatus(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Обновить информцию о работодателе
 // @Description Позволяет обновить всю основную информацию о работодателе при помощи его персонального токена и тела запроса. Доступно только пользователям группы employee и ADMIN
-// @Tags employer
+// @Tags Employer
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -230,7 +230,7 @@ func PutEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Добавить нового работодателя
 // @Description Позволяет добавлять нового работодателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу.
-// @Tags employer
+// @Tags Employer
 // @Accept json
 // @Produce json
 // @Param EmployerInfo body s.RequestEmployee true "Основные данные для добавления работодателя. В поле статус указывайте ID, который уже есть в системе!"
@@ -311,7 +311,7 @@ func PostNewEmployer(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про всех работодателей
 // @Description Позволяет получить всю основную информацию про всех работодатлей. Доступно только пользователям с ролью ADMIN
-// @Tags ADMIN
+// @Tags Admin
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -358,7 +358,7 @@ func GetAllEmployee(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить информцию про работодателя
 // @Description Позволяет получить всю основную информацию про работодатля. Доступно всем авторизованным пользователям, поэтому токен обязателен!
-// @Tags employer
+// @Tags Employer
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -406,7 +406,7 @@ func GetEmployeeInfo(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Авторизовать работодателя
 // @Description Позволяет получить новый токен для работодателя, чтобы у него сохранился доступ к функционалу
-// @Tags employer
+// @Tags Employer
 // @Accept json
 // @Produce json
 // @Param Email query string true "email работодателя"

@@ -16,7 +16,7 @@ import (
 
 // @Summary Изменить видимость вакансии
 // @Description Позволяет изменить видимость вакансии. Доступно только пользователям группы employee и ADMIN
-// @Tags vacancy
+// @Tags Vacancy
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -90,7 +90,7 @@ func PatchVisibleVacancy(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Обновить информцию о вакансии
 // @Description Позволяет обновить всю основную информацию о вакансии. Доступно только пользователям группы employee и ADMIN
-// @Tags vacancy
+// @Tags Vacancy
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -163,7 +163,7 @@ func PutVacancy(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получить кол-во ВИДИМЫХ вакансий в системе
 // @Description Позволяет получить количество ВИДИМЫХ вакансий в системе, доступных для получения. Доступно всем пользователям
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Success 200 {object} s.NumberOfVacancies "Возвращает статус 'Ok!' и количество вакансий"
@@ -194,7 +194,7 @@ func GetVacanciesNumbers(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary поиск вакансий по критериям
 // @Description Возвращает список всех вакансий, которые будут соответствовать передаваемым требованиям. Имееют доступ все.
-// @Tags vacancy
+// @Tags Vacancy
 // @Produce json
 // @Param ExpID query int false "ID опыта"
 // @Param Min query int false "Минимальная ЗП"
@@ -280,7 +280,7 @@ func SearchVacancies(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получение списка ВИДИМЫХ вакансий по 'странично'
 // @Description Позволяет получить всю основную информацию про все ВИДИМЫЕ вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. LastID - после какого ID будет идти отсчёт limit.
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param Page query int true "Номер страницы, которую нужно отобразить"
@@ -329,7 +329,7 @@ func GetVacancyWithLimit(storage *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Получение списка вакансий по 'странично' по ВРЕМЕНИ
 // @Description Позволяет получить всю основную информацию про все вакансии, которые у есть, но в ограниченном количестве. Limit - кол-во вакансий, которое нужно вернуть. CreatedAt - время, после которого будет идти отсчёт limit.
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param Limit query int true "Кол-во вакансий, в соответствии с которым нужно вернуть их"
@@ -370,7 +370,7 @@ func GetVacancyWithLimitByTime(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Удаление вакансии
 // @Description Позволяет удалить вакансию из системы. Доступ имеют только пользователи роли employee и ADMIN
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Produce json
 // @Param VacancyID query int true "ID вакансии, которую нужно удалить"
 // @Success 200 {object} s.StatusInfo "Возвращает статус и краткую информацию "
@@ -435,7 +435,7 @@ func DeleteVacancy(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Добавить новую вакансию
 // @Description Позволяет добавлять новую вакансию в систему. В ответе клиент получит данные вакансии и работодателя. Доступ имеют роли Employee и ADMIN
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param VacancyInfo body s.ResponseVac true "Основные данные для добавления вакансии. В поле exp_id указывайте ID, который уже есть в системе!"
@@ -517,7 +517,7 @@ func PostNewVacancy(storag *sqlx.DB) gin.HandlerFunc {
 
 // @Summary Данные вакансии по ID
 // @Description Позволяет получить все данные вакансии по её ID. Если да, то какой у неё статус.
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param VacancyID query int true "ID вакансии, о которой хотите получить данные"
@@ -567,7 +567,7 @@ func GetVacancyInfoByID(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Проверка отклика
 // @Description Позволяет узнать, откликнулся ли ранее пользователь на эту вакансию. Если да, то какой у неё статус.
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Param VacancyID query int true "ID вакансии, на которую надо посмотреть отклик"
@@ -633,7 +633,7 @@ func GetAllResponseByVacancy(storage *sqlx.DB) gin.HandlerFunc {
 // @Summary Все вакансии одного работодателя
 // @Description Позволяет получить массив всех вакансий работодателя. В результате клиент получит ID работодателя и массив всех его вакансий.
 // @Security ApiKeyAuth
-// @Tags vacancy
+// @Tags Vacancy
 // @Accept json
 // @Produce json
 // @Success 200 {array} s.ResponseAllVacancyByEmployee "Возвращает ID отклика, данные об этой вакансии, на которую откликнулся пользователь и статус отклика "
