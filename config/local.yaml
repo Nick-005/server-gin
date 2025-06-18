@@ -1,6 +1,0 @@
-env: "local" # но может быть local, dev, prod. Этот параметр показывает на какой машине работает наша программа. В нашем случае на local
-storage_path: "" # Показывает, где хранится файл базы данных
-http_server:
-    address: "localhost:5432"
-    timeout: 10s
-    idle_timeout: 60s

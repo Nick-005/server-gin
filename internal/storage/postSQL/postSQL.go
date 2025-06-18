@@ -1051,7 +1051,6 @@ func GetAllResumeByCandidate(storage *sqlx.Tx, id int) (s.ResumeResult, error) {
 	return result, nil
 }
 
-// нормализовал, всё норм
 func GetAllCandidates(storage *sqlx.Tx) ([]s.InfoCandidate, error) {
 	var result []s.InfoCandidate
 

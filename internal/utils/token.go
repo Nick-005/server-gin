@@ -43,22 +43,6 @@ func GenerateResetToken(email, role string) (string, error) {
 	result = strings.ReplaceAll(result, "+", "-")
 	result = strings.ReplaceAll(result, "/", "_")
 	return result, nil
-	// jsonData, err := json.Marshal(token)
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// // Подписываем токен
-	// mac := hmac.New(sha256.New, secretKey)
-	// mac.Write(jsonData)
-	// signature := mac.Sum(nil)
-
-	// // Формат: данные.подпись
-	// return fmt.Sprintf(
-	// 	"%s.%s",
-	// 	base64.URLEncoding.EncodeToString(jsonData),
-	// 	base64.URLEncoding.EncodeToString(signature),
-	// ), nil
 }
 
 func ValidateResetToken(tokenString string) (*ClaimToRecover, error) {
@@ -76,41 +60,5 @@ func ValidateResetToken(tokenString string) (*ClaimToRecover, error) {
 		return nil, err
 	}
 	return claim, nil
-	// parts := strings.Split(tokenStr, ".")
-	// if len(parts) != 2 {
-	// 	return nil, fmt.Errorf("invalid token format")
-	// }
 
-	// // Декодируем данные
-	// jsonData, err := base64.URLEncoding.DecodeString(parts[0])
-	// if err != nil {
-	// 	return nil, fmt.Errorf("invalid token encoding")
-	// }
-
-	// // Проверяем подпись
-	// mac := hmac.New(sha256.New, secretKey)
-	// mac.Write(jsonData)
-	// expectedSignature := mac.Sum(nil)
-
-	// actualSignature, err := base64.URLEncoding.DecodeString(parts[1])
-	// if err != nil {
-	// 	return nil, fmt.Errorf("invalid signature encoding")
-	// }
-
-	// if !hmac.Equal(actualSignature, expectedSignature) {
-	// 	return nil, fmt.Errorf("invalid token signature")
-	// }
-
-	// // Парсим данные
-	// var token ResetToken
-	// if err := json.Unmarshal(jsonData, &token); err != nil {
-	// 	return nil, fmt.Errorf("invalid token data")
-	// }
-
-	// // Проверяем срок действия
-	// if time.Now().After(token.ExpiresAt) {
-	// 	return nil, fmt.Errorf("token expired")
-	// }
-
-	// return &token, nil
 }

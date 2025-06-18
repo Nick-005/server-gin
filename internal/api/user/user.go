@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -274,48 +275,48 @@ func DeleteResume(storag *sqlx.DB) gin.HandlerFunc {
 // @Failure 401 {object} s.InfoError "Возвращает ошибку, если у пользователя нету доступа к этому функционалу."
 // @Failure 500 {object} s.InfoError "Возвращает ошибку, если на сервере произошла непредвиденная ошибка."
 // @Router /verify [patch]
-// func PatchVerifyStatus(storag *sqlx.DB) gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		tx := ctx.MustGet("tx").(*sqlx.Tx)
+func PatchVerifyStatus(storag *sqlx.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tx := ctx.MustGet("tx").(*sqlx.Tx)
 
-// 		tokenString := ctx.Query("Token")
-// 		claim := &s.ClaimsToVerify{}
-// 		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
-// 			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
-// 		})
-// 		if err != nil {
+		tokenString := ctx.Query("Token")
+		claim := &s.ClaimsToVerify{}
+		token, err := jwt.ParseWithClaims(tokenString, claim, func(t *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWT_SECRET_TOKEN_EMP")), nil
+		})
+		if err != nil {
 
-// 			ctx.JSON(http.StatusUnauthorized, gin.H{
-// 				"Status": "Err",
-// 				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
-// 			},
-// 			)
-// 			return
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Error":  fmt.Sprintf("Ошибка при дешифровке токена! error: %v", err),
+			},
+			)
+			return
 
-// 		}
-// 		if !token.Valid {
-// 			ctx.JSON(http.StatusUnauthorized, gin.H{
-// 				"Status": "Err",
-// 				"Error":  "Невалидный токен! Пожалуйста перепроверьте его",
-// 			})
-// 			return
-// 		}
-// 		err = sqlp.ConfirmUserEmail(tx, claim.Email)
-// 		if err != nil {
-// 			ctx.JSON(http.StatusBadRequest, gin.H{
-// 				"Status": "Err",
-// 				"Info":   "Произошла ошибка в ",
-// 				"Error":  err.Error(),
-// 			})
-// 			return
-// 		}
+		}
+		if !token.Valid {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"Status": "Err",
+				"Error":  "Невалидный токен! Пожалуйста перепроверьте его",
+			})
+			return
+		}
+		err = sqlp.ConfirmUserEmail(tx, claim.Email)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Status": "Err",
+				"Info":   "Произошла ошибка в ",
+				"Error":  err.Error(),
+			})
+			return
+		}
 
-// 		ctx.JSON(200, gin.H{
-// 			"Status": "Ok!",
-// 			"Info":   "Данные успешно обновлены!",
-// 		})
-// 	}
-// }
+		ctx.JSON(200, gin.H{
+			"Status": "Ok!",
+			"Info":   "Данные успешно обновлены!",
+		})
+	}
+}
 
 // @Summary Добавить нового соискателя
 // @Description Позволяет добавлять нового соискателя в систему. В ответе клиент получит токен, с помощью которого сможет получить доступ к некоторому функционалу. Доступ имеют роли Candidate и ADMIN
@@ -435,9 +436,11 @@ func CheckToken(storag *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		ctx.JSON(200, gin.H{
-			"Status": "Ok!",
-		})
+
+		ctx.Redirect(http.StatusTemporaryRedirect, "https://workall-9eca6.web.app/auth")
+		// ctx.JSON(200, gin.H{
+		// 	"Status": "Ok!",
+		// })
 	}
 }
 
@@ -856,9 +859,12 @@ func ResetPasswordForUser(mailer *mailer.Mailer) gin.HandlerFunc {
 		text := fmt.Sprintf("Ваш старый пароль был успешно сброшен!\n\nВот ваш новый пароль от учётной записи:\n\nЛогин:%s\nПароль:%s\n\n\n\nС уважением, WorkAll!", tokenArgs.Email, newPassword)
 		mailer.SendAsync(tokenArgs.Email, "Ваш пароль был обновлён!", text)
 
-		ctx.JSON(200, gin.H{
-			"Status": "Ok!",
-		})
+		ctx.Redirect(http.StatusPermanentRedirect, "https://workall-9eca6.web.app/auth")
+
+		// ctx.JSON(200, gin.H{
+		// 	"Status": "Ok!",
+		// })
+
 	}
 }
 
